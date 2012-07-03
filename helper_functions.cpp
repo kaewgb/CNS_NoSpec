@@ -113,9 +113,8 @@ void check_lo_hi_ng_dx( int lo[],  int hi[],  int ng,  double dx[],
 	}
 }
 
-void check_4D_arrays( int dim[],
-							 double ****a, double ****a2, int la, const char *aname,
-							 double ****b, double ****b2, int lb, const char *bname ){
+void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la){
+
 	int i,j,k,l;
 	FOR(i, 0, dim[0]){
 		FOR(j, 0, dim[1]){
@@ -123,14 +122,7 @@ void check_4D_arrays( int dim[],
 				FOR(l, 0, la){
 					if(!FEQ(a[i][j][k][l], a2[i][j][k][l])){
 						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
-								aname, i, j, k, l, a[i][j][k][l], a2[i][j][k][l], aname, i, j, k, l);
-						exit(1);
-					}
-				}
-				FOR(l, 0, lb){
-					if(!FEQ(b[i][j][k][l], b2[i][j][k][l])){
-						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
-								bname, i, j, k, l, b[i][j][k][l], b2[i][j][k][l], bname, i, j, k, l);
+								name, i, j, k, l, a[i][j][k][l], a2[i][j][k][l], name, i, j, k, l);
 						exit(1);
 					}
 				}
@@ -138,3 +130,4 @@ void check_4D_arrays( int dim[],
 		}
 	}
 }
+

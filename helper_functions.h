@@ -12,8 +12,6 @@ void read_3D(FILE *f, double ****ptr, int dim[], int l);
 void check_double(double a, double b, const char *name);
 void check_lo_hi_ng_dx( int lo[],  int hi[],  int ng,  double dx[],
 									  int lo2[], int hi2[], int ng2, double dx2[] );
-void check_4D_arrays( int dim[],
-							 double ****a, double ****a2, int la, const char *aname,
-							 double ****b, double ****b2, int lb, const char *bname );
+void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la);
 
 

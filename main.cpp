@@ -8,7 +8,7 @@ void diffterm_test();
 
 int main(int argc, char *argv[]){
 
-//	ctoprim_test();
+	ctoprim_test();
 	diffterm_test();
 	return 0;
 
@@ -78,7 +78,8 @@ void ctoprim_test(){
 	// Checking...
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
 	check_double(courno, courno2, "courno");
-	check_4D_arrays(dim, u, u2, 5, "u", q, q2, 6, "q");
+	check_4D_array("u", u, u2, dim, 5);
+	check_4D_array("q", q, q2, dim, 6);
 	printf("Correct!\n");
 
 	free_4D(u,  dim);		free_4D(q,  dim);
@@ -86,7 +87,7 @@ void ctoprim_test(){
 }
 
 void diffterm_test(){
-	int dim[3];
+	int dim[3], dim2[3];
 	int i,j,k,l;
 
 	int lo[3], hi[3], ng=4;
@@ -113,25 +114,26 @@ void diffterm_test(){
 	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
-	FOR(i, 0, 3)
-		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+	FOR(i, 0, 3){
+		dim[i] 	= hi[i]-lo[i]+1 + 2*ng;
+		dim2[i] = hi[i]-lo[i]+1;
+	}
 
-	allocate_4D(q, 		 	dim, 6); 	// [40][40][40][6]
-	allocate_4D(difflux, 	dim, 5); 	// [40][40][40][5]
-	allocate_4D(q2, 	 	dim, 6); 	// [40][40][40][6]
-	allocate_4D(difflux2, 	dim, 5); 	// [40][40][40][5]
+	allocate_4D(q, 		 	dim,  6); 	// [40][40][40][6]
+	allocate_4D(difflux, 	dim2, 5); 	// [40][40][40][5]
+	allocate_4D(q2, 	 	dim,  6); 	// [40][40][40][6]
+	allocate_4D(difflux2, 	dim2, 5); 	// [40][40][40][5]
 
 	FOR(l, 0, 6)
 		read_3D(fin, q, dim, l);
 	FOR(l, 0, 5)
-		read_3D(fin, difflux, dim, l);
+		read_3D(fin, difflux, dim2, l);
 
 	fscanf(fin, "%le %le", &eta, &alam);
 	fclose(fin);
 
 	printf("Applying diffterm()...\n");
 	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
-	printf("After diffterm()\n");
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
@@ -142,19 +144,20 @@ void diffterm_test(){
 	FOR(l, 0, 6)
 		read_3D(fout, q2, dim, l);
 	FOR(l, 0, 5)
-		read_3D(fout, difflux2, dim, l);
+		read_3D(fout, difflux2, dim2, l);
 
 	fscanf(fout, "%le %le", &eta2, &alam2);
 	fclose(fout);
 
 	// Checking...
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-	check_4D_arrays(dim, q, q2, 6, "q", difflux, difflux2, 5, "difflux");
+	check_4D_array("q", q, q2, dim, 6);
+	check_4D_array("difflux", difflux, difflux2, dim2, 5);
 	check_double(eta,  eta2,  "eta");
 	check_double(alam, alam2, "alam");
 
-	free_4D(q,  dim);	free_4D(difflux,  dim);
-	free_4D(q2, dim);	free_4D(difflux2, dim);
+	free_4D(q,  dim);	free_4D(difflux,  dim2);
+	free_4D(q2, dim);	free_4D(difflux2, dim2);
 
 	printf("Correct!\n");
 }

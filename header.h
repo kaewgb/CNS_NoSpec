@@ -25,7 +25,8 @@ enum {
 	qu=1,
 	qv,
 	qw,
-	qpres
+	qpres,
+	qfive
 };
 
 static const double ALP	=  0.8E0;

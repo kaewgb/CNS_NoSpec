@@ -4,7 +4,7 @@
 
 #define	lo(i)		lo[i]
 #define	hi(i)		hi[i]
-#define dxinv(i)	dxinv[i]
+#define dxinv(i)	dxinv[i-1]
 #define	q(i,j,k,l)	q[i][j][k][l]
 #define	ux(i,j,k)	ux[i][j][k]
 #define	vx(i,j,k)	vx[i][j][k]
@@ -50,26 +50,25 @@ void diffterm (
 	const double OFF3		=  8.0E0/315.0E0;
 	const double OFF4		= -1.0E0/560.0E0;
 
-	FOR(i, 0, 3)
+	FOR(i, 0, 3){
 		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+		dxinv[i] = 1.0E0/dx[i];
+	}
 
 	allocate_3D(ux, dim);	allocate_3D(uy, dim);	allocate_3D(uz, dim);
 	allocate_3D(vx, dim);	allocate_3D(vy, dim);	allocate_3D(vz, dim);
 	allocate_3D(wx, dim);	allocate_3D(wy, dim);	allocate_3D(wz, dim);
 
-	DO(i, lo[0], hi[0]){
-		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2])
+	DO(i, lo[0]-ng, hi[0]-ng){
+		DO(j, lo[1]-ng, hi[1]-ng){
+			DO(k, lo[2]-ng, hi[2]-ng)
 				difflux[i][j][k][irho] = 0.0E0;
 		}
 	}
 
-	DO(i, 1, 3)
-		dxinv[i] = 1.0E0/dx[i];
-
-	#pragma omp parallel private(i,j,k)
+//	#pragma omp parallel private(i,j,k)
 	{
-		#pragma omp for nowait
+//		#pragma omp for nowait
 		DO(i, lo[0], hi[0]){
 			DO(j, lo[1]-ng, hi[1]+ng){
 				DO(k, lo[2]-ng, hi[2]+ng){
@@ -96,7 +95,7 @@ void diffterm (
 			}
 		}
 
-		#pragma omp for nowait
+//		#pragma omp for nowait
 		DO(i, lo[0]-ng, hi[0]+ng){
 			DO(j, lo[1], hi[1]){
 				DO(k, lo[2]-ng, hi[2]+ng){
@@ -123,7 +122,7 @@ void diffterm (
 			}
 		}
 
-		#pragma omp for
+//		#pragma omp for
 		DO(i, lo[0]-ng, hi[0]+ng){
 			DO(j, lo[1]-ng, hi[1]+ng){
 				DO(k, lo[2], hi[2]){
@@ -151,7 +150,7 @@ void diffterm (
 		}
 	}
 
-	#pragma omp parallel for private(i,j,k,uxx,uyy,uzz,vyx,wzx)
+//	#pragma omp parallel for private(i,j,k,uxx,uyy,uzz,vyx,wzx)
 	DO(i, lo[0], hi[0]){
 		DO(j, lo[1], hi[1]){
 			DO(k, lo[2], hi[2]){
@@ -184,13 +183,13 @@ void diffterm (
 					  + GAM*(wz(i+3,j,k)-wz(i-3,j,k))
 					  + DEL*(wz(i+4,j,k)-wz(i-4,j,k)))*dxinv(1);
 
-				difflux(i,j,k,imx) = eta*(FourThirds*uxx + uyy + uzz + OneThird*(vyx+wzx));
+				difflux(i-ng,j-ng,k-ng,imx) = eta*(FourThirds*uxx + uyy + uzz + OneThird*(vyx+wzx));
 
 			}
 		}
 	}
 
-	#pragma omp parallel for private(i,j,k,vxx,vyy,vzz,uxy,wzy)
+//	#pragma omp parallel for private(i,j,k,vxx,vyy,vzz,uxy,wzy)
 	DO(i, lo[0], hi[0]){
 		DO(j, lo[1], hi[1]){
 			DO(k, lo[2], hi[2]){
@@ -223,13 +222,13 @@ void diffterm (
 					  + GAM*(wz(i,j+3,k)-wz(i,j-3,k))
 					  + DEL*(wz(i,j+4,k)-wz(i,j-4,k)))*dxinv(2);
 
-				difflux(i,j,k,imy) = eta*(vxx + FourThirds*vyy + vzz + OneThird*(uxy+wzy));
+				difflux(i-ng,j-ng,k-ng,imy) = eta*(vxx + FourThirds*vyy + vzz + OneThird*(uxy+wzy));
 
 			}
 		}
 	}
 
-	#pragma omp parallel for private(i,j,k,wxx,wyy,wzz,uxz,vyz)
+//	#pragma omp parallel for private(i,j,k,wxx,wyy,wzz,uxz,vyz)
 	DO(i, lo[0], hi[0]){
 		DO(j, lo[1], hi[1]){
 			DO(k, lo[2], hi[2]){
@@ -262,34 +261,34 @@ void diffterm (
 					  + GAM*(vy(i,j,k+3)-vy(i,j,k-3))
 					  + DEL*(vy(i,j,k+4)-vy(i,j,k-4)))*dxinv(3);
 
-				difflux(i,j,k,imz) = eta*(wxx + wyy + FourThirds*wzz + OneThird*(uxz+vyz));
+				difflux(i-ng,j-ng,k-ng,imz) = eta*(wxx + wyy + FourThirds*wzz + OneThird*(uxz+vyz));
 
 			}
 		}
 	}
 
-	#pragma omp parallel for private(i,j,k,txx,tyy,tzz,divu,tauxx,tauyy,tauzz,tauxy,tauxz,tauyz,mechwork)
+//	#pragma omp parallel for private(i,j,k,txx,tyy,tzz,divu,tauxx,tauyy,tauzz,tauxy,tauxz,tauyz,mechwork)
 	DO(i, lo[0], hi[0]){
 		DO(j, lo[1], hi[1]){
 			DO(k, lo[2], hi[2]){
 
-				txx = (CENTER*q(i,j,k,6)
-					  + OFF1*(q(i+1,j,k,6)+q(i-1,j,k,6))
-					  + OFF2*(q(i+2,j,k,6)+q(i-2,j,k,6))
-					  + OFF3*(q(i+3,j,k,6)+q(i-3,j,k,6))
-					  + OFF4*(q(i+4,j,k,6)+q(i-4,j,k,6)))*SQR(dxinv(1));
+				txx = (CENTER*q(i,j,k,qfive)
+					  + OFF1*(q(i+1,j,k,qfive)+q(i-1,j,k,qfive))
+					  + OFF2*(q(i+2,j,k,qfive)+q(i-2,j,k,qfive))
+					  + OFF3*(q(i+3,j,k,qfive)+q(i-3,j,k,qfive))
+					  + OFF4*(q(i+4,j,k,qfive)+q(i-4,j,k,qfive)))*SQR(dxinv(1));
 
-				tyy = (CENTER*q(i,j,k,6)
-					  + OFF1*(q(i,j+1,k,6)+q(i,j-1,k,6))
-					  + OFF2*(q(i,j+2,k,6)+q(i,j-2,k,6))
-					  + OFF3*(q(i,j+3,k,6)+q(i,j-3,k,6))
-					  + OFF4*(q(i,j+4,k,6)+q(i,j-4,k,6)))*SQR(dxinv(2));
+				tyy = (CENTER*q(i,j,k,qfive)
+					  + OFF1*(q(i,j+1,k,qfive)+q(i,j-1,k,qfive))
+					  + OFF2*(q(i,j+2,k,qfive)+q(i,j-2,k,qfive))
+					  + OFF3*(q(i,j+3,k,qfive)+q(i,j-3,k,qfive))
+					  + OFF4*(q(i,j+4,k,qfive)+q(i,j-4,k,qfive)))*SQR(dxinv(2));
 
-				tzz = (CENTER*q(i,j,k,6)
-					  + OFF1*(q(i,j,k+1,6)+q(i,j,k-1,6))
-					  + OFF2*(q(i,j,k+2,6)+q(i,j,k-2,6))
-					  + OFF3*(q(i,j,k+3,6)+q(i,j,k-3,6))
-					  + OFF4*(q(i,j,k+4,6)+q(i,j,k-4,6)))*SQR(dxinv(3));
+				tzz = (CENTER*q(i,j,k,qfive)
+					  + OFF1*(q(i,j,k+1,qfive)+q(i,j,k-1,qfive))
+					  + OFF2*(q(i,j,k+2,qfive)+q(i,j,k-2,qfive))
+					  + OFF3*(q(i,j,k+3,qfive)+q(i,j,k-3,qfive))
+					  + OFF4*(q(i,j,k+4,qfive)+q(i,j,k-4,qfive)))*SQR(dxinv(3));
 
 				divu  = TwoThirds*(ux(i,j,k)+vy(i,j,k)+wz(i,j,k));
 				tauxx = 2.E0*ux(i,j,k) - divu;
@@ -304,11 +303,11 @@ void diffterm (
 							tauzz*wz(i,j,k) + SQR(tauxy)+SQR(tauxz)+SQR(tauyz);
 
 				mechwork = eta*mechwork
-					  + difflux(i,j,k,imx)*q(i,j,k,qu)
-					  + difflux(i,j,k,imy)*q(i,j,k,qv)
-					  + difflux(i,j,k,imz)*q(i,j,k,qw);
+					  + difflux(i-ng,j-ng,k-ng,imx)*q(i,j,k,qu)
+					  + difflux(i-ng,j-ng,k-ng,imy)*q(i,j,k,qv)
+					  + difflux(i-ng,j-ng,k-ng,imz)*q(i,j,k,qw);
 
-				difflux(i,j,k,iene) = alam*(txx+tyy+tzz) + mechwork;
+				difflux(i-ng,j-ng,k-ng,iene) = alam*(txx+tyy+tzz) + mechwork;
 
 			}
 		}

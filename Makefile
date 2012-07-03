@@ -1,4 +1,5 @@
 CC			= g++
+CFLAGS		=
 TARGET		= advance
 OBJ_FILES	= main.o ctoprim.o hypterm.o diffterm.o helper_functions.o
 HEADERS		= header.h helper_functions.h
