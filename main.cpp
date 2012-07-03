@@ -6,10 +6,12 @@
 #define FEQ(x, y)	((fabs(x-y)<0.000001)? true:false)
 
 void ctoprim_test();
+void diffterm_test();
 
 int main(int argc, char *argv[]){
 
 	ctoprim_test();
+//	diffterm_test();
 	return 0;
 
 }
@@ -54,7 +56,7 @@ void ctoprim_test(){
 
 	int i, j, k, l, dummy;
 	int lo[3], hi[3];
-	const int ng=4;
+	int ng=4;
 	double ****u, ****q;
 	double dx[3], courno;
 
@@ -62,11 +64,6 @@ void ctoprim_test(){
 	int lo2[3], hi2[3];
 	double ****u2, ****q2;
 	double dx2[3], courno2;
-
-	allocate_4D(u, 40, 40, 40, 5);
-	allocate_4D(q, 40, 40, 40, 6);
-	allocate_4D(u2, 40, 40, 40, 5);
-	allocate_4D(q2, 40, 40, 40, 6);
 
 	FILE *fin = fopen("ctoprim_input", "r");
 	FILE *fout = fopen("ctoprim_output", "r");
@@ -80,6 +77,12 @@ void ctoprim_test(){
 
 	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
+
+	allocate_4D(u, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 5); 		// [40][40][40][5]
+	allocate_4D(q, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 6); 		// [40][40][40][6]
+	allocate_4D(u2, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 5); 	// [40][40][40][5]
+	allocate_4D(q2, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 6); 	// [40][40][40][6]
+
 	DO(l, 0, 4){
 		DO(k, lo[2]-ng, hi[2]+ng){
 			DO(j, lo[1]-ng, hi[1]+ng){
@@ -182,6 +185,25 @@ void ctoprim_test(){
 }
 
 void diffterm_test(){
-	int lo[3];
+	int lo[3], hi[3], ng=4;
+	double dx[3], eta, alam;
+	double ****q, ****difflux;
+
+	int lo2[3], hi2[3], ng2=4;
+	double dx2[3], eta2, alam2;
+	double ****q2, ****difflux2;
+
+	FILE *fin 	= fopen("diffterm_input", "r");
+	FILE *fout 	= fopen("diffterm_output", "r");
+
+	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
+	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
+	fscanf(fin, "%d\n", &ng);
+	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
+//	fscanf()
+
+
+	fclose(fin);
+	fclose(fout);
 }
 
