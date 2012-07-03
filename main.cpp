@@ -16,9 +16,10 @@ int main(int argc, char *argv[]){
 
 }
 
-static inline void allocate_4D(double ****&ptr, int di, int dj, int dk, int dl){
+static inline void allocate_4D(double ****&ptr, int dim[], int dl){
 
 	int i,j,k,l;
+	int di=dim[0], dj=dim[1], dk=dim[2];
 	double *temp;
 
 	ptr = (double ****) malloc(di * sizeof(double ***));
@@ -39,8 +40,9 @@ static inline void allocate_4D(double ****&ptr, int di, int dj, int dk, int dl){
 	}
 
 }
-static inline void free_4D(double ****ptr, int di, int dj, int dk){
+static inline void free_4D(double ****ptr, int dim[]){
 	int i,j,k;
+	int di=dim[0], dj=dim[1], dk=dim[2];
 
 	free(ptr[0][0][0]);
 	FOR(i, 0, di){
@@ -54,7 +56,7 @@ static inline void free_4D(double ****ptr, int di, int dj, int dk){
 
 void ctoprim_test(){
 
-	int i, j, k, l, dummy;
+	int i, j, k, l, dummy, dim[3];
 	int lo[3], hi[3];
 	int ng=4;
 	double ****u, ****q;
@@ -78,10 +80,13 @@ void ctoprim_test(){
 	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
-	allocate_4D(u, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 5); 		// [40][40][40][5]
-	allocate_4D(q, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 6); 		// [40][40][40][6]
-	allocate_4D(u2, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 5); 	// [40][40][40][5]
-	allocate_4D(q2, hi[0]-lo[0]+1+2*ng, hi[1]-lo[1]+1+2*ng, hi[2]-lo[2]+1+2*ng, 6); 	// [40][40][40][6]
+	FOR(i, 0, 3)
+		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+
+	allocate_4D(u, 	dim, 5); 	// [40][40][40][5]
+	allocate_4D(q, 	dim, 6); 	// [40][40][40][6]
+	allocate_4D(u2, dim, 5); 	// [40][40][40][5]
+	allocate_4D(q2, dim, 6); 	// [40][40][40][6]
 
 	DO(l, 0, 4){
 		DO(k, lo[2]-ng, hi[2]+ng){
@@ -180,11 +185,14 @@ void ctoprim_test(){
 	}
 	printf("Correct!\n");
 
-	free_4D(u,  40, 40, 40);		free_4D(q,  40, 40, 40);
-	free_4D(u2, 40, 40, 40);		free_4D(q2, 40, 40, 40);
+	free_4D(u,  dim);		free_4D(q,  dim);
+	free_4D(u2, dim);		free_4D(q2, dim);
 }
 
 void diffterm_test(){
+	int dim[3];
+	int i,j,k,l;
+
 	int lo[3], hi[3], ng=4;
 	double dx[3], eta, alam;
 	double ****q, ****difflux;
@@ -200,7 +208,18 @@ void diffterm_test(){
 	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
 	fscanf(fin, "%d\n", &ng);
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
-//	fscanf()
+
+	FOR(i, 0, 3)
+		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+
+	allocate_4D(q, 		 	dim, 6); 	// [40][40][40][6]
+	allocate_4D(difflux, 	dim, 5); 	// [40][40][40][5]
+	allocate_4D(q2, 	 	dim, 6); 	// [40][40][40][6]
+	allocate_4D(difflux2, 	dim, 5); 	// [40][40][40][5]
+
+	FOR(l, 0, 6){
+//		FOR
+	}
 
 
 	fclose(fin);
