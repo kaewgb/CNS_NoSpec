@@ -11,7 +11,7 @@ void ctoprim (
     double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
     double dx[],    // i: dx[3]
     int ng,         // i
-    double courno   // i/o
+    double &courno   // i/o
 ){
     int i, j, k;
     double c, eint, courx, coury, courz, courmx, courmy, courmz, rhoinv;

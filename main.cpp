@@ -3,7 +3,16 @@
 #include <math.h>
 #include "header.h"
 
-#define FEQ(x, y)	((fabs(x-y)<0.001)? true:false)
+#define FEQ(x, y)	((fabs(x-y)<0.000001)? true:false)
+
+void ctoprim_test();
+
+int main(int argc, char *argv[]){
+
+	ctoprim_test();
+	return 0;
+
+}
 
 static inline void allocate4d(double ****&ptr, int di, int dj, int dk, int dl){
 
@@ -28,20 +37,17 @@ static inline void allocate4d(double ****&ptr, int di, int dj, int dk, int dl){
 	}
 
 }
+
 void ctoprim_test(){
 
 	int i, j, k, l, dummy;
 	int lo[3], hi[3];
 	const int ng=4;
-//	double u[40][40][40][5];
-//	double q[40][40][40][6];
 	double ****u, ****q;
 	double dx[3], courno;
 
 	int ng2;
 	int lo2[3], hi2[3];
-//	double u2[40][40][40][5];
-//	double q2[40][40][40][6];
 	double ****u2, ****q2;
 	double dx2[3], courno2;
 
@@ -52,6 +58,10 @@ void ctoprim_test(){
 
 	FILE *fin = fopen("ctoprim_input", "r");
 	FILE *fout = fopen("ctoprim_output", "r");
+	if(fin == NULL || fout == NULL){
+		printf("Invalid input file\n");
+		exit(1);
+	}
 
 	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
 	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
@@ -130,8 +140,9 @@ void ctoprim_test(){
 	}
 	if(!FEQ(courno, courno2)){
 		printf("courno = %le != %le = courno2\n", courno, courno2);
-//            exit(1);
+		exit(1);
 	}
+
 	DO(i, lo[0]-ng, hi[0]+ng){
 		DO(j, lo[1]-ng, hi[1]+ng){
 			DO(k, lo[2]-ng, hi[2]+ng){
@@ -155,9 +166,7 @@ void ctoprim_test(){
 	printf("Correct!\n");
 }
 
-int main(int argc, char *argv[]){
-
-	ctoprim_test();
-	return 0;
+void diffterm_test(){
 
 }
+
