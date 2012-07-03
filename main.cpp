@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "header.h"
-
-#define FEQ(x, y)	((fabs(x-y)<0.000001)? true:false)
+#include "test_helper_functions.h"
 
 void ctoprim_test();
 void diffterm_test();
@@ -14,44 +12,6 @@ int main(int argc, char *argv[]){
 //	diffterm_test();
 	return 0;
 
-}
-
-static inline void allocate_4D(double ****&ptr, int dim[], int dl){
-
-	int i,j,k,l;
-	int di=dim[0], dj=dim[1], dk=dim[2];
-	double *temp;
-
-	ptr = (double ****) malloc(di * sizeof(double ***));
-	FOR(i, 0, di){
-		ptr[i] = (double ***) malloc(dj * sizeof(double **));
-		FOR(j, 0, dj)
-			ptr[i][j] = (double **) malloc(dk * sizeof(double *));
-	}
-
-	temp = (double *) malloc(di*dj*dk*dl * sizeof(double));
-	FOR(i, 0, di){
-		FOR(j, 0, dj){
-			FOR(k, 0, dk){
-				ptr[i][j][k] = temp;
-				temp += dl;
-			}
-		}
-	}
-
-}
-static inline void free_4D(double ****ptr, int dim[]){
-	int i,j,k;
-	int di=dim[0], dj=dim[1], dk=dim[2];
-
-	free(ptr[0][0][0]);
-	FOR(i, 0, di){
-		FOR(j, 0, dj){
-			free(ptr[i][j]);
-		}
-		free(ptr[i]);
-	}
-	free(ptr);
 }
 
 void ctoprim_test(){
@@ -74,6 +34,7 @@ void ctoprim_test(){
 		exit(1);
 	}
 
+	// Scanning input
 	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
 	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
 
@@ -88,24 +49,11 @@ void ctoprim_test(){
 	allocate_4D(u2, dim, 5); 	// [40][40][40][5]
 	allocate_4D(q2, dim, 6); 	// [40][40][40][6]
 
-	DO(l, 0, 4){
-		DO(k, lo[2]-ng, hi[2]+ng){
-			DO(j, lo[1]-ng, hi[1]+ng){
-				DO(i, lo[0]-ng, hi[0]+ng){
-					fscanf(fin, "%le", &u[i][j][k][l]);
-				}
-			}
-		}
-	}
-	DO(l, 0, 5){
-		DO(k, lo[2]-ng, hi[2]+ng){
-			DO(j, lo[1]-ng, hi[1]+ng){
-				DO(i, lo[0]-ng, hi[0]+ng){
-					fscanf(fin, "%le", &q[i][j][k][l]);
-				}
-			}
-		}
-	}
+	FOR(l, 0, 5)
+		read_3D(fin, u, dim, l);
+	FOR(l, 0, 6)
+		read_3D(fin, q, dim, l);
+
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
 	fscanf(fin, "%d\n", &dummy);
 	fscanf(fin, "%le\n", &courno);
@@ -114,75 +62,23 @@ void ctoprim_test(){
 	printf("Applying ctoprim()...\n");
 	ctoprim(lo, hi, u, q, dx, ng, courno);
 
+	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
 	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
-	DO(l, 0, 4){
-		DO(k, lo[2]-ng, hi[2]+ng){
-			DO(j, lo[1]-ng, hi[1]+ng){
-				DO(i, lo[0]-ng, hi[0]+ng){
-					fscanf(fout, "%le", &u2[i][j][k][l]);
-				}
-			}
-		}
-	}
-	DO(l, 0, 5){
-		DO(k, lo[2]-ng, hi[2]+ng){
-			DO(j, lo[1]-ng, hi[1]+ng){
-				DO(i, lo[0]-ng, hi[0]+ng){
-					fscanf(fout, "%le", &q2[i][j][k][l]);
-				}
-			}
-		}
-	}
+	FOR(l, 0, 5)
+		read_3D(fout, u2, dim, l);
+	FOR(l, 0, 6)
+		read_3D(fout, q2, dim, l);
+
 	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
 	fscanf(fout, "%d\n", &ng2);
 	fscanf(fout, "%le\n", &courno2);
 	fclose(fout);
 
-	DO(i, 0, 2){
-
-		if(lo[i] != lo2[i]+ng){
-			printf("lo[%d] = %d != %d = lo2[%d]\n", i, lo[i], lo2[i], i);
-			exit(1);
-		}
-		if(hi[i] != hi2[i]+ng){
-			printf("hi[%d] = %d != %d = hi2[%d]\n", i, hi[i], hi2[i], i);
-			exit(1);
-		}
-		if(!FEQ(dx[i], dx2[i])){
-			printf("dx[%d] = %le != %le = dx2[%d]\n", i, dx[i], dx2[i], i);
-			exit(1);
-		}
-	}
-	if(ng != ng2){
-		printf("ng = %d != %d = ng2\n", ng, ng2);
-		exit(1);
-	}
-	if(!FEQ(courno, courno2)){
-		printf("courno = %le != %le = courno2\n", courno, courno2);
-		exit(1);
-	}
-
-	DO(i, lo[0]-ng, hi[0]+ng){
-		DO(j, lo[1]-ng, hi[1]+ng){
-			DO(k, lo[2]-ng, hi[2]+ng){
-				DO(l, 0, 4){
-					if(!FEQ(u[i][j][k][l], u2[i][j][k][l])){
-						printf("u[%d][%d][%d][%d] = %le != %le = u2[%d][%d][%d][%d]\n",
-								i, j, k, l, u[i][j][k][l], u2[i][j][k][l], i, j, k, l);
-						exit(1);
-					}
-				}
-				DO(l, 0, 5){
-					if(!FEQ(q[i][j][k][l], q2[i][j][k][l])){
-						printf("q[%d][%d][%d][%d] = %le != %le = q2[%d][%d][%d][%d]\n",
-								i, j, k, l, q[i][j][k][l], q2[i][j][k][l], i, j, k, l);
-						exit(1);
-					}
-				}
-			}
-		}
-	}
+	// Checking...
+	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
+	check_double(courno, courno2, "courno");
+	check_4D_arrays(dim, u, u2, 5, "u", q, q2, 6, "q");
 	printf("Correct!\n");
 
 	free_4D(u,  dim);		free_4D(q,  dim);
@@ -203,11 +99,19 @@ void diffterm_test(){
 
 	FILE *fin 	= fopen("diffterm_input", "r");
 	FILE *fout 	= fopen("diffterm_output", "r");
+	if(fin == NULL || fout == NULL){
+		printf("Invalid input!\n");
+		exit(1);
+	}
 
+	// Scanning input
 	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
 	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
 	fscanf(fin, "%d\n", &ng);
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
+
+	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
+	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
 	FOR(i, 0, 3)
 		dim[i] = hi[i]-lo[i]+1 + 2*ng;
@@ -217,10 +121,37 @@ void diffterm_test(){
 	allocate_4D(q2, 	 	dim, 6); 	// [40][40][40][6]
 	allocate_4D(difflux2, 	dim, 5); 	// [40][40][40][5]
 
-	FOR(l, 0, 6){
-//		FOR
-	}
+	FOR(l, 0, 6)
+		read_3D(fin, q, dim, l);
+	FOR(l, 0, 5)
+		read_3D(fin, difflux, dim, l);
 
+	fscanf(fin, "%le %le", &eta, &alam);
+
+	printf("Applying diffterm()...\n");
+	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
+
+	// Scanning output to check
+	fscanf(fin, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
+	fscanf(fin, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
+	fscanf(fin, "%d\n", &ng2);
+	fscanf(fin, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
+
+	FOR(l, 0, 6)
+		read_3D(fin, q2, dim, l);
+	FOR(l, 0, 5)
+		read_3D(fin, difflux2, dim, l);
+
+	fscanf(fin, "%le %le", &eta2, &alam2);
+
+	// Checking...
+	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
+	check_4D_arrays(dim, q, q2, 6, "q", difflux, difflux2, 5, "difflux");
+	check_double(eta,  eta2,  "eta");
+	check_double(alam, alam2, "alam");
+
+	free_4D(q,  dim);	free_4D(difflux,  dim);
+	free_4D(q2, dim);	free_4D(difflux2, dim);
 
 	fclose(fin);
 	fclose(fout);
