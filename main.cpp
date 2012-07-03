@@ -26,7 +26,6 @@ static inline void allocate4d(double ****&ptr, int di, int dj, int dk, int dl){
 			}
 		}
 	}
-	printf("done allocate4d\n");
 
 }
 void ctoprim_test(){
@@ -56,7 +55,6 @@ void ctoprim_test(){
 
 	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
 	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
-	printf("done lo-hi\n");
 
 	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
@@ -69,7 +67,6 @@ void ctoprim_test(){
 			}
 		}
 	}
-	printf("Done with u\n");
 	DO(l, 0, 5){
 		DO(k, lo[2]-ng, hi[2]+ng){
 			DO(j, lo[1]-ng, hi[1]+ng){
@@ -79,15 +76,13 @@ void ctoprim_test(){
 			}
 		}
 	}
-	printf("Done with q\n");
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
 	fscanf(fin, "%d\n", &dummy);
 	fscanf(fin, "%le\n", &courno);
 	fclose(fin);
 
-	printf("before ctoprim\n");
+	printf("Applying ctoprim()...\n");
 	ctoprim(lo, hi, u, q, dx, ng, courno);
-	printf("after ctoprim\n");
 
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
 	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
