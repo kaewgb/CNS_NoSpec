@@ -7,8 +7,8 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin\Debug\CNS_NoSpec" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug\" />
+				<Option output="bin/Debug/CNS_NoSpec" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -16,8 +16,8 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin\Release\CNS_NoSpec" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release\" />
+				<Option output="bin/Release/CNS_NoSpec" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -36,7 +36,9 @@
 		<Unit filename="ctoprim.cpp">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="diffterm.cpp" />
 		<Unit filename="header.h" />
+		<Unit filename="hypterm.cpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
