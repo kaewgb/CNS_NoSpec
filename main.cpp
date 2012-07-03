@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
 
 }
 
-static inline void allocate4d(double ****&ptr, int di, int dj, int dk, int dl){
+static inline void allocate_4D(double ****&ptr, int di, int dj, int dk, int dl){
 
 	int i,j,k,l;
 	double *temp;
@@ -37,6 +37,18 @@ static inline void allocate4d(double ****&ptr, int di, int dj, int dk, int dl){
 	}
 
 }
+static inline void free_4D(double ****ptr, int di, int dj, int dk){
+	int i,j,k;
+
+	free(ptr[0][0][0]);
+	FOR(i, 0, di){
+		FOR(j, 0, dj){
+			free(ptr[i][j]);
+		}
+		free(ptr[i]);
+	}
+	free(ptr);
+}
 
 void ctoprim_test(){
 
@@ -51,10 +63,10 @@ void ctoprim_test(){
 	double ****u2, ****q2;
 	double dx2[3], courno2;
 
-	allocate4d(u, 40, 40, 40, 5);
-	allocate4d(q, 40, 40, 40, 6);
-	allocate4d(u2, 40, 40, 40, 5);
-	allocate4d(q2, 40, 40, 40, 6);
+	allocate_4D(u, 40, 40, 40, 5);
+	allocate_4D(q, 40, 40, 40, 6);
+	allocate_4D(u2, 40, 40, 40, 5);
+	allocate_4D(q2, 40, 40, 40, 6);
 
 	FILE *fin = fopen("ctoprim_input", "r");
 	FILE *fout = fopen("ctoprim_output", "r");
@@ -164,9 +176,12 @@ void ctoprim_test(){
 		}
 	}
 	printf("Correct!\n");
+
+	free_4D(u,  40, 40, 40);		free_4D(q,  40, 40, 40);
+	free_4D(u2, 40, 40, 40);		free_4D(q2, 40, 40, 40);
 }
 
 void diffterm_test(){
-
+	int lo[3];
 }
 
