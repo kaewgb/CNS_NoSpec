@@ -38,6 +38,8 @@
 		</Unit>
 		<Unit filename="diffterm.cpp" />
 		<Unit filename="header.h" />
+		<Unit filename="helper_functions.cpp" />
+		<Unit filename="helper_functions.h" />
 		<Unit filename="hypterm.cpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>

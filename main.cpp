@@ -198,12 +198,12 @@ void hypterm_test(){
 		dim[i]  = dim2[i] + 2*ng;
 	}
 
-	allocate_4D(cons, 	dim, 	5);
-	allocate_4D(q, 		dim, 	6);
-	allocate_4D(flux, 	dim2, 	5);
-	allocate_4D(cons2, 	dim, 	5);
-	allocate_4D(q2, 	dim, 	6);
-	allocate_4D(flux2, 	dim2, 	5);
+	allocate_4D(cons, 	dim, 	5);		// [40][40][40][5]
+	allocate_4D(q, 		dim, 	6);		// [40][40][40][6]
+	allocate_4D(flux, 	dim2, 	5);		// [32][32][32][5]
+	allocate_4D(cons2, 	dim, 	5);		// [40][40][40][5]
+	allocate_4D(q2, 	dim, 	6);	 	// [40][40][40][6]
+	allocate_4D(flux2, 	dim2, 	5);		// [40][40][40][5]
 
 	FOR(l, 0, 5)
 		read_3D(fin, cons,  dim,  l);
