@@ -1,8 +1,8 @@
 #include "header.h"
 #define	q(i,j,k,l)		q[i][j][k][l]
 #define cons(i,j,k,l)	cons[i][j][k][l]
-#define flux(i,j,k,l)	flux[i][j][k][l]
-#define dxinv(i)		dxinv[i]
+#define flux(i,j,k,l)	flux[i-ng][j-ng][k-ng][l]
+#define dxinv(i)		dxinv[i-1]
 
 void hypterm(
 	int lo[],			//i: lo[3]
@@ -18,9 +18,8 @@ void hypterm(
 	double unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4;
 	double dxinv[3];
 
-	DO(i, 1, 3){
+	FOR(i, 0, 3)
 		dxinv[i] = 1.0E0/dx[i];
-	}
 
 //	#pragma omp parallel for private(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
 	DO(i, lo[0], hi[0]){

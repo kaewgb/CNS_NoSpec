@@ -5,11 +5,13 @@
 
 void ctoprim_test();
 void diffterm_test();
+void hypterm_test();
 
 int main(int argc, char *argv[]){
 
 	ctoprim_test();
 	diffterm_test();
+	hypterm_test();
 	return 0;
 
 }
@@ -120,9 +122,9 @@ void diffterm_test(){
 	}
 
 	allocate_4D(q, 		 	dim,  6); 	// [40][40][40][6]
-	allocate_4D(difflux, 	dim2, 5); 	// [40][40][40][5]
+	allocate_4D(difflux, 	dim2, 5); 	// [32][32][32][5]
 	allocate_4D(q2, 	 	dim,  6); 	// [40][40][40][6]
-	allocate_4D(difflux2, 	dim2, 5); 	// [40][40][40][5]
+	allocate_4D(difflux2, 	dim2, 5); 	// [32][32][32][5]
 
 	FOR(l, 0, 6)
 		read_3D(fin, q, dim, l);
@@ -162,3 +164,80 @@ void diffterm_test(){
 	printf("Correct!\n");
 }
 
+void hypterm_test(){
+
+	int lo[3], hi[3], ng;
+	double dx[3];
+	double ****cons, ****q, ****flux;
+
+	int lo2[3], hi2[3], ng2;
+	double dx2[3];
+	double ****cons2, ****q2, ****flux2;
+
+	int i,j,k,l;
+	int dim[3], dim2[3];
+
+	FILE *fin = fopen("hypterm_input", "r");
+	FILE *fout = fopen("hypterm_output", "r");
+	if(fin == NULL || fout == NULL){
+		printf("Invalid input!\n");
+		exit(1);
+	}
+
+	// Scanning input
+	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
+	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
+	fscanf(fin, "%d\n", &ng);
+	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
+
+	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
+	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
+
+	FOR(i, 0, 3){
+		dim2[i] = hi[i]-lo[i]+1;
+		dim[i]  = dim2[i] + 2*ng;
+	}
+
+	allocate_4D(cons, 	dim, 	5);
+	allocate_4D(q, 		dim, 	6);
+	allocate_4D(flux, 	dim2, 	5);
+	allocate_4D(cons2, 	dim, 	5);
+	allocate_4D(q2, 	dim, 	6);
+	allocate_4D(flux2, 	dim2, 	5);
+
+	FOR(l, 0, 5)
+		read_3D(fin, cons,  dim,  l);
+	FOR(l, 0, 6)
+		read_3D(fin, q,		dim,  l);
+	FOR(l, 0, 5)
+		read_3D(fin, flux,  dim2, l);
+	fclose(fin);
+
+	printf("Applying hypterm()...\n");
+	hypterm(lo, hi, ng, dx, cons, q, flux);
+
+	// Scanning output to check
+	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
+	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
+	fscanf(fout, "%d\n", &ng2);
+	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
+
+	FOR(l, 0, 5)
+		read_3D(fout, cons2, dim,  l);
+	FOR(l, 0, 6)
+		read_3D(fout, q2,	 dim,  l);
+	FOR(l, 0, 5)
+		read_3D(fout, flux2,  dim2, l);
+	fclose(fout);
+
+	// Checking...
+	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
+	check_4D_array("cons", cons, cons2, dim,  5);
+	check_4D_array("q",    q, 	 q2,	dim,  6);
+	check_4D_array("flux", flux, flux2, dim2, 5);
+
+	free_4D(cons, dim);		free_4D(q, dim);	free_4D(flux, dim2);
+	free_4D(cons2, dim);	free_4D(q2, dim);	free_4D(flux2, dim2);
+
+	printf("Correct!\n");
+}
