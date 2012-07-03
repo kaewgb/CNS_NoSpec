@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "header.h"
+#include "helper_functions.h"
 
 #define	lo(i)		lo[i]
 #define	hi(i)		hi[i]
@@ -16,24 +17,6 @@
 #define	wz(i,j,k)	wz[i][j][k]
 
 #define difflux(i,j,k,l)	difflux[i][j][k][l]
-
-static inline void allocate(double ***&ptr, int dim_x, int dim_y, int dim_z){
-	int i,j,k;
-	ptr = (double ***) malloc(dim_x * sizeof(double **));
-	FOR(i, 0, dim_x)
-		ptr[i] = (double **) malloc(dim_y * sizeof(double *));
-
-	// Allocate memory as a bulk
-	ptr[0][0] = (double *) malloc(dim_x*dim_y*dim_z * sizeof(double));
-	FOR(i, 1, dim_x)
-		ptr[i][0] = ptr[i-1][0] + dim_y*dim_z;
-
-	FOR(i, 0, dim_x){
-		FOR(j, 1, dim_y){
-			ptr[i][j] = ptr[i][j-1] + dim_z;
-		}
-	}
-}
 
 void diffterm (
 	int lo[],			// i: lo[3]
@@ -53,7 +36,9 @@ void diffterm (
 	double tauxx, tauyy, tauzz, tauxy, tauxz, tauyz;
 	double divu, uxx, uyy, uzz, vxx, vyy, vzz, wxx, wyy, wzz, txx, tyy, tzz;
 	double mechwork, uxy, uxz, vyz, wzx, wzy, vyx;
+
 	int i,j,k;
+	int dim[3];
 
 	const double OneThird	= 1.0E0/3.0E0;
 	const double TwoThirds	= 2.0E0/3.0E0;
@@ -65,15 +50,12 @@ void diffterm (
 	const double OFF3		=  8.0E0/315.0E0;
 	const double OFF4		= -1.0E0/560.0E0;
 
-	allocate(ux, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(uy, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(uz, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(vx, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(vy, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(vz, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(wx, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(wy, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
-	allocate(wz, hi[0]-lo[0]+2*ng+1, hi[1]-lo[1]+2*ng+1, hi[2]-lo[2]+2*ng+1);
+	FOR(i, 0, 3)
+		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+
+	allocate_3D(ux, dim);	allocate_3D(uy, dim);	allocate_3D(uz, dim);
+	allocate_3D(vx, dim);	allocate_3D(vy, dim);	allocate_3D(vz, dim);
+	allocate_3D(wx, dim);	allocate_3D(wy, dim);	allocate_3D(wz, dim);
 
 	DO(i, lo[0], hi[0]){
 		DO(j, lo[1], hi[1]){
@@ -331,4 +313,8 @@ void diffterm (
 			}
 		}
 	}
+
+	free_3D(ux, dim);	free_3D(uy, dim);	free_3D(uz, dim);
+	free_3D(vx, dim);	free_3D(vy, dim);	free_3D(vz, dim);
+	free_3D(wx, dim);	free_3D(wy, dim);	free_3D(wz, dim);
 }

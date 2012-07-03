@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "header.h"
-#include "test_helper_functions.h"
+#include "helper_functions.h"
 
 void ctoprim_test();
 void diffterm_test();
 
 int main(int argc, char *argv[]){
 
-	ctoprim_test();
-//	diffterm_test();
+//	ctoprim_test();
+	diffterm_test();
 	return 0;
 
 }
@@ -127,22 +127,25 @@ void diffterm_test(){
 		read_3D(fin, difflux, dim, l);
 
 	fscanf(fin, "%le %le", &eta, &alam);
+	fclose(fin);
 
 	printf("Applying diffterm()...\n");
 	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
+	printf("After diffterm()\n");
 
 	// Scanning output to check
-	fscanf(fin, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
-	fscanf(fin, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
-	fscanf(fin, "%d\n", &ng2);
-	fscanf(fin, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
+	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
+	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
+	fscanf(fout, "%d\n", &ng2);
+	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
 
 	FOR(l, 0, 6)
-		read_3D(fin, q2, dim, l);
+		read_3D(fout, q2, dim, l);
 	FOR(l, 0, 5)
-		read_3D(fin, difflux2, dim, l);
+		read_3D(fout, difflux2, dim, l);
 
-	fscanf(fin, "%le %le", &eta2, &alam2);
+	fscanf(fout, "%le %le", &eta2, &alam2);
+	fclose(fout);
 
 	// Checking...
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
@@ -153,7 +156,6 @@ void diffterm_test(){
 	free_4D(q,  dim);	free_4D(difflux,  dim);
 	free_4D(q2, dim);	free_4D(difflux2, dim);
 
-	fclose(fin);
-	fclose(fout);
+	printf("Correct!\n");
 }
 
