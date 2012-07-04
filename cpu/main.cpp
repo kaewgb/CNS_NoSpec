@@ -29,8 +29,8 @@ void ctoprim_test(){
 	double ****u2, ****q2;
 	double dx2[3], courno2;
 
-	FILE *fin = fopen("ctoprim_input", "r");
-	FILE *fout = fopen("ctoprim_output", "r");
+	FILE *fin = fopen("../testcases/ctoprim_input", "r");
+	FILE *fout = fopen("../testcases/ctoprim_output", "r");
 	if(fin == NULL || fout == NULL){
 		printf("Invalid input file\n");
 		exit(1);
@@ -100,8 +100,8 @@ void diffterm_test(){
 	double dx2[3], eta2, alam2;
 	double ****q2, ****difflux2;
 
-	FILE *fin 	= fopen("diffterm_input", "r");
-	FILE *fout 	= fopen("diffterm_output", "r");
+	FILE *fin 	= fopen("../testcases/diffterm_input", "r");
+	FILE *fout 	= fopen("../testcases/diffterm_output", "r");
 	if(fin == NULL || fout == NULL){
 		printf("Invalid input!\n");
 		exit(1);
@@ -177,8 +177,8 @@ void hypterm_test(){
 	int i,j,k,l;
 	int dim[3], dim2[3];
 
-	FILE *fin = fopen("hypterm_input", "r");
-	FILE *fout = fopen("hypterm_output", "r");
+	FILE *fin = fopen("../testcases/hypterm_input", "r");
+	FILE *fout = fopen("../testcases/hypterm_output", "r");
 	if(fin == NULL || fout == NULL){
 		printf("Invalid input!\n");
 		exit(1);

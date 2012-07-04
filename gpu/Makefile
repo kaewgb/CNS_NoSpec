@@ -1,6 +1,6 @@
-CC			= g++
+CC			= nvcc
 CFLAGS		=
-TARGET		= advance
+TARGET		= gpu
 OBJ_FILES	= main.o ctoprim.o hypterm.o diffterm.o helper_functions.o
 HEADERS		= header.h helper_functions.h
 
