@@ -5,7 +5,7 @@
 
 void allocate_4D(double ****&ptr, int dim[], int dl){
 
-	int i,j,k,l;
+	int i,j,k;
 	int di=dim[0], dj=dim[1], dk=dim[2];
 	double *temp;
 
@@ -29,7 +29,7 @@ void allocate_4D(double ****&ptr, int dim[], int dl){
 }
 
 void allocate_3D(double ***&ptr, int dim[]){
-	int i,j,k;
+	int i,j;
 	int di=dim[0], dj=dim[1], dk=dim[2];
 	double *temp;
 
@@ -48,10 +48,9 @@ void allocate_3D(double ***&ptr, int dim[]){
 	}
 }
 
-
 void free_4D(double ****ptr, int dim[]){
-	int i,j,k;
-	int di=dim[0], dj=dim[1], dk=dim[2];
+	int i,j;
+	int di=dim[0], dj=dim[1], dk;
 
 	free(ptr[0][0][0]);
 	FOR(i, 0, di){
@@ -64,7 +63,7 @@ void free_4D(double ****ptr, int dim[]){
 }
 
 void free_3D(double ***ptr, int dim[]){
-	int i,j;
+	int i;
 	free(ptr[0][0]);
 	FOR(i, 0, dim[0])
 		free(ptr[i]);

@@ -22,6 +22,7 @@ void ctoprim_test(){
 	int lo[3], hi[3];
 	int ng=4;
 	double ****u, ****q;
+	double *d_u, *d_q;
 	double dx[3], courno;
 
 	int ng2;
@@ -61,8 +62,20 @@ void ctoprim_test(){
 	fscanf(fin, "%le\n", &courno);
 	fclose(fin);
 
+	// Moving into GPU's Memory
+	gpu_allocate_4D(d_u, dim, 5);
+	gpu_allocate_4D(d_q, dim, 6);
+	gpu_copy_from_host_4D(d_u, u, dim, 5);
+	gpu_copy_from_host_4D(d_q, q, dim, 6);
+
 	printf("Applying ctoprim()...\n");
 	ctoprim(lo, hi, u, q, dx, ng, courno);
+
+	// Copying data back
+	gpu_copy_to_host_4D(u, d_u, dim, 5);
+	gpu_copy_to_host_4D(q, d_q, dim, 6);
+	gpu_free_4D(d_u);
+	gpu_free_4D(d_q);
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
