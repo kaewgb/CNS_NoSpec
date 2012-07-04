@@ -9,5 +9,7 @@ $(TARGET):	$(OBJ_FILES)
 
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
+%.o:		%.cu $(HEADERS)
+			$(CC) $(CFLAGS) -c $< -o $@
 clean:
 			rm -f $(OBJ_FILES) $(TARGET)
