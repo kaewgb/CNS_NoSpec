@@ -1,4 +1,4 @@
 CNS_NoSpec
 ==========
 
-C translation of Fortran 90 code of CNS_NoSpec example in BoxLib
+C and CUDA translation of Fortran 90 code of CNS_NoSpec example in BoxLib
