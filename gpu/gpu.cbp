@@ -33,6 +33,9 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="Makefile" />
+		<Unit filename="advance.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="ctoprim.cu">
 			<Option compile="1" />
 			<Option link="1" />
@@ -44,7 +47,9 @@
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
 		<Unit filename="header.h" />
-		<Unit filename="helper_functions.cpp" />
+		<Unit filename="helper_functions.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="helper_functions.h" />
 		<Unit filename="hypterm.cu">
 			<Option compile="1" />
