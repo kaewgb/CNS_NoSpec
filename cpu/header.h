@@ -1,9 +1,6 @@
 #ifndef HEADER_INCLUDED
 #define HEADER_INCLUDED
 
-// LIBRARIES
-#include <stdio.h>
-
 // CONSTRUCTS
 #define DO(x, y, z)		for(x=y; x<=(int)(z); x++)
 #define FOR(x, y, z)	for(x=y; x<(int)(z); x++)
@@ -35,6 +32,7 @@ static const double GAM	=  4.0E0/105.0E0;
 static const double DEL	= -1.0E0/280.0E0;
 
 // FUNCTIONS
+extern void ctoprim_test();
 extern void ctoprim (
     int lo[],       // i: lo[3]
     int hi[],       // i: hi[3]
@@ -44,6 +42,8 @@ extern void ctoprim (
     int ng,         // i
     double &courno   // i/o
 );
+
+extern void hypterm_test();
 extern void hypterm(
 	int lo[],			//i: lo[3]
 	int hi[],			//i: hi[3]
@@ -53,6 +53,8 @@ extern void hypterm(
 	double ****q,		//i: cons[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[0]-lo[0]+2*ng][6];
 	double ****flux		//o: flux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 );
+
+extern void diffterm_test();
 extern void diffterm (
 	int lo[],			// i: lo[3]
 	int hi[],			// i: hi[3]
