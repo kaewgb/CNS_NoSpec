@@ -71,7 +71,7 @@ void ctoprim (
 
 void ctoprim_test(){
 
-	int i, j, k, l, dummy, dim[3];
+	int i, l, dummy, dim[3];
 	int lo[3], hi[3];
 	int ng=4;
 	double ****u, ****q;

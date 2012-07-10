@@ -2,6 +2,31 @@
 #include <stdlib.h>
 #include "header.h"
 #include "helper_functions.h"
+#define CUDA_SAFE_CALL( call )                               						\
+{                                                              						\
+    cudaError_t err = call;                                                       	\
+    if( cudaSuccess != err) {                                                    	\
+		fprintf(stderr, "Cuda error in call at file '%s' in line %i : %s.\n",     	\
+				__FILE__, __LINE__, cudaGetErrorString( err) );             		\
+		exit(-1);                                                             		\
+	}                                         										\
+}
+
+void gpu_allocate_4D(double *&d_ptr, int dim[], int dl){
+	CUDA_SAFE_CALL(cudaMalloc((void **) &d_ptr, dim[0]*dim[1]*dim[2]*dl * sizeof(double)));
+}
+
+void gpu_copy_from_host_4D(double *dev, double ****host, int dim[], int dl){
+	CUDA_SAFE_CALL(cudaMemcpy(dev, host[0][0][0], dim[0]*dim[1]*dim[2]*dl * sizeof(double), cudaMemcpyHostToDevice));
+}
+
+void gpu_copy_to_host_4D(double ****host, double *dev, int dim[], int dl){
+	CUDA_SAFE_CALL(cudaMemcpy(host[0][0][0], dev, dim[0]*dim[1]*dim[2]*dl * sizeof(double), cudaMemcpyDeviceToHost));
+}
+
+void gpu_free_4D(double *d_ptr){
+	CUDA_SAFE_CALL(cudaFree(d_ptr));
+}
 
 void allocate_4D(double ****&ptr, int dim[], int dl){
 
@@ -50,7 +75,7 @@ void allocate_3D(double ***&ptr, int dim[]){
 
 void free_4D(double ****ptr, int dim[]){
 	int i,j;
-	int di=dim[0], dj=dim[1], dk;
+	int di=dim[0], dj=dim[1];
 
 	free(ptr[0][0][0]);
 	FOR(i, 0, di){

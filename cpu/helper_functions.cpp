@@ -50,7 +50,7 @@ void allocate_3D(double ***&ptr, int dim[]){
 
 void free_4D(double ****ptr, int dim[]){
 	int i,j;
-	int di=dim[0], dj=dim[1], dk;
+	int di=dim[0], dj=dim[1];
 
 	free(ptr[0][0][0]);
 	FOR(i, 0, di){

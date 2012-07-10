@@ -321,7 +321,7 @@ void diffterm (
 
 void diffterm_test(){
 	int dim[3], dim2[3];
-	int i,j,k,l;
+	int i, l;
 
 	int lo[3], hi[3], ng=4;
 	double dx[3], eta, alam;

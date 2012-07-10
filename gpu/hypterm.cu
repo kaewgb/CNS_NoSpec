@@ -207,7 +207,7 @@ void hypterm_test(){
 	double dx2[3];
 	double ****cons2, ****q2, ****flux2;
 
-	int i,j,k,l;
+	int i, l;
 	int dim[3], dim2[3];
 
 	FILE *fin = fopen("../testcases/hypterm_input", "r");
