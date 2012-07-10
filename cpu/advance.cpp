@@ -15,7 +15,7 @@ void advance(
 	double courno, courno_proc;
 	double ****D[NBOXES], ****F[NBOXES], ****Unew[NBOXES], ****Q[NBOXES];
 	double ****up, ****dp, ****fp, ****unp, ****qp;
-	double ****Q2[NBOXES];
+	double ****Q2[NBOXES], ****D2[NBOXES], ****F2[NBOXES];
 
     // Some arithmetic constants.
     double OneThird      = 1.E0/3.E0;
@@ -36,16 +36,38 @@ void advance(
 	// Allocation
 	FOR(i, 0, NBOXES){
 		allocate_4D(D[i], dim, nc);
+		allocate_4D(D2[i], dim, nc);
 		allocate_4D(F[i], dim, nc);
+		allocate_4D(F2[i], dim, nc);
 		allocate_4D(Q[i], dim_ng, nc+1);
 		allocate_4D(Q2[i], dim_ng, nc+1);
 		allocate_4D(Unew[i], dim_ng, nc);
 	}
 
+    //!
+    //! Calculate primitive variables based on U.
+    //!
+    //! Also calculate courno so we can set "dt".
+    //!
 	courno_proc = 1.0E-50;
-	FOR(n, 0, NBOXES){
+	FOR(n, 0, NBOXES)
 		ctoprim(lo, hi, U[n], Q[n], dx, ng, courno_proc);
-	}
+
+	courno = courno_proc;
+	dt = cfl/courno;
+	printf("dt, courno = %le, %le\n", dt, courno);
+
+    //!
+    //! Calculate D at time N.
+    //!
+	FOR(n, 0, NBOXES)
+		diffterm(lo, hi, ng, dx, Q[n], D[n], eta, alam);
+
+    //!
+    //! Calculate F at time N.
+    //!
+	FOR(n, 0, NBOXES)
+		hypterm(lo, hi, ng, dx, U[n], Q[n], F[n]);
 
 	// Check answer
 	FILE *fout=fopen("../testcases/advance_output", "r");
@@ -53,6 +75,12 @@ void advance(
 		FOR(l, 0, nc+1)
 			read_3D(fout, Q2[n], dim_ng, l);
 		check_4D_array("Q", Q[n], Q2[n], dim_ng, nc+1);
+		FOR(l, 0, nc)
+			read_3D(fout, D2[n], dim, l);
+		check_4D_array("D", D[n], D2[n], dim, nc);
+		FOR(l, 0, nc)
+			read_3D(fout, F2[n], dim, l);
+		check_4D_array("F", F[n], F2[n], dim, nc);
 	}
 	fclose(fout);
 	printf("Correct!\n");
@@ -60,7 +88,9 @@ void advance(
 	// Free memory
 	FOR(i, 0, NBOXES){
 		free_4D(D[i], dim);
+		free_4D(D2[i], dim);
 		free_4D(F[i], dim);
+		free_4D(F2[i], dim);
 		free_4D(Q[i], dim_ng);
 		free_4D(Q2[i], dim_ng);
 		free_4D(Unew[i], dim_ng);

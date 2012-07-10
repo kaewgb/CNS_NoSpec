@@ -91,6 +91,11 @@ contains
             up => dataptr(U, n)
             write(4,*), up
         end do
+        write(4,*), dt
+        write(4,*), dx
+        write(4,*), cfl
+        write(4,*), eta
+        write(4,*), alam
         close(4)
     end if
 
@@ -130,14 +135,6 @@ contains
 !       end if
     end do
 
-    if(parallel_IOProcessor() .and. istep == 3) then
-        open(unit=5, file="advance_output")
-        do n=1,nboxes(Q)
-            qp => dataptr(Q, n)
-            write(5,*), qp
-        end do
-        close(5)
-    end if
     call parallel_reduce(courno, courno_proc, MPI_MAX)
 
     dt = cfl / courno
@@ -186,6 +183,7 @@ contains
 !       end if
 
     end do
+
     !
     ! Calculate F at time N.
     !
@@ -226,6 +224,19 @@ contains
 !       end if
 
     end do
+    if(parallel_IOProcessor() .and. istep == 3) then
+        open(unit=5, file="advance_output")
+        do n=1,nboxes(Q)
+            qp => dataptr(Q, n)
+            dp => dataptr(D, n)
+            fp => dataptr(F, n)
+            write(5,*), qp
+            write(5,*), dp
+            write(5,*), fp
+            write(5,*), fp(1,1,1,1:4)
+        end do
+        close(5)
+    end if
     !
     ! Calculate U at time N+1/3.
     !
