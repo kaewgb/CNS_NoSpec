@@ -15,7 +15,7 @@ void advance(
 	double courno, courno_proc;
 	double ****D[NBOXES], ****F[NBOXES], ****Unew[NBOXES], ****Q[NBOXES];
 	double ****up, ****dp, ****fp, ****unp, ****qp;
-	double ****Q2[NBOXES], ****D2[NBOXES], ****F2[NBOXES];
+	double ****Q2[NBOXES], ****D2[NBOXES], ****F2[NBOXES], ****Unew2[NBOXES], ****U2[NBOXES];
 
     // Some arithmetic constants.
     double OneThird      = 1.E0/3.E0;
@@ -42,6 +42,8 @@ void advance(
 		allocate_4D(Q[i], dim_ng, nc+1);
 		allocate_4D(Q2[i], dim_ng, nc+1);
 		allocate_4D(Unew[i], dim_ng, nc);
+		allocate_4D(Unew2[i], dim_ng, nc);
+		allocate_4D(U2[i], dim_ng, nc);
 	}
 
     //!
@@ -69,18 +71,48 @@ void advance(
 	FOR(n, 0, NBOXES)
 		hypterm(lo, hi, ng, dx, U[n], Q[n], F[n]);
 
+    //!
+    //! Calculate U at time N+1/3.
+    //!
+    // Read Unew (for borders)
+    FILE *fin=fopen("../testcases/advance_unp", "r");
+    FOR(n, 0, NBOXES){
+    	FOR(l, 0, nc)
+			read_3D(fin, Unew[n], dim_ng, l);
+    }
+    fclose(fin);
+
+	FOR(n, 0, NBOXES){
+		FOR(i, 0, dim[0]){
+			FOR(j, 0, dim[1]){
+				FOR(k, 0, dim[2]){
+					FOR(l, 0, nc)
+						Unew[n][i+NG][j+NG][k+NG][l] = U[n][i+NG][j+NG][k+NG][l] + dt*(D[n][i][j][k][l] + F[n][i][j][k][l]);
+				}
+			}
+		}
+	}
+
 	// Check answer
 	FILE *fout=fopen("../testcases/advance_output", "r");
 	FOR(n, 0, NBOXES){
-		FOR(l, 0, nc+1)
-			read_3D(fout, Q2[n], dim_ng, l);
-		check_4D_array("Q", Q[n], Q2[n], dim_ng, nc+1);
+		printf("BOX#%d...\n", n);
+//		FOR(l, 0, nc+1)
+//			read_3D(fout, Q2[n], dim_ng, l);
+//		check_4D_array("Q", Q[n], Q2[n], dim_ng, nc+1);
+//		FOR(l, 0, nc)
+//			read_3D(fout, D2[n], dim, l);
+//		check_4D_array("D", D[n], D2[n], dim, nc);
+//		FOR(l, 0, nc)
+//			read_3D(fout, F2[n], dim, l);
+//		check_4D_array("F", F[n], F2[n], dim, nc);
 		FOR(l, 0, nc)
-			read_3D(fout, D2[n], dim, l);
-		check_4D_array("D", D[n], D2[n], dim, nc);
+			read_3D(fout, U2[n], dim_ng, l);
+		check_4D_array("U", U[n], U2[n], dim_ng, nc);
 		FOR(l, 0, nc)
-			read_3D(fout, F2[n], dim, l);
-		check_4D_array("F", F[n], F2[n], dim, nc);
+			read_3D(fout, Unew2[n], dim_ng, l);
+		check_4D_array("Unew", Unew[n], Unew2[n], dim_ng, nc);
+
 	}
 	fclose(fout);
 	printf("Correct!\n");
@@ -94,6 +126,8 @@ void advance(
 		free_4D(Q[i], dim_ng);
 		free_4D(Q2[i], dim_ng);
 		free_4D(Unew[i], dim_ng);
+		free_4D(Unew2[i], dim_ng);
+		free_4D(U2[i], dim_ng);
 	}
 }
 

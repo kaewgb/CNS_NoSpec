@@ -70,6 +70,7 @@ contains
         open(unit=3, file="U_after")
         up => dataptr(U, 1)
         write(3, *), up
+        write(3, *), unp
         close(3)
         write(*, *), "done after"
     end if
@@ -97,6 +98,12 @@ contains
         write(4,*), eta
         write(4,*), alam
         close(4)
+        open(unit=7, file="advance_unp")
+        do n=1, nboxes(Q)
+            unp => dataptr(Unew, n)
+            write(7,*), unp
+        end do
+        close(7)
     end if
 
     do n=1,nboxes(Q)
@@ -224,19 +231,7 @@ contains
 !       end if
 
     end do
-    if(parallel_IOProcessor() .and. istep == 3) then
-        open(unit=5, file="advance_output")
-        do n=1,nboxes(Q)
-            qp => dataptr(Q, n)
-            dp => dataptr(D, n)
-            fp => dataptr(F, n)
-            write(5,*), qp
-            write(5,*), dp
-            write(5,*), fp
-            write(5,*), fp(1,1,1,1:4)
-        end do
-        close(5)
-    end if
+
     !
     ! Calculate U at time N+1/3.
     !
@@ -263,6 +258,23 @@ contains
           !$OMP END PARALLEL DO
        end do
     end do
+    if(parallel_IOProcessor() .and. istep == 3) then
+        write(*, *), "nboxes(U)", nboxes(U)
+        open(unit=5, file="advance_output")
+        do n=1,nboxes(Q)
+            qp => dataptr(Q, n)
+            dp => dataptr(D, n)
+            fp => dataptr(F, n)
+            unp => dataptr(Unew, n)
+            up => dataptr(U, n)
+!            write(5,*), qp
+!            write(5,*), dp
+!            write(5,*), fp
+            write(5,*), up
+            write(5,*), unp
+        end do
+        close(5)
+    end if
     !
     ! Sync U^1/3 prior to calculating D & F.
     !
