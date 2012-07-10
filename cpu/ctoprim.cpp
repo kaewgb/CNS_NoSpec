@@ -43,7 +43,7 @@ void ctoprim (
         }
     }
 
-    if(courno != -1.0){
+    if(courno != -1.0){	// Just my way to check if courno is present, i.e., is passed to the function
 //        #pragma omp parallel for private(i, j, k, c, courx, coury, courz) reduction(max: courmx, courmy, courmz)
         DO(i, lo[0], hi[0]){
             DO(j, lo[1], hi[1]){
@@ -71,7 +71,7 @@ void ctoprim (
 
 void ctoprim_test(){
 
-	int i, l, dummy, dim[3];
+	int i, l, dummy, dim_ng[3];
 	int lo[3], hi[3];
 	int ng=4;
 	double ****u, ****q;
@@ -97,17 +97,17 @@ void ctoprim_test(){
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
 	FOR(i, 0, 3)
-		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+		dim_ng[i] = hi[i]-lo[i]+1 + 2*ng;
 
-	allocate_4D(u, 	dim, 5); 	// [40][40][40][5]
-	allocate_4D(q, 	dim, 6); 	// [40][40][40][6]
-	allocate_4D(u2, dim, 5); 	// [40][40][40][5]
-	allocate_4D(q2, dim, 6); 	// [40][40][40][6]
+	allocate_4D(u, 	dim_ng, 5); 	// [40][40][40][5]
+	allocate_4D(q, 	dim_ng, 6); 	// [40][40][40][6]
+	allocate_4D(u2, dim_ng, 5); 	// [40][40][40][5]
+	allocate_4D(q2, dim_ng, 6); 	// [40][40][40][6]
 
 	FOR(l, 0, 5)
-		read_3D(fin, u, dim, l);
+		read_3D(fin, u, dim_ng, l);
 	FOR(l, 0, 6)
-		read_3D(fin, q, dim, l);
+		read_3D(fin, q, dim_ng, l);
 
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
 	fscanf(fin, "%d\n", &dummy);
@@ -121,9 +121,9 @@ void ctoprim_test(){
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
 	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
 	FOR(l, 0, 5)
-		read_3D(fout, u2, dim, l);
+		read_3D(fout, u2, dim_ng, l);
 	FOR(l, 0, 6)
-		read_3D(fout, q2, dim, l);
+		read_3D(fout, q2, dim_ng, l);
 
 	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
 	fscanf(fout, "%d\n", &ng2);
@@ -133,11 +133,11 @@ void ctoprim_test(){
 	// Checking...
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
 	check_double(courno, courno2, "courno");
-	check_4D_array("u", u, u2, dim, 5);
-	check_4D_array("q", q, q2, dim, 6);
+	check_4D_array("u", u, u2, dim_ng, 5);
+	check_4D_array("q", q, q2, dim_ng, 6);
 	printf("Correct!\n");
 
-	free_4D(u,  dim);		free_4D(q,  dim);
-	free_4D(u2, dim);		free_4D(q2, dim);
+	free_4D(u,  dim_ng);		free_4D(q,  dim_ng);
+	free_4D(u2, dim_ng);		free_4D(q2, dim_ng);
 }
 

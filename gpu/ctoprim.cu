@@ -8,6 +8,31 @@
 #define q(i,j,k,l)  q[i][j][k][l-1]
 #define dx(i)		dx[i-1]
 
+__global__ void gpu_ctoprim_kernel(
+    int lo[],       // i: lo[3]
+    int hi[],       // i: hi[3]
+    double *u_d,   // i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q_d, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double dx[],    // i: dx[3]
+    int ng,         // i
+    double *courno   // i/o
+){
+
+}
+void gpu_ctoprim(
+    int lo[],       // i: lo[3]
+    int hi[],       // i: hi[3]
+    double *u_d,   	// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q_d, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double dx[],    // i: dx[3]
+    int ng,         // i
+    double &courno  // i/o
+){
+	int i, dim_ng[3];
+	FOR(i, 0, 3)
+		dim_ng[i] = hi[i]-lo[i]+1 + ng+ng;
+
+}
 void ctoprim (
     int lo[],       // i: lo[3]
     int hi[],       // i: hi[3]
@@ -43,7 +68,7 @@ void ctoprim (
         }
     }
 
-    if(courno != -1.0){
+    if(courno != -1.0){	// Just my way to check of courno is present, i.e., is passed to the function
 //        #pragma omp parallel for private(i, j, k, c, courx, coury, courz) reduction(max: courmx, courmy, courmz)
         DO(i, lo[0], hi[0]){
             DO(j, lo[1], hi[1]){
@@ -71,7 +96,7 @@ void ctoprim (
 
 void ctoprim_test(){
 
-	int i, l, dummy, dim[3];
+	int i, l, dummy, dim_ng[3];
 	int lo[3], hi[3];
 	int ng=4;
 	double ****u, ****q;
@@ -80,6 +105,7 @@ void ctoprim_test(){
 	int ng2;
 	int lo2[3], hi2[3];
 	double ****u2, ****q2;
+	double *u_d, *q_d;
 	double dx2[3], courno2;
 
 	FILE *fin = fopen("../testcases/ctoprim_input", "r");
@@ -97,33 +123,43 @@ void ctoprim_test(){
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
 	FOR(i, 0, 3)
-		dim[i] = hi[i]-lo[i]+1 + 2*ng;
+		dim_ng[i] = hi[i]-lo[i]+1 + 2*ng;
 
-	allocate_4D(u, 	dim, 5); 	// [40][40][40][5]
-	allocate_4D(q, 	dim, 6); 	// [40][40][40][6]
-	allocate_4D(u2, dim, 5); 	// [40][40][40][5]
-	allocate_4D(q2, dim, 6); 	// [40][40][40][6]
+	allocate_4D(u, 	dim_ng, 5); 	// [40][40][40][5]
+	allocate_4D(q, 	dim_ng, 6); 	// [40][40][40][6]
+	allocate_4D(u2, dim_ng, 5); 	// [40][40][40][5]
+	allocate_4D(q2, dim_ng, 6); 	// [40][40][40][6]
+
+	gpu_allocate_4D(u_d, dim_ng, 5);
+	gpu_allocate_4D(q_d, dim_ng, 6);
 
 	FOR(l, 0, 5)
-		read_3D(fin, u, dim, l);
+		read_3D(fin, u, dim_ng, l);
 	FOR(l, 0, 6)
-		read_3D(fin, q, dim, l);
+		read_3D(fin, q, dim_ng, l);
 
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
 	fscanf(fin, "%d\n", &dummy);
 	fscanf(fin, "%le\n", &courno);
 	fclose(fin);
 
+	gpu_copy_from_host_4D(u_d, u, dim_ng, 5);
+	gpu_copy_from_host_4D(q_d, q, dim_ng, 6);
+
 	printf("Applying ctoprim()...\n");
-	ctoprim(lo, hi, u, q, dx, ng, courno);
+//	gpu_ctoprim(lo, hi, u_d, q_d, dx, ng, courno);
+//	ctoprim(lo, hi, u, q, dx, ng, courno);
+
+	gpu_copy_to_host_4D(u, u_d, dim_ng, 5);
+	gpu_copy_to_host_4D(q, q_d, dim_ng, 6);
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
 	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
 	FOR(l, 0, 5)
-		read_3D(fout, u2, dim, l);
+		read_3D(fout, u2, dim_ng, l);
 	FOR(l, 0, 6)
-		read_3D(fout, q2, dim, l);
+		read_3D(fout, q2, dim_ng, l);
 
 	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
 	fscanf(fout, "%d\n", &ng2);
@@ -133,11 +169,14 @@ void ctoprim_test(){
 	// Checking...
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
 	check_double(courno, courno2, "courno");
-	check_4D_array("u", u, u2, dim, 5);
-	check_4D_array("q", q, q2, dim, 6);
+	check_4D_array("u", u, u2, dim_ng, 5);
+	check_4D_array("q", q, q2, dim_ng, 6);
 	printf("Correct!\n");
 
-	free_4D(u,  dim);		free_4D(q,  dim);
-	free_4D(u2, dim);		free_4D(q2, dim);
+	gpu_free_4D(u_d);
+	gpu_free_4D(q_d);
+
+	free_4D(u,  dim_ng);		free_4D(q,  dim_ng);
+	free_4D(u2, dim_ng);		free_4D(q2, dim_ng);
 }
 
