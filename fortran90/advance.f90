@@ -56,7 +56,23 @@ contains
     !
     ! Sync U prior to calculating D & F.
     !
+    if(parallel_IOProcessor() .and. istep == 3) then
+        open(unit=2, file="U_before")
+        up => dataptr(U, 1)
+        write(2, *), up
+        close(2)
+        write(*, *), "done before"
+     end if
+
     call multifab_fill_boundary(U)
+
+    if(parallel_IOProcessor() .and. istep == 3) then
+        open(unit=3, file="U_after")
+        up => dataptr(U, 1)
+        write(3, *), up
+        close(3)
+        write(*, *), "done after"
+    end if
 
     call multifab_build(D,    la, nc,   0)
     call multifab_build(F,    la, nc,   0)
@@ -68,6 +84,15 @@ contains
     ! Also calculate courno so we can set "dt".
     !
     courno_proc = 1.0d-50
+
+    if(parallel_IOProcessor() .and. istep == 3) then
+        open(unit=4, file="advance_input")
+        do n=1,nboxes(Q)
+            up => dataptr(U, n)
+            write(4,*), up
+        end do
+        close(4)
+    end if
 
     do n=1,nboxes(Q)
        if ( remote(Q,n) ) cycle
@@ -105,6 +130,14 @@ contains
 !       end if
     end do
 
+    if(parallel_IOProcessor() .and. istep == 3) then
+        open(unit=5, file="advance_output")
+        do n=1,nboxes(Q)
+            qp => dataptr(Q, n)
+            write(5,*), qp
+        end do
+        close(5)
+    end if
     call parallel_reduce(courno, courno_proc, MPI_MAX)
 
     dt = cfl / courno
@@ -166,31 +199,31 @@ contains
        lo = lwb(get_box(F,n))
        hi = upb(get_box(F,n))
 
-       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-            open(unit=2, file="hypterm_input")
-            write(2,*), lo
-            write(2,*), hi
-            write(2,*), ng
-            write(2,*), dx
-            write(2,*), up
-            write(2,*), qp
-            write(2,*), fp
-            close(2)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
+!            open(unit=2, file="hypterm_input")
+!            write(2,*), lo
+!            write(2,*), hi
+!            write(2,*), ng
+!            write(2,*), dx
+!            write(2,*), up
+!            write(2,*), qp
+!            write(2,*), fp
+!            close(2)
+!       end if
 
        call hypterm(lo,hi,ng,dx,up,qp,fp)
 
-       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-            open(unit=3, file="hypterm_output")
-            write(3,*), lo
-            write(3,*), hi
-            write(3,*), ng
-            write(3,*), dx
-            write(3,*), up
-            write(3,*), qp
-            write(3,*), fp
-            close(3)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
+!            open(unit=3, file="hypterm_output")
+!            write(3,*), lo
+!            write(3,*), hi
+!            write(3,*), ng
+!            write(3,*), dx
+!            write(3,*), up
+!            write(3,*), qp
+!            write(3,*), fp
+!            close(3)
+!       end if
 
     end do
     !

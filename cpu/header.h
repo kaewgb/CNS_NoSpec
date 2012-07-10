@@ -10,6 +10,12 @@
 #define MAX(x, y)       ((x > y)? (x):(y))
 
 // CONSTANTS
+#define	DIM		3
+#define	NC		5
+#define	NG		4
+#define	NCELLS	32
+#define	NBOXES	1
+
 enum {
 	irho=0,
 	imx,
@@ -64,5 +70,15 @@ extern void diffterm (
 	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 	double eta,			// i
 	double alam			// i
+);
+
+extern void advance_test();
+extern void advance(
+	double ****U[],	// i/o
+	double &dt,		// o
+	double dx[],	// i: dx[U.dim]
+	double cfl,		// i
+	double eta,		// i
+	double alam		// i
 );
 #endif

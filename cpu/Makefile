@@ -1,7 +1,7 @@
 CC			= g++
 CFLAGS		=
 TARGET		= cpu
-OBJ_FILES	= main.o ctoprim.o hypterm.o diffterm.o helper_functions.o
+OBJ_FILES	= main.o ctoprim.o hypterm.o diffterm.o helper_functions.o advance.o
 HEADERS		= header.h helper_functions.h
 
 $(TARGET):	$(OBJ_FILES)

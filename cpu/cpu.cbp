@@ -32,6 +32,7 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="Makefile" />
+		<Unit filename="advance.cpp" />
 		<Unit filename="ctoprim.cpp" />
 		<Unit filename="diffterm.cpp" />
 		<Unit filename="header.h" />
