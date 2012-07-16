@@ -32,6 +32,23 @@ enum {
 	qfive
 };
 
+typedef struct global_const {
+
+	int ng;
+	int padder;
+	int lo[DIM];
+	int hi[DIM];
+	int dim[DIM];
+	int dim_ng[DIM];
+	double dx[DIM];
+	double cfl;
+	double eta;
+	double alam;
+
+} global_const_t;
+
+extern global_const_t *d_const_ptr;
+
 static const double ALP	=  0.8E0;
 static const double BET	= -0.2E0;
 static const double GAM	=  4.0E0/105.0E0;
@@ -46,7 +63,7 @@ extern void ctoprim (
     double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
     double dx[],    // i: dx[3]
     int ng,         // i
-    double &courno   // i/o
+    double &courno  // i/o
 );
 
 extern void hypterm_test();
