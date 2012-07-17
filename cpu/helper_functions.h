@@ -7,6 +7,13 @@ void allocate_3D(double ***&ptr, int dim[]);
 void free_4D(double ****ptr, int dim[]);
 void free_3D(double ***ptr, int dim[]);
 
+// Utilities
+void fill_boundary(
+	double ****U,	// Array
+	int dim[],		// Dimensions (ghost cells excluded)
+	int dim_ng[]	// Dimensions (ghost cells included)
+);
+
 // Read and check
 void read_3D(FILE *f, double ****ptr, int dim[], int l);
 void check_double(double a, double b, const char *name);

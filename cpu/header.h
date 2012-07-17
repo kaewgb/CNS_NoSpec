@@ -13,7 +13,7 @@
 #define	DIM		3
 #define	NC		5
 #define	NG		4
-#define	NCELLS	32
+#define	NCELLS	16
 #define	NBOXES	1
 
 enum {

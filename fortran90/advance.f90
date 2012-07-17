@@ -56,39 +56,16 @@ contains
     !
     ! Sync U prior to calculating D & F.
     !
-    if(parallel_IOProcessor() .and. istep == 3) then
+    if(parallel_IOProcessor() .and. istep == 1) then
         open(unit=2, file="U_before")
         up => dataptr(U, 1)
         write(2, *), up
         close(2)
         write(*, *), "done before"
      end if
-
-    call multifab_fill_boundary(U)
-
-    if(parallel_IOProcessor() .and. istep == 3) then
-        open(unit=3, file="U_after")
-        up => dataptr(U, 1)
-        write(3, *), up
-        write(3, *), unp
-        close(3)
-        write(*, *), "done after"
-    end if
-
-    call multifab_build(D,    la, nc,   0)
-    call multifab_build(F,    la, nc,   0)
-    call multifab_build(Q,    la, nc+1, ng)
-    call multifab_build(Unew, la, nc,   ng)
-    !
-    ! Calculate primitive variables based on U.
-    !
-    ! Also calculate courno so we can set "dt".
-    !
-    courno_proc = 1.0d-50
-
-    if(parallel_IOProcessor() .and. istep == 3) then
+    if(parallel_IOProcessor() .and. istep == 1) then
         open(unit=4, file="advance_input")
-        do n=1,nboxes(Q)
+        do n=1,nboxes(U)
             up => dataptr(U, n)
             write(4,*), up
         end do
@@ -99,12 +76,34 @@ contains
         write(4,*), alam
         close(4)
         open(unit=7, file="advance_unp")
-        do n=1, nboxes(Q)
+        do n=1, nboxes(Unew)
             unp => dataptr(Unew, n)
             write(7,*), unp
         end do
         close(7)
     end if
+
+    call multifab_fill_boundary(U)
+
+    if(parallel_IOProcessor() .and. istep == 1) then
+        open(unit=3, file="U_after")
+        up => dataptr(U, 1)
+        write(3, *), up
+        !write(3, *), unp
+        close(3)
+        write(*, *), "done after"
+    end if
+    
+    call multifab_build(D,    la, nc,   0)
+    call multifab_build(F,    la, nc,   0)
+    call multifab_build(Q,    la, nc+1, ng)
+    call multifab_build(Unew, la, nc,   ng)
+    !
+    ! Calculate primitive variables based on U.
+    !
+    ! Also calculate courno so we can set "dt".
+    !
+    courno_proc = 1.0d-50
 
     do n=1,nboxes(Q)
        if ( remote(Q,n) ) cycle
@@ -258,7 +257,7 @@ contains
           !$OMP END PARALLEL DO
        end do
     end do
-    if(parallel_IOProcessor() .and. istep == 3) then
+    if(parallel_IOProcessor() .and. istep == 1) then
         write(*, *), "nboxes(U)", nboxes(U)
         open(unit=5, file="advance_output")
         do n=1,nboxes(Q)
@@ -267,11 +266,11 @@ contains
             fp => dataptr(F, n)
             unp => dataptr(Unew, n)
             up => dataptr(U, n)
-!            write(5,*), qp
-!            write(5,*), dp
-!            write(5,*), fp
+            write(5,*), qp
+            write(5,*), dp
+            write(5,*), fp
             write(5,*), up
-            write(5,*), unp
+!            write(5,*), unp
         end do
         close(5)
     end if

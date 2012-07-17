@@ -45,6 +45,11 @@ void advance(
 		allocate_4D(U2[i], dim_ng, nc);
 	}
 
+	//
+	// multifab_fill_boundary(U)
+	//
+	fill_boundary(U[0], dim, dim_ng);
+
     //!
     //! Calculate primitive variables based on U.
     //!
@@ -93,24 +98,25 @@ void advance(
 	}
 
 	// Check answer
-	FILE *fout=fopen("../testcases/advance_output", "r");
+//	FILE *fout=fopen("../testcases/advance_output", "r");
+	FILE *fout=fopen("../fortran90/advance_output", "r");
 	FOR(n, 0, NBOXES){
 		printf("BOX#%d...\n", n);
-//		FOR(l, 0, nc+1)
-//			read_3D(fout, Q2[n], dim_ng, l);
-//		check_4D_array("Q", Q[n], Q2[n], dim_ng, nc+1);
-//		FOR(l, 0, nc)
-//			read_3D(fout, D2[n], dim, l);
-//		check_4D_array("D", D[n], D2[n], dim, nc);
-//		FOR(l, 0, nc)
-//			read_3D(fout, F2[n], dim, l);
-//		check_4D_array("F", F[n], F2[n], dim, nc);
+		FOR(l, 0, nc+1)
+			read_3D(fout, Q2[n], dim_ng, l);
+		check_4D_array("Q", Q[n], Q2[n], dim_ng, nc+1);
+		FOR(l, 0, nc)
+			read_3D(fout, D2[n], dim, l);
+		check_4D_array("D", D[n], D2[n], dim, nc);
+		FOR(l, 0, nc)
+			read_3D(fout, F2[n], dim, l);
+		check_4D_array("F", F[n], F2[n], dim, nc);
 		FOR(l, 0, nc)
 			read_3D(fout, U2[n], dim_ng, l);
 		check_4D_array("U", U[n], U2[n], dim_ng, nc);
-		FOR(l, 0, nc)
-			read_3D(fout, Unew2[n], dim_ng, l);
-		check_4D_array("Unew", Unew[n], Unew2[n], dim_ng, nc);
+//		FOR(l, 0, nc)
+//			read_3D(fout, Unew2[n], dim_ng, l);
+//		check_4D_array("Unew", Unew[n], Unew2[n], dim_ng, nc);
 
 	}
 	fclose(fout);
@@ -144,7 +150,8 @@ void advance_test(){
 		allocate_4D(U[i], dim_ng, nc);
 
 	// Initiation
-	FILE *fin = fopen("../testcases/advance_input", "r");
+//	FILE *fin = fopen("../testcases/advance_input", "r");
+	FILE *fin = fopen("../fortran90/advance_input", "r");
 	FOR(n, 0, NBOXES){
 		FOR(l, 0, nc)
 			read_3D(fin, U[n], dim_ng, l);

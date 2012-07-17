@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define	CELLS	64
+#define	CELLS	16
 #define	NG		4
 #define	NC		5
 #define	DIM		(CELLS + 2*NG)
@@ -22,10 +22,12 @@ int main(int argc, char *argv[]){
 	allocate_4D(b, dim, NC);
 	allocate_4D(a, dim, NC);
 
-	FILE *fb, *fa, *fout;
+	FILE *fb, *fa, *fout, *fbcross, *facross;
 	fb = fopen("../fortran90/U_before", "r");
 	fa = fopen("../fortran90/U_after", "r");
 	fout = fopen("mask", "w");
+	fbcross = fopen("b_cross", "w");
+	facross = fopen("a_cross", "w");
 
 	FOR(l, 0, NC){
 		FOR(k, 0, DIM){
@@ -42,15 +44,43 @@ int main(int argc, char *argv[]){
 		FOR(j, 0, DIM){
 			FOR(k, 0, DIM){
 				fprintf(fout, "%d", FEQ(b[i][j][k][0], a[i][j][k][0]));
+//				if(!FEQ(b[i][j][k][0], a[i][j][k][0]))
+//					printf("%le != %le\n", b[i][j][k][0], a[i][j][k][0]);
 			}
 			fprintf(fout, "\n");
 		}
 		fprintf(fout, "\n");
 	}
 
+	i = 0;
+	FOR(l, 0, NC){
+		FOR(j, 0, DIM){
+			FOR(k, 0, DIM){
+					fprintf(fbcross, "%12.4le ", b[i][j][k][l]);
+					fprintf(facross, "%12.4le ", a[i][j][k][l]);
+			}
+			fprintf(fbcross, "\n");
+			fprintf(facross, "\n");
+		}
+		fprintf(fbcross, "\n");
+		fprintf(facross, "\n");
+	}
+	FILE *fu = fopen("fill_u", "w");
+	l = 0;
+	FOR(i, 0, DIM){
+		FOR(j, 0, DIM){
+			FOR(k, 0, DIM)
+				fprintf(fu, "%12.4le ", b[i][j][k][l]);
+			fprintf(fu, "\n");
+		}
+		fprintf(fu, "\n");
+	}
+	fclose(fu);
 	fclose(fb);
 	fclose(fa);
 	fclose(fout);
+	fclose(fbcross);
+	fclose(facross);
 	return 0;
 }
 
