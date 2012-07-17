@@ -1,5 +1,5 @@
 #include <math.h>
-#define FEQ(x, y)	((fabs(x-y)<0.000001)? true:false)
+#define FEQ(x, y)	((fabs(x-y)<0.000000001)? true:false)
 
 // Allocations
 void allocate_4D(double ****&ptr, int dim[], int dl);

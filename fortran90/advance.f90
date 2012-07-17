@@ -50,6 +50,7 @@ contains
     double precision, parameter :: OneQuarter    = 1.d0/4.d0
     double precision, parameter :: ThreeQuarters = 3.d0/4.d0
 
+	write(*,*), "---STEP", istep, "------------------------------>>>>>"
     nc = ncomp(U)
     ng = nghost(U)
     la = get_layout(U)
@@ -257,27 +258,12 @@ contains
           !$OMP END PARALLEL DO
        end do
     end do
-    if(parallel_IOProcessor() .and. istep == 1) then
-        write(*, *), "nboxes(U)", nboxes(U)
-        open(unit=5, file="advance_output")
-        do n=1,nboxes(Q)
-            qp => dataptr(Q, n)
-            dp => dataptr(D, n)
-            fp => dataptr(F, n)
-            unp => dataptr(Unew, n)
-            up => dataptr(U, n)
-            write(5,*), qp
-            write(5,*), dp
-            write(5,*), fp
-            write(5,*), up
-!            write(5,*), unp
-        end do
-        close(5)
-    end if
+
     !
     ! Sync U^1/3 prior to calculating D & F.
     !
     call multifab_fill_boundary(Unew)
+
     !
     ! Calculate primitive variables based on U^1/3.
     !
@@ -309,6 +295,7 @@ contains
     !
     ! Calculate F at time N+1/3.
     !
+	write(*,*), "----- Relevant Part ---------------------------------------"
     do n=1,nboxes(F)
        if ( remote(F,n) ) cycle
 
@@ -321,6 +308,7 @@ contains
 
        call hypterm(lo,hi,ng,dx,up,qp,fp)
     end do
+	write(*,*), "----- End Relevant Part ---------------------------------------"
     !
     ! Calculate U at time N+2/3.
     !
@@ -352,6 +340,25 @@ contains
     ! Sync U^2/3 prior to calculating D & F.
     !
     call multifab_fill_boundary(Unew)
+
+    if(parallel_IOProcessor() .and. istep == 1) then
+        write(*, *), "nboxes(U)", nboxes(U)
+        open(unit=5, file="advance_output")
+        do n=1,nboxes(Q)
+            qp => dataptr(Q, n)
+            dp => dataptr(D, n)
+            fp => dataptr(F, n)
+            unp => dataptr(Unew, n)
+            up => dataptr(U, n)
+            write(5,*), qp
+            write(5,*), dp
+            write(5,*), fp
+            write(5,*), up
+            write(5,*), unp
+        end do
+        close(5)
+    end if
+
     !
     ! Calculate primitive variables based on U^2/3.
     !
@@ -532,6 +539,40 @@ contains
                   + GAM*(cons(i+3,j,k,imx)-cons(i-3,j,k,imx)) &
                   + DEL*(cons(i+4,j,k,imx)-cons(i-4,j,k,imx)))*dxinv(1)
 
+			if(i == lo(1) .and. j == lo(2) .and. k == lo(3)) then
+
+				write(*,*), "flux(i,j,k,imx)", flux(i,j,k,imx)
+
+				write(*,*), "ALP", ALP
+				write(*,*), "cons(i+1,j,k,imx)", cons(i+1,j,k,imx)
+				write(*,*), "unp1", unp1
+				write(*,*), "cons(i-1,j,k,imx)", cons(i-1,j,k,imx)
+				write(*,*), "unm1", unm1
+				write(*,*), "q(i+1,j,k,qpres)", q(i+1,j,k,qpres)
+				write(*,*), "q(i-1,j,k,qpres)", q(i-1,j,k,qpres)
+				write(*,*), "BET", BET
+				write(*,*), "cons(i+2,j,k,imx)", cons(i+2,j,k,imx)
+				write(*,*), "unp2", unp2
+				write(*,*), "cons(i-2,j,k,imx)", cons(i-2,j,k,imx)
+				write(*,*), "unm2", unm2
+				write(*,*), "q(i+2,j,k,qpres)", q(i+2,j,k,qpres)
+				write(*,*), "q(i-2,j,k,qpres)", q(i-2,j,k,qpres)
+				write(*,*), "GAM", GAM
+				write(*,*), "cons(i+3,j,k,imx)", cons(i+3,j,k,imx)
+				write(*,*), "unp3", unp3
+				write(*,*), "cons(i-3,j,k,imx)", cons(i-3,j,k,imx)
+				write(*,*), "unm3", unm3
+				write(*,*), "q(i+3,j,k,qpres)", q(i+3,j,k,qpres)
+				write(*,*), "q(i-3,j,k,qpres)", q(i-3,j,k,qpres)
+				write(*,*), "DEL", DEL
+				write(*,*), "cons(i+4,j,k,imx)", cons(i+4,j,k,imx)
+				write(*,*), "unp4", unp4
+				write(*,*), "cons(i-4,j,k,imx)", cons(i-4,j,k,imx)
+				write(*,*), "unm4", unm4
+				write(*,*), "q(i+4,j,k,qpres)", q(i+4,j,k,qpres)
+				write(*,*), "q(i-4,j,k,qpres)", q(i-4,j,k,qpres)
+			end if
+
              flux(i,j,k,imx)= - &
                    (ALP*(cons(i+1,j,k,imx)*unp1-cons(i-1,j,k,imx)*unm1 &
                   + (q(i+1,j,k,qpres)-q(i-1,j,k,qpres)))               &
@@ -541,6 +582,10 @@ contains
                   + (q(i+3,j,k,qpres)-q(i-3,j,k,qpres)))               &
                   + DEL*(cons(i+4,j,k,imx)*unp4-cons(i-4,j,k,imx)*unm4 &
                   + (q(i+4,j,k,qpres)-q(i-4,j,k,qpres))))*dxinv(1)
+
+			if(i == lo(1) .and. j == lo(2) .and. k == lo(3)) then
+				write(*,*), "flux(i,j,k,imx)", flux(i,j,k,imx)
+			end if
 
              flux(i,j,k,imy)= - &
                    (ALP*(cons(i+1,j,k,imy)*unp1-cons(i-1,j,k,imy)*unm1) &

@@ -78,14 +78,6 @@ void advance(
     //!
     //! Calculate U at time N+1/3.
     //!
-    // Read Unew (for borders)
-    FILE *fin=fopen("../testcases/advance_unp", "r");
-    FOR(n, 0, NBOXES){
-    	FOR(l, 0, nc)
-			read_3D(fin, Unew[n], dim_ng, l);
-    }
-    fclose(fin);
-
 	FOR(n, 0, NBOXES){
 		FOR(i, 0, dim[0]){
 			FOR(j, 0, dim[1]){
@@ -96,6 +88,50 @@ void advance(
 			}
 		}
 	}
+
+	//!
+    //! Sync U^1/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
+    //!
+	fill_boundary(Unew[0], dim, dim_ng);
+
+	//!
+    //! Calculate primitive variables based on U^1/3.
+    //!
+    FOR(n, 0, NBOXES)
+		ctoprim(lo, hi, Unew[n], Q[n], dx, ng);
+
+    //!
+    //! Calculate D at time N+1/3.
+    //!
+	FOR(n, 0, NBOXES)
+		diffterm(lo, hi, ng, dx, Q[n], D[n], eta, alam);
+
+	//!
+    //! Calculate F at time N+1/3.
+    //!
+    FOR(n, 0, NBOXES)
+		hypterm(lo, hi, ng, dx, Unew[n], Q[n], F[n]);
+
+	//!
+    //! Calculate U at time N+2/3.
+    //!
+	FOR(n, 0, NBOXES){
+		FOR(i, 0, dim[0]){
+			FOR(j, 0, dim[0]){
+				FOR(k, 0, dim[0]){
+					FOR(l, 0, nc)
+						Unew[n][i+NG][j+NG][k+NG][l] =
+							ThreeQuarters *  U[n][i+NG][j+NG][k+NG][l] +
+							OneQuarter    * (Unew[n][i+NG][j+NG][k+NG][l] + dt*(D[n][i][j][k][l] + F[n][i][j][k][l]));
+				}
+			}
+		}
+	}
+
+	//!
+    //! Sync U^2/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
+    //!
+	fill_boundary(Unew[0], dim, dim_ng);
 
 	// Check answer
 //	FILE *fout=fopen("../testcases/advance_output", "r");
@@ -114,9 +150,9 @@ void advance(
 		FOR(l, 0, nc)
 			read_3D(fout, U2[n], dim_ng, l);
 		check_4D_array("U", U[n], U2[n], dim_ng, nc);
-//		FOR(l, 0, nc)
-//			read_3D(fout, Unew2[n], dim_ng, l);
-//		check_4D_array("Unew", Unew[n], Unew2[n], dim_ng, nc);
+		FOR(l, 0, nc)
+			read_3D(fout, Unew2[n], dim_ng, l);
+		check_4D_array("Unew", Unew[n], Unew2[n], dim_ng, nc);
 
 	}
 	fclose(fout);

@@ -46,6 +46,39 @@ void hypterm(
 					  + GAM*(cons(i+3,j,k,imx)-cons(i-3,j,k,imx))
 					  + DEL*(cons(i+4,j,k,imx)-cons(i-4,j,k,imx)))*dxinv(1);
 
+//				if(i==ng && j==ng && k==ng){
+//					printf("flux = %lf\n", flux(i,j,k,imx));
+//					printf("ALP = %lf\n", ALP);
+//					printf("cons(i+1,j,k,imx) = %lf\n", cons(i+1,j,k,imx));
+//					printf("unp1 = %lf\n", unp1);
+//					printf("cons(i-1,j,k,imx) = %lf\n", cons(i-1,j,k,imx));
+//					printf("unm1 = %lf\n", unm1);
+//					printf("q(i+1,j,k,qpres) = %lf\n", q(i+1,j,k,qpres));
+//					printf("q(i-1,j,k,qpres) = %lf\n", q(i-1,j,k,qpres));
+//					printf("BET = %lf\n", BET);
+//					printf("cons(i+2,j,k,imx) = %lf\n", cons(i+2,j,k,imx));
+//					printf("unp2 = %lf\n", unp2);
+//					printf("cons(i-2,j,k,imx) = %lf\n", cons(i-2,j,k,imx));
+//					printf("unm2 = %lf\n", unm2);
+//					printf("q(i+2,j,k,qpres) = %lf\n", q(i+2,j,k,qpres));
+//					printf("q(i-2,j,k,qpres) = %lf\n", q(i-2,j,k,qpres));
+//					printf("GAM = %lf\n", GAM);
+//					printf("cons(i+3,j,k,imx) = %lf\n", cons(i+3,j,k,imx));
+//					printf("unp3 = %lf\n", unp3);
+//					printf("cons(i-3,j,k,imx) = %lf\n", cons(i-3,j,k,imx));
+//					printf("unm3 = %lf\n", unm3);
+//					printf("q(i+3,j,k,qpres) = %lf\n", q(i+3,j,k,qpres));
+//					printf("q(i-3,j,k,qpres) = %lf\n", q(i-3,j,k,qpres));
+//					printf("DEL = %lf\n", DEL);
+//					printf("cons(i+4,j,k,imx) = %lf\n", cons(i+4,j,k,imx));
+//					printf("unp4 = %lf\n", unp4);
+//					printf("cons(i-4,j,k,imx) = %lf\n", cons(i-4,j,k,imx));
+//					printf("unm4 = %lf\n", unm4);
+//					printf("q(i+4,j,k,qpres) = %lf\n", q(i+4,j,k,qpres));
+//					printf("q(i-4,j,k,qpres) = %lf\n", q(i-4,j,k,qpres));
+//
+//				}
+
 				flux(i,j,k,imx)= -
 					   (ALP*(cons(i+1,j,k,imx)*unp1-cons(i-1,j,k,imx)*unm1
 					  + (q(i+1,j,k,qpres)-q(i-1,j,k,qpres)))
@@ -55,6 +88,9 @@ void hypterm(
 					  + (q(i+3,j,k,qpres)-q(i-3,j,k,qpres)))
 					  + DEL*(cons(i+4,j,k,imx)*unp4-cons(i-4,j,k,imx)*unm4
 					  + (q(i+4,j,k,qpres)-q(i-4,j,k,qpres))))*dxinv(1);
+//
+//				if(i==ng && j==ng && k==ng)
+//					printf("after: %le\n", flux(i,j,k,imx));
 
 				flux(i,j,k,imy)= -
 					   (ALP*(cons(i+1,j,k,imy)*unp1-cons(i-1,j,k,imy)*unm1)

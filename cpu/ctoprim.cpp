@@ -69,6 +69,41 @@ void ctoprim (
     courno = MAX(MAX(courmx, courmy), MAX(courmz, courno));
 }
 
+void ctoprim (
+    int lo[],       // i: lo[3]
+    int hi[],       // i: hi[3]
+    double ****u,   // i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double dx[],    // i: dx[3]
+    int ng         // i
+){
+    int i, j, k;
+    double c, eint, rhoinv;
+
+    const double GAMMA  = 1.4E0;
+    const double CV     = 8.3333333333E6;
+
+//    #pragma omp parallel for private(i, j, k, eint, rhoinv)
+    DO(i, lo[0]-ng, hi[0]+ng){
+        DO(j, lo[1]-ng, hi[1]+ng){
+            DO(k, lo[2]-ng, hi[2]+ng){
+
+				rhoinv     = 1.0E0/u(i,j,k,1);
+				q(i,j,k,1) = u(i,j,k,1);
+				q(i,j,k,2) = u(i,j,k,2)*rhoinv;
+				q(i,j,k,3) = u(i,j,k,3)*rhoinv;
+				q(i,j,k,4) = u(i,j,k,4)*rhoinv;
+
+				eint = u(i,j,k,5)*rhoinv - 0.5E0*(SQR(q(i,j,k,2)) + SQR(q(i,j,k,3)) + SQR(q(i,j,k,4)));
+
+				q(i,j,k,5) = (GAMMA-1.0E0)*eint*u(i,j,k,1);
+				q(i,j,k,6) = eint/CV;
+
+            }
+        }
+    }
+}
+
 void ctoprim_test(){
 
 	int i, l, dummy, dim_ng[3];
