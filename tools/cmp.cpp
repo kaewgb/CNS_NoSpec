@@ -44,8 +44,6 @@ int main(int argc, char *argv[]){
 		FOR(j, 0, DIM){
 			FOR(k, 0, DIM){
 				fprintf(fout, "%d", FEQ(b[i][j][k][0], a[i][j][k][0]));
-//				if(!FEQ(b[i][j][k][0], a[i][j][k][0]))
-//					printf("%le != %le\n", b[i][j][k][0], a[i][j][k][0]);
 			}
 			fprintf(fout, "\n");
 		}

@@ -295,7 +295,6 @@ contains
     !
     ! Calculate F at time N+1/3.
     !
-	write(*,*), "----- Relevant Part ---------------------------------------"
     do n=1,nboxes(F)
        if ( remote(F,n) ) cycle
 
@@ -308,7 +307,7 @@ contains
 
        call hypterm(lo,hi,ng,dx,up,qp,fp)
     end do
-	write(*,*), "----- End Relevant Part ---------------------------------------"
+
     !
     ! Calculate U at time N+2/3.
     !
@@ -340,24 +339,6 @@ contains
     ! Sync U^2/3 prior to calculating D & F.
     !
     call multifab_fill_boundary(Unew)
-
-    if(parallel_IOProcessor() .and. istep == 1) then
-        write(*, *), "nboxes(U)", nboxes(U)
-        open(unit=5, file="advance_output")
-        do n=1,nboxes(Q)
-            qp => dataptr(Q, n)
-            dp => dataptr(D, n)
-            fp => dataptr(F, n)
-            unp => dataptr(Unew, n)
-            up => dataptr(U, n)
-            write(5,*), qp
-            write(5,*), dp
-            write(5,*), fp
-            write(5,*), up
-            write(5,*), unp
-        end do
-        close(5)
-    end if
 
     !
     ! Calculate primitive variables based on U^2/3.
@@ -429,6 +410,24 @@ contains
           !$OMP END PARALLEL DO
        end do
     end do
+    
+if(parallel_IOProcessor() .and. istep == 1) then
+        write(*, *), "nboxes(U)", nboxes(U)
+        open(unit=5, file="advance_output")
+        do n=1,nboxes(Q)
+            qp => dataptr(Q, n)
+            dp => dataptr(D, n)
+            fp => dataptr(F, n)
+            unp => dataptr(Unew, n)
+            up => dataptr(U, n)
+            write(5,*), qp
+            write(5,*), dp
+            write(5,*), fp
+            write(5,*), up
+!            write(5,*), unp
+        end do
+        close(5)
+    end if
 
     call destroy(Unew)
     call destroy(Q)
