@@ -411,21 +411,14 @@ contains
        end do
     end do
     
-if(parallel_IOProcessor() .and. istep == 1) then
+	if(parallel_IOProcessor() .and. istep == 1) then
         write(*, *), "nboxes(U)", nboxes(U)
         open(unit=5, file="advance_output")
         do n=1,nboxes(Q)
-            qp => dataptr(Q, n)
-            dp => dataptr(D, n)
-            fp => dataptr(F, n)
-            unp => dataptr(Unew, n)
             up => dataptr(U, n)
-            write(5,*), qp
-            write(5,*), dp
-            write(5,*), fp
             write(5,*), up
-!            write(5,*), unp
         end do
+		write(5,*), dt
         close(5)
     end if
 
