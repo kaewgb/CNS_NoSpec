@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-//#include "thrust/reduce.h"
-//#include "thrust/device_ptr.h"
+#include "thrust/reduce.h"
+#include "thrust/device_ptr.h"
 #include "header.h"
 #include "helper_functions.h"
 
@@ -69,11 +69,9 @@ void gpu_ctoprim(
 ){
 	int i, len, dim_ng[3];
 	double *d_cour;
-//	printf("d_const->hi[0] = %d\n", h_const.hi[0]);
-//	printf("d_const->lo[0] = %d\n", h_const.lo[0]);
+
 	FOR(i, 0, 3)
 		dim_ng[i] = h_const.dim_ng[i];
-	printf("dim3\n");
 
 	len = dim_ng[0] * dim_ng[1] * dim_ng[2];
 	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
@@ -88,19 +86,11 @@ void gpu_ctoprim(
 
 	// Find max & update courno
 	// TODO: make it minus infinity
-	printf("yo\n");
-//	thrust::device_ptr<double> dev_ptr(d_cour);
-//	courno = thrust::reduce(dev_ptr, dev_ptr + len, (double) -1.0, thrust::maximum<double>());
-
-//	thrust::device_ptr<double> dev_ptr_u(u_d);
-//	double u_max = thrust::reduce(dev_ptr_u, dev_ptr_u+len, (double) -1.0, thrust::maximum<double>());
-//	printf("u_max = %le\n");
+	thrust::device_ptr<double> dev_ptr(d_cour);
+	courno = thrust::reduce(dev_ptr, dev_ptr + len, (double) -1.0, thrust::maximum<double>());
 
 	// Free temporary memory
 	cudaFree(d_cour);
-
-//	// Update courno
-//	cudaMemcpyFromSymbol(&courno, d_courno, sizeof(double));
 
 }
 
@@ -262,7 +252,7 @@ void ctoprim_test(
 	printf("u_max = %le\n", u_max);
 
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-//	check_double(courno, courno2, "courno");
+	check_double(courno, courno2, "courno");
 	check_4D_array("u", u, u2, dim_g, 5);
 	check_4D_array("q", q, q2, dim_g, 6);
 	printf("Correct!\n");

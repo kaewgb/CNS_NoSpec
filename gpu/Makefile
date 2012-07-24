@@ -2,7 +2,7 @@ CC			= g++
 NVCC		= nvcc
 
 TARGET		= gpu
-OBJ_FILES	= main.o ctoprim.o helper_functions.o
+OBJ_FILES	= main.o diffterm.o helper_functions.o
 HEADERS		= header.h helper_functions.h
 THRUST		= $(HOME)/software/thrust/
 

@@ -29,9 +29,9 @@ int main(int argc, char *argv[]){
 	cudaGetSymbolAddress((void **) &d_const_ptr, d_const);
 
 	// Calling Test Kernels
-	ctoprim_test(h_const, d_const_ptr);
-//	diffterm_test();
-//	hypterm_test();
+//	ctoprim_test(h_const, d_const_ptr);
+	diffterm_test(h_const, d_const_ptr);
+//	hypterm_test(h_const, d_const_ptr);
 
 //	advance_test();
 
