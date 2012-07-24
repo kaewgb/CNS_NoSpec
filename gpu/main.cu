@@ -31,8 +31,8 @@ int main(int argc, char *argv[]){
 
 	// Calling Test Kernels
 //	ctoprim_test(h_const, d_const_ptr);
-	diffterm_test(h_const, d_const_ptr);
-//	hypterm_test(h_const, d_const_ptr);
+//	diffterm_test(h_const, d_const_ptr);
+	hypterm_test(h_const, d_const_ptr);
 
 //	advance_test();
 

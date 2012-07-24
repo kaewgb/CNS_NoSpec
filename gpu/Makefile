@@ -2,11 +2,11 @@ CC			= g++
 NVCC		= nvcc
 
 TARGET		= gpu
-OBJ_FILES	= main.o diffterm.o helper_functions.o
+OBJ_FILES	= main.o diffterm.o hypterm.o helper_functions.o
 HEADERS		= header.h helper_functions.h
 THRUST		= $(HOME)/software/thrust/
 
-NVCCFLAGS	= -I$(THRUST) -arch=sm_13
+NVCCFLAGS	= -I$(THRUST) -arch=sm_13 --ptxas-options=-v
 
 $(TARGET):	$(OBJ_FILES)
 			$(NVCC) -o $(TARGET) $^

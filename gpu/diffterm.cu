@@ -334,6 +334,9 @@ void diffterm (
 
 #undef difflux(i,j,k,l)
 
+#define	BLOCK_DIM_X	16
+#define	BLOCK_DIM_Y	16
+
 __global__ void gpu_diffterm_kernel(
 	global_const_t *g,			// i: Global struct containing application parameters
 	double *q,					// i:
@@ -348,15 +351,19 @@ void gpu_diffterm(
 	double *d_flux				// o:
 ){
 	int i, len, dim[3];
-	int grid_dim, block_dim;
+	int grid_dim, grid_dim_x, grid_dim_y;
 	FOR(i, 0, 3)
 		dim[i] = h_const.dim[i];
 
+	// TODO: Make sure it supports non-square box
 	len = dim[0] * dim[1] * dim[2];
-	grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
-	block_dim = BLOCK_DIM;
+	grid_dim_x = (dim[0]+BLOCK_DIM_X-1)/BLOCK_DIM_X;
+	grid_dim_y = (dim[1]+BLOCK_DIM_Y-1)/BLOCK_DIM_Y;
+	grid_dim = grid_dim_x * grid_dim_y * dim[2];
 
-	gpu_hypterm_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_flux);
+	dim3 block_dim(BLOCK_DIM_X, BLOCK_DIM_Y);
+
+	gpu_diffterm_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_flux);
 }
 void diffterm_test(
 	global_const_t h_const, // i: Global struct containing applicatino parameters
