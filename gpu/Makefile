@@ -1,9 +1,12 @@
 CC			= g++
 NVCC		= nvcc
-CFLAGS		=
+
 TARGET		= gpu
-OBJ_FILES	= main.o ctoprim.o hypterm.o diffterm.o helper_functions.o advance.o
+OBJ_FILES	= main.o ctoprim.o helper_functions.o
 HEADERS		= header.h helper_functions.h
+THRUST		= $(HOME)/software/thrust/
+
+NVCCFLAGS	= -I$(THRUST) -arch=sm_13
 
 $(TARGET):	$(OBJ_FILES)
 			$(NVCC) -o $(TARGET) $^
@@ -11,6 +14,6 @@ $(TARGET):	$(OBJ_FILES)
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
 %.o:		%.cu $(HEADERS)
-			$(NVCC) $(CFLAGS) -c $< -o $@
+			$(NVCC) -c $< -o $@ $(NVCCFLAGS)
 clean:
 			rm -f $(OBJ_FILES) $(TARGET)

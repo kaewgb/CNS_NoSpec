@@ -87,6 +87,7 @@ program main
   lo = 0
   hi = n_cell-1
   bx = make_box(lo,hi)
+  write(*,*), 'n_cell', n_cell
 
   do i = 1,DM
      dx(i) = (prob_hi(i)-prob_lo(i)) / n_cell
@@ -111,6 +112,17 @@ program main
      call write_plotfile(U,istep,dx,time,prob_lo,prob_hi)
   end if
 
+  open(unit=9, file="../testcases/general_input")
+  write(9, *), NG
+  lo = lwb(get_box(U,1))
+  hi = upb(get_box(U,1))
+  write(9, *), lo
+  write(9, *), hi
+  write(9, *), dx
+  write(9, *), cfl
+  write(9, *), eta
+  write(9, *), alam 
+  close(9)
   do istep=1,nsteps
 
      if (parallel_IOProcessor()) then

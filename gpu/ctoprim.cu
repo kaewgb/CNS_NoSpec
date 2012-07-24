@@ -1,38 +1,112 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+//#include "thrust/reduce.h"
+//#include "thrust/device_ptr.h"
 #include "header.h"
 #include "helper_functions.h"
 
-#define u(i,j,k,l)  u[i][j][k][l-1]
-#define q(i,j,k,l)  q[i][j][k][l-1]
-#define dx(i)		dx[i-1]
+#define	BLOCK_DIM	512
+
+__device__ double d_courno;
+__constant__ double GAMMA  = 1.4E0;
+__constant__ double CV     = 8.3333333333E6;
 
 __global__ void gpu_ctoprim_kernel(
-    int lo[],       // i: lo[3]
-    int hi[],       // i: hi[3]
-    double *u_d,   // i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
-    double *q_d, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
-    double dx[],    // i: dx[3]
-    int ng,         // i
-    double *courno   // i/o
+	global_const_t *g,	// i: Application parameters
+    double *u,   		// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q, 			// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double *courno  	// i/o
 ){
 
+	int i, j, k, idx, loffset;
+	int numthreads = BLOCK_DIM;
+	double rhoinv, eint, c, courx, coury, courz;
+
+	idx = blockIdx.x * blockDim.x + threadIdx.x;
+	i = idx / (g->dim_ng[2] * g->dim_ng[1]);
+	j = (idx / g->dim_ng[2]) % g->dim_ng[1];
+	k = idx % g->dim_ng[2];
+
+	loffset = g->dim_ng[0] * g->dim_ng[1] * g->dim_ng[2];
+
+	// Calculate Q
+	if( idx < loffset ){
+
+		rhoinv 				= 1.0E0/u[idx];				//u(i,j,k,1) = u[0][i][j][k]
+		q[idx] 				= u[idx]; 					//u(i,j,k,1) = u[0][i][j][k]
+		q[idx+loffset] 		= u[idx+loffset]*rhoinv; 	//u(i,j,k,2) = u[1][i][j][k]
+		q[idx+2*loffset] 	= u[idx+2*loffset]*rhoinv; 	//u(i,j,k,3) = u[2][i][j][k]
+		q[idx+3*loffset] 	= u[idx+3*loffset]*rhoinv; 	//u(i,j,k,4) = u[3][i][j][k]
+
+		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
+
+		q[idx+4*loffset] = (GAMMA-1.0E0)*eint*u[idx];
+		q[idx+5*loffset] = eint/CV;
+
+		// Calculate new courno (excluding ng)
+		if(	g->ng <= i && i <= g->hi[0]+g->ng &&
+			g->ng <= j && j <= g->hi[1]+g->ng &&
+			g->ng <= k && k <= g->hi[2]+g->ng ){
+
+			c 		= sqrt(GAMMA*q[idx+4*loffset]/q[idx]);
+			courx 	= (c+fabs(q[idx+loffset]))	/g->dx[0];
+			coury	= (c+fabs(q[idx+2*loffset]))/g->dx[1];
+			courz	= (c+fabs(q[idx+3*loffset]))/g->dx[2];
+
+			courno[idx] = MAX(courx, MAX(coury, courz));
+		}
+		else
+			courno[idx] = -1.0;		//TODO: make it minus infinity
+	}
 }
 void gpu_ctoprim(
-    int lo[],       // i: lo[3]
-    int hi[],       // i: hi[3]
-    double *u_d,   	// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
-    double *q_d, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
-    double dx[],    // i: dx[3]
-    int ng,         // i
-    double &courno  // i/o
+	global_const_t h_const,		// i: Global struct containing application parameters
+    global_const_t *d_const,	// i: Device pointer to global struct containing application parameters
+    double *u_d,   				// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q_d, 				// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double &courno  			// i/o
 ){
-	int i, dim_ng[3];
+	int i, len, dim_ng[3];
+	double *d_cour;
+//	printf("d_const->hi[0] = %d\n", h_const.hi[0]);
+//	printf("d_const->lo[0] = %d\n", h_const.lo[0]);
 	FOR(i, 0, 3)
-		dim_ng[i] = hi[i]-lo[i]+1 + ng+ng;
+		dim_ng[i] = h_const.dim_ng[i];
+	printf("dim3\n");
+
+	len = dim_ng[0] * dim_ng[1] * dim_ng[2];
+	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
+	int block_dim = BLOCK_DIM;
+
+	// Allocate temporary memory to find maximum courno
+	cudaMalloc((void **) &d_cour, len * sizeof(double));
+
+	// TODO: edit parameters
+	printf("calling kernel\n");
+	gpu_ctoprim_kernel<<<grid_dim, block_dim>>>(d_const, u_d, q_d, d_cour);
+
+	// Find max & update courno
+	// TODO: make it minus infinity
+	printf("yo\n");
+//	thrust::device_ptr<double> dev_ptr(d_cour);
+//	courno = thrust::reduce(dev_ptr, dev_ptr + len, (double) -1.0, thrust::maximum<double>());
+
+//	thrust::device_ptr<double> dev_ptr_u(u_d);
+//	double u_max = thrust::reduce(dev_ptr_u, dev_ptr_u+len, (double) -1.0, thrust::maximum<double>());
+//	printf("u_max = %le\n");
+
+	// Free temporary memory
+	cudaFree(d_cour);
+
+//	// Update courno
+//	cudaMemcpyFromSymbol(&courno, d_courno, sizeof(double));
 
 }
+
+#define u(i,j,k,l)  u[l-1][i][j][k]
+#define q(i,j,k,l)  q[l-1][i][j][k]
+#define dx(i)		dx[i-1]
 void ctoprim (
     int lo[],       // i: lo[3]
     int hi[],       // i: hi[3]
@@ -40,7 +114,7 @@ void ctoprim (
     double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
     double dx[],    // i: dx[3]
     int ng,         // i
-    double &courno   // i/o
+    double &courno  // i/o
 ){
     int i, j, k;
     double c, eint, courx, coury, courz, courmx, courmy, courmz, rhoinv;
@@ -63,12 +137,11 @@ void ctoprim (
 
 				q(i,j,k,5) = (GAMMA-1.0E0)*eint*u(i,j,k,1);
 				q(i,j,k,6) = eint/CV;
-
             }
         }
     }
 
-    if(courno != -1.0){	// Just my way to check of courno is present, i.e., is passed to the function
+    if(courno != -1.0){	// Just my way to check if courno is present, i.e., is passed to the function
 //        #pragma omp parallel for private(i, j, k, c, courx, coury, courz) reduction(max: courmx, courmy, courmz)
         DO(i, lo[0], hi[0]){
             DO(j, lo[1], hi[1]){
@@ -93,8 +166,14 @@ void ctoprim (
     //
     courno = MAX(MAX(courmx, courmy), MAX(courmz, courno));
 }
+#undef u(i,j,k,l)
+#undef q(i,j,k,l)
+#undef dx(i)
 
-void ctoprim_test(){
+void ctoprim_test(
+	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+){
 
 	int i, l, dummy, dim_ng[3];
 	int lo[3], hi[3];
@@ -124,6 +203,7 @@ void ctoprim_test(){
 
 	FOR(i, 0, 3)
 		dim_ng[i] = hi[i]-lo[i]+1 + 2*ng;
+	printf("dim_ng: %d %d %d\n", dim_ng[0], dim_ng[1], dim_ng[2]);
 
 	allocate_4D(u, 	dim_ng, 5); 	// [40][40][40][5]
 	allocate_4D(q, 	dim_ng, 6); 	// [40][40][40][6]
@@ -133,6 +213,7 @@ void ctoprim_test(){
 	gpu_allocate_4D(u_d, dim_ng, 5);
 	gpu_allocate_4D(q_d, dim_ng, 6);
 
+	// TODO: rearrange array to [l][i][j][k]
 	FOR(l, 0, 5)
 		read_3D(fin, u, dim_ng, l);
 	FOR(l, 0, 6)
@@ -147,9 +228,8 @@ void ctoprim_test(){
 	gpu_copy_from_host_4D(q_d, q, dim_ng, 6);
 
 	printf("Applying ctoprim()...\n");
-//	gpu_ctoprim(lo, hi, u_d, q_d, dx, ng, courno);
+	gpu_ctoprim(h_const, d_const, u_d, q_d, courno);
 //	ctoprim(lo, hi, u, q, dx, ng, courno);
-
 	gpu_copy_to_host_4D(u, u_d, dim_ng, 5);
 	gpu_copy_to_host_4D(q, q_d, dim_ng, 6);
 
@@ -167,8 +247,33 @@ void ctoprim_test(){
 	fclose(fout);
 
 	// Checking...
+	double u_max=-1.0;
+	int j,k;
+	FOR(l, 0, 5){
+		FOR(i, 0, dim_ng[0]){
+			FOR(j, 0, dim_ng[1]){
+				FOR(k, 0, dim_ng[2]){
+					if(u_max < u[l][i][j][k])
+						u_max = u[l][i][j][k];
+				}
+			}
+		}
+	}
+	printf("u_max = %le\n", u_max);
+	printf("u[l][i][j][k] = %le\n", u[1][0][1][0]);
+	printf("q2[l][i][j][k] = %le\n", q2[1][0][1][0]);
+//	FOR(i, 0, dim_ng[0]){
+//		FOR(j, 0, dim_ng[1]){
+//			FOR(k, 0, dim_ng[2])
+//				if(q[0][i][j][k] != 33.33){
+//					printf("q[0][%d][%d][%d] = %le\n", i, j, k, q[0][i][j][k]);
+//					exit(1);
+//				}
+//		}
+//	}
+
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-	check_double(courno, courno2, "courno");
+//	check_double(courno, courno2, "courno");
 	check_4D_array("u", u, u2, dim_ng, 5);
 	check_4D_array("q", q, q2, dim_ng, 6);
 	printf("Correct!\n");
@@ -176,7 +281,7 @@ void ctoprim_test(){
 	gpu_free_4D(u_d);
 	gpu_free_4D(q_d);
 
-	free_4D(u,  dim_ng);		free_4D(q,  dim_ng);
-	free_4D(u2, dim_ng);		free_4D(q2, dim_ng);
+	free_4D(u,  dim_ng, 5);		free_4D(q,  dim_ng, 6);
+	free_4D(u2, dim_ng, 5);		free_4D(q2, dim_ng, 6);
 }
 

@@ -13,7 +13,7 @@
 #define	DIM		3
 #define	NC		5
 #define	NG		4
-#define	NCELLS	32
+#define	NCELLS	16
 #define	NBOXES	1
 
 enum {
@@ -32,13 +32,28 @@ enum {
 	qfive
 };
 
+typedef struct global_const {
+	int ng;
+	int lo[3];
+	int hi[3];
+	int dim[3];
+	int dim_ng[3];
+	double dx[3];
+	double cfl;
+	double eta;
+	double alam;
+} global_const_t;
+
 static const double ALP	=  0.8E0;
 static const double BET	= -0.2E0;
 static const double GAM	=  4.0E0/105.0E0;
 static const double DEL	= -1.0E0/280.0E0;
 
 // FUNCTIONS
-extern void ctoprim_test();
+extern void ctoprim_test(
+	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
 extern void ctoprim (
     int lo[],       // i: lo[3]
     int hi[],       // i: hi[3]

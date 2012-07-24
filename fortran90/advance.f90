@@ -57,13 +57,7 @@ contains
     !
     ! Sync U prior to calculating D & F.
     !
-    if(parallel_IOProcessor() .and. istep == 1) then
-        open(unit=2, file="U_before")
-        up => dataptr(U, 1)
-        write(2, *), up
-        close(2)
-        write(*, *), "done before"
-     end if
+
     if(parallel_IOProcessor() .and. istep == 1) then
         open(unit=4, file="advance_input")
         do n=1,nboxes(U)
@@ -85,15 +79,6 @@ contains
     end if
 
     call multifab_fill_boundary(U)
-
-    if(parallel_IOProcessor() .and. istep == 1) then
-        open(unit=3, file="U_after")
-        up => dataptr(U, 1)
-        write(3, *), up
-        !write(3, *), unp
-        close(3)
-        write(*, *), "done after"
-    end if
     
     call multifab_build(D,    la, nc,   0)
     call multifab_build(F,    la, nc,   0)
@@ -115,31 +100,31 @@ contains
        lo = lwb(get_box(Q,n))
        hi = upb(get_box(Q,n))
 
-!       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-!            open(unit=2, file="ctoprim_input")
-!            write(2,*), lo
-!            write(2,*), hi
-!            write(2,*), up
-!            write(2,*), qp
-!            write(2,*), dx
-!            write(2,*), ng
-!            write(2,*), courno_proc
-!            close(2)
-!       end if
+       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+            open(unit=2, file="../testcases/ctoprim_input")
+            write(2,*), lo
+            write(2,*), hi
+            write(2,*), up
+            write(2,*), qp
+            write(2,*), dx
+            write(2,*), ng
+            write(2,*), courno_proc
+            close(2)
+       end if
 
        call ctoprim(lo,hi,up,qp,dx,ng,courno=courno_proc)
 
-!       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-!            open(unit=3, file="ctoprim_output")
-!            write(3,*), lo
-!            write(3,*), hi
-!            write(3,*), up
-!            write(3,*), qp
-!            write(3,*), dx
-!            write(3,*), ng
-!            write(3,*), courno_proc
-!            close(3)
-!       end if
+       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+            open(unit=3, file="../testcases/ctoprim_output")
+            write(3,*), lo
+            write(3,*), hi
+            write(3,*), up
+            write(3,*), qp
+            write(3,*), dx
+            write(3,*), ng
+            write(3,*), courno_proc
+            close(3)
+       end if
     end do
 
     call parallel_reduce(courno, courno_proc, MPI_MAX)

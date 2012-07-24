@@ -9,7 +9,7 @@ void gpu_free_4D(double *d_ptr);
 
 void allocate_4D(double ****&ptr, int dim[], int dl);
 void allocate_3D(double ***&ptr, int dim[]);
-void free_4D(double ****ptr, int dim[]);
+void free_4D(double ****ptr, int dim[], int dl);
 void free_3D(double ***ptr, int dim[]);
 
 // Read and check

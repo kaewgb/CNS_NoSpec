@@ -56,7 +56,11 @@
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
-		<Unit filename="main.cpp" />
+		<Unit filename="main.cu">
+			<Option compile="1" />
+			<Option link="1" />
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<debugger />

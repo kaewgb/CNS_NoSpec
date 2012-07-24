@@ -30,23 +30,23 @@ void gpu_free_4D(double *d_ptr){
 
 void allocate_4D(double ****&ptr, int dim[], int dl){
 
-	int i,j,k;
+	int l,i,j;
 	int di=dim[0], dj=dim[1], dk=dim[2];
 	double *temp;
 
-	ptr = (double ****) malloc(di * sizeof(double ***));
-	FOR(i, 0, di){
-		ptr[i] = (double ***) malloc(dj * sizeof(double **));
-		FOR(j, 0, dj)
-			ptr[i][j] = (double **) malloc(dk * sizeof(double *));
+	ptr = (double ****) malloc(dl * sizeof(double ***));
+	FOR(l, 0, dl){
+		ptr[l] = (double ***) malloc(di * sizeof(double **));
+		FOR(i, 0, di)
+			ptr[l][i] = (double **) malloc(dj * sizeof(double *));
 	}
 
-	temp = (double *) malloc(di*dj*dk*dl * sizeof(double));
-	FOR(i, 0, di){
-		FOR(j, 0, dj){
-			FOR(k, 0, dk){
-				ptr[i][j][k] = temp;
-				temp += dl;
+	temp = (double *) malloc(dl*di*dj*dk * sizeof(double));
+	FOR(l, 0, dl){
+		FOR(i, 0, di){
+			FOR(j, 0, dj){
+				ptr[l][i][j] = temp;
+				temp += dk;
 			}
 		}
 	}
@@ -73,16 +73,15 @@ void allocate_3D(double ***&ptr, int dim[]){
 	}
 }
 
-void free_4D(double ****ptr, int dim[]){
-	int i,j;
+void free_4D(double ****ptr, int dim[], int dl){
+	int i,l;
 	int di=dim[0], dj=dim[1];
 
 	free(ptr[0][0][0]);
-	FOR(i, 0, di){
-		FOR(j, 0, dj){
-			free(ptr[i][j]);
-		}
-		free(ptr[i]);
+	FOR(l, 0, dl){
+		FOR(i, 0, di)
+			free(ptr[l][i]);
+		free(ptr[l]);
 	}
 	free(ptr);
 }
@@ -100,7 +99,8 @@ void read_3D(FILE *f, double ****ptr, int dim[], int l){
 	FOR(k, 0, dim[2]){
 		FOR(j, 0, dim[1]){
 			FOR(i, 0, dim[0])
-				fscanf(f, "%le", &ptr[i][j][k][l]);
+				fscanf(f, "%le", &ptr[l][i][j][k]);
+//				fscanf(f, "%le", &ptr[i][j][k][l]);
 		}
 	}
 }
@@ -140,13 +140,13 @@ void check_lo_hi_ng_dx( int lo[],  int hi[],  int ng,  double dx[],
 void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la){
 
 	int i,j,k,l;
-	FOR(i, 0, dim[0]){
-		FOR(j, 0, dim[1]){
-			FOR(k, 0, dim[2]){
-				FOR(l, 0, la){
-					if(!FEQ(a[i][j][k][l], a2[i][j][k][l])){
+	FOR(l, 0, la){
+		FOR(i, 0, dim[0]){
+			FOR(j, 0, dim[1]){
+				FOR(k, 0, dim[2]){
+					if(!FEQ(a[l][i][j][k], a2[l][i][j][k])){
 						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
-								name, i, j, k, l, a[i][j][k][l], a2[i][j][k][l], name, i, j, k, l);
+								name, l, i, j, k, a[l][i][j][k], a2[l][i][j][k], name, l, i, j, k);
 						exit(1);
 					}
 				}
@@ -154,4 +154,22 @@ void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  
 		}
 	}
 }
+
+//void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la){
+//
+//	int i,j,k,l;
+//	FOR(i, 0, dim[0]){
+//		FOR(j, 0, dim[1]){
+//			FOR(k, 0, dim[2]){
+//				FOR(l, 0, la){
+//					if(!FEQ(a[i][j][k][l], a2[i][j][k][l])){
+//						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
+//								name, i, j, k, l, a[i][j][k][l], a2[i][j][k][l], name, i, j, k, l);
+//						exit(1);
+//					}
+//				}
+//			}
+//		}
+//	}
+//}
 
