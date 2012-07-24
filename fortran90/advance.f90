@@ -100,31 +100,31 @@ contains
        lo = lwb(get_box(Q,n))
        hi = upb(get_box(Q,n))
 
-       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
-            open(unit=2, file="../testcases/ctoprim_input")
-            write(2,*), lo
-            write(2,*), hi
-            write(2,*), up
-            write(2,*), qp
-            write(2,*), dx
-            write(2,*), ng
-            write(2,*), courno_proc
-            close(2)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+!            open(unit=2, file="../testcases/ctoprim_input")
+!            write(2,*), lo
+!            write(2,*), hi
+!            write(2,*), up
+!            write(2,*), qp
+!            write(2,*), dx
+!            write(2,*), ng
+!            write(2,*), courno_proc
+!            close(2)
+!       end if
 
        call ctoprim(lo,hi,up,qp,dx,ng,courno=courno_proc)
 
-       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
-            open(unit=3, file="../testcases/ctoprim_output")
-            write(3,*), lo
-            write(3,*), hi
-            write(3,*), up
-            write(3,*), qp
-            write(3,*), dx
-            write(3,*), ng
-            write(3,*), courno_proc
-            close(3)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+!            open(unit=3, file="../testcases/ctoprim_output")
+!            write(3,*), lo
+!            write(3,*), hi
+!            write(3,*), up
+!            write(3,*), qp
+!            write(3,*), dx
+!            write(3,*), ng
+!            write(3,*), courno_proc
+!            close(3)
+!       end if
     end do
 
     call parallel_reduce(courno, courno_proc, MPI_MAX)

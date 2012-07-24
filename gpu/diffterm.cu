@@ -318,9 +318,31 @@ void diffterm (
 	free_3D(vx, dim);	free_3D(vy, dim);	free_3D(vz, dim);
 	free_3D(wx, dim);	free_3D(wy, dim);	free_3D(wz, dim);
 }
+#undef	lo(i)
+#undef	hi(i)
+#undef 	dxinv(i)
+#undef	q(i,j,k,l)
+#undef	ux(i,j,k)
+#undef	vx(i,j,k)
+#undef	wx(i,j,k)
+#undef	uy(i,j,k)
+#undef	vy(i,j,k)
+#undef	wy(i,j,k)
+#undef	uz(i,j,k)
+#undef	vz(i,j,k)
+#undef	wz(i,j,k)
 
-void diffterm_test(){
-	int dim[3], dim2[3];
+#undef difflux(i,j,k,l)
+
+__global__ void gpu_diffterm_kernel(){
+}
+void gpu_diffterm(){
+}
+void diffterm_test(
+	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+){
+	int dim_g[3], dim[3];
 	int i, l;
 
 	int lo[3], hi[3], ng=4;
@@ -330,6 +352,8 @@ void diffterm_test(){
 	int lo2[3], hi2[3], ng2=4;
 	double dx2[3], eta2, alam2;
 	double ****q2, ****difflux2;
+
+	double *d_q,*d_flux;
 
 	FILE *fin 	= fopen("../testcases/diffterm_input", "r");
 	FILE *fout 	= fopen("../testcases/diffterm_output", "r");
@@ -348,25 +372,34 @@ void diffterm_test(){
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
 	FOR(i, 0, 3){
-		dim[i] 	= hi[i]-lo[i]+1 + 2*ng;
-		dim2[i] = hi[i]-lo[i]+1;
+		dim_g[i] 	= hi[i]-lo[i]+1 + 2*ng;
+		dim[i] = hi[i]-lo[i]+1;
 	}
 
-	allocate_4D(q, 		 	dim,  6); 	// [40][40][40][6]
-	allocate_4D(difflux, 	dim2, 5); 	// [32][32][32][5]
-	allocate_4D(q2, 	 	dim,  6); 	// [40][40][40][6]
-	allocate_4D(difflux2, 	dim2, 5); 	// [32][32][32][5]
+	allocate_4D(q, 		 	dim_g,  6); 	// [40][40][40][6]
+	allocate_4D(difflux, 	dim, 5); 	// [32][32][32][5]
+	allocate_4D(q2, 	 	dim_g,  6); 	// [40][40][40][6]
+	allocate_4D(difflux2, 	dim, 5); 	// [32][32][32][5]
+
+	gpu_allocate_4D(d_q, 	dim_g, 6);
+	gpu_allocate_4D(d_flux, dim, 5);
 
 	FOR(l, 0, 6)
-		read_3D(fin, q, dim, l);
+		read_3D(fin, q, dim_g, l);
 	FOR(l, 0, 5)
-		read_3D(fin, difflux, dim2, l);
+		read_3D(fin, difflux, dim, l);
 
 	fscanf(fin, "%le %le", &eta, &alam);
 	fclose(fin);
 
+	gpu_copy_from_host_4D(d_q, q, dim_g, 6);
+	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
+
 	printf("Applying diffterm()...\n");
 	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
+
+	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
+	gpu_copy_to_host_4D(difflux, d_flux, dim, 5);
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
@@ -375,22 +408,25 @@ void diffterm_test(){
 	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
 
 	FOR(l, 0, 6)
-		read_3D(fout, q2, dim, l);
+		read_3D(fout, q2, dim_g, l);
 	FOR(l, 0, 5)
-		read_3D(fout, difflux2, dim2, l);
+		read_3D(fout, difflux2, dim, l);
 
 	fscanf(fout, "%le %le", &eta2, &alam2);
 	fclose(fout);
 
 	// Checking...
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-	check_4D_array("q", q, q2, dim, 6);
-	check_4D_array("difflux", difflux, difflux2, dim2, 5);
+	check_4D_array("q", q, q2, dim_g, 6);
+	check_4D_array("difflux", difflux, difflux2, dim, 5);
 	check_double(eta,  eta2,  "eta");
 	check_double(alam, alam2, "alam");
 
-	free_4D(q,  dim);	free_4D(difflux,  dim2);
-	free_4D(q2, dim);	free_4D(difflux2, dim2);
+	gpu_free_4D(d_q);
+	gpu_free_4D(d_flux);
+
+	free_4D(q,  dim_g, 6);	free_4D(difflux,  dim, 5);
+	free_4D(q2, dim_g, 6);	free_4D(difflux2, dim, 5);
 
 	printf("Correct!\n");
 }

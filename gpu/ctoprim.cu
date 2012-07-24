@@ -175,7 +175,7 @@ void ctoprim_test(
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 ){
 
-	int i, l, dummy, dim_ng[3];
+	int i, l, dummy, dim_g[3];
 	int lo[3], hi[3];
 	int ng=4;
 	double ****u, ****q;
@@ -184,7 +184,7 @@ void ctoprim_test(
 	int ng2;
 	int lo2[3], hi2[3];
 	double ****u2, ****q2;
-	double *u_d, *q_d;
+	double *d_u, *d_q;
 	double dx2[3], courno2;
 
 	FILE *fin = fopen("../testcases/ctoprim_input", "r");
@@ -202,44 +202,44 @@ void ctoprim_test(
 	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
 
 	FOR(i, 0, 3)
-		dim_ng[i] = hi[i]-lo[i]+1 + 2*ng;
-	printf("dim_ng: %d %d %d\n", dim_ng[0], dim_ng[1], dim_ng[2]);
+		dim_g[i] = hi[i]-lo[i]+1 + 2*ng;
+	printf("dim_g: %d %d %d\n", dim_g[0], dim_g[1], dim_g[2]);
 
-	allocate_4D(u, 	dim_ng, 5); 	// [40][40][40][5]
-	allocate_4D(q, 	dim_ng, 6); 	// [40][40][40][6]
-	allocate_4D(u2, dim_ng, 5); 	// [40][40][40][5]
-	allocate_4D(q2, dim_ng, 6); 	// [40][40][40][6]
+	allocate_4D(u, 	dim_g, 5); 	// [40][40][40][5]
+	allocate_4D(q, 	dim_g, 6); 	// [40][40][40][6]
+	allocate_4D(u2, dim_g, 5); 	// [40][40][40][5]
+	allocate_4D(q2, dim_g, 6); 	// [40][40][40][6]
 
-	gpu_allocate_4D(u_d, dim_ng, 5);
-	gpu_allocate_4D(q_d, dim_ng, 6);
+	gpu_allocate_4D(d_u, dim_g, 5);
+	gpu_allocate_4D(d_q, dim_g, 6);
 
 	// TODO: rearrange array to [l][i][j][k]
 	FOR(l, 0, 5)
-		read_3D(fin, u, dim_ng, l);
+		read_3D(fin, u, dim_g, l);
 	FOR(l, 0, 6)
-		read_3D(fin, q, dim_ng, l);
+		read_3D(fin, q, dim_g, l);
 
 	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
 	fscanf(fin, "%d\n", &dummy);
 	fscanf(fin, "%le\n", &courno);
 	fclose(fin);
 
-	gpu_copy_from_host_4D(u_d, u, dim_ng, 5);
-	gpu_copy_from_host_4D(q_d, q, dim_ng, 6);
+	gpu_copy_from_host_4D(d_u, u, dim_g, 5);
+	gpu_copy_from_host_4D(d_q, q, dim_g, 6);
 
 	printf("Applying ctoprim()...\n");
-	gpu_ctoprim(h_const, d_const, u_d, q_d, courno);
+	gpu_ctoprim(h_const, d_const, d_u, d_q, courno);
 //	ctoprim(lo, hi, u, q, dx, ng, courno);
-	gpu_copy_to_host_4D(u, u_d, dim_ng, 5);
-	gpu_copy_to_host_4D(q, q_d, dim_ng, 6);
+	gpu_copy_to_host_4D(u, d_u, dim_g, 5);
+	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
 	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
 	FOR(l, 0, 5)
-		read_3D(fout, u2, dim_ng, l);
+		read_3D(fout, u2, dim_g, l);
 	FOR(l, 0, 6)
-		read_3D(fout, q2, dim_ng, l);
+		read_3D(fout, q2, dim_g, l);
 
 	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
 	fscanf(fout, "%d\n", &ng2);
@@ -250,9 +250,9 @@ void ctoprim_test(
 	double u_max=-1.0;
 	int j,k;
 	FOR(l, 0, 5){
-		FOR(i, 0, dim_ng[0]){
-			FOR(j, 0, dim_ng[1]){
-				FOR(k, 0, dim_ng[2]){
+		FOR(i, 0, dim_g[0]){
+			FOR(j, 0, dim_g[1]){
+				FOR(k, 0, dim_g[2]){
 					if(u_max < u[l][i][j][k])
 						u_max = u[l][i][j][k];
 				}
@@ -260,28 +260,17 @@ void ctoprim_test(
 		}
 	}
 	printf("u_max = %le\n", u_max);
-	printf("u[l][i][j][k] = %le\n", u[1][0][1][0]);
-	printf("q2[l][i][j][k] = %le\n", q2[1][0][1][0]);
-//	FOR(i, 0, dim_ng[0]){
-//		FOR(j, 0, dim_ng[1]){
-//			FOR(k, 0, dim_ng[2])
-//				if(q[0][i][j][k] != 33.33){
-//					printf("q[0][%d][%d][%d] = %le\n", i, j, k, q[0][i][j][k]);
-//					exit(1);
-//				}
-//		}
-//	}
 
 	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
 //	check_double(courno, courno2, "courno");
-	check_4D_array("u", u, u2, dim_ng, 5);
-	check_4D_array("q", q, q2, dim_ng, 6);
+	check_4D_array("u", u, u2, dim_g, 5);
+	check_4D_array("q", q, q2, dim_g, 6);
 	printf("Correct!\n");
 
-	gpu_free_4D(u_d);
-	gpu_free_4D(q_d);
+	gpu_free_4D(d_u);
+	gpu_free_4D(d_q);
 
-	free_4D(u,  dim_ng, 5);		free_4D(q,  dim_ng, 6);
-	free_4D(u2, dim_ng, 5);		free_4D(q2, dim_ng, 6);
+	free_4D(u,  dim_g, 5);		free_4D(q,  dim_g, 6);
+	free_4D(u2, dim_g, 5);		free_4D(q2, dim_g, 6);
 }
 

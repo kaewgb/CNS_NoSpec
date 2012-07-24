@@ -64,7 +64,10 @@ extern void ctoprim (
     double &courno   // i/o
 );
 
-extern void hypterm_test();
+extern void hypterm_test(
+	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
 extern void hypterm(
 	int lo[],			//i: lo[3]
 	int hi[],			//i: hi[3]
@@ -75,7 +78,10 @@ extern void hypterm(
 	double ****flux		//o: flux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 );
 
-extern void diffterm_test();
+extern void diffterm_test(
+	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
 extern void diffterm (
 	int lo[],			// i: lo[3]
 	int hi[],			// i: hi[3]
