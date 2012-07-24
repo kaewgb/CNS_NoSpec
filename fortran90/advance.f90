@@ -146,8 +146,8 @@ contains
        lo = lwb(get_box(D,n))
        hi = upb(get_box(D,n))
 
-       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-            open(unit=2, file="diffterm_input")
+       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+            open(unit=2, file="../testcases/diffterm_input")
             write(2,*), lo
             write(2,*), hi
             write(2,*), ng
@@ -161,8 +161,8 @@ contains
 
        call diffterm(lo,hi,ng,dx,qp,dp,ETA,ALAM)
 
-       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-            open(unit=3, file="diffterm_output")
+       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+            open(unit=3, file="../testcases/diffterm_output")
             write(3,*), lo
             write(3,*), hi
             write(3,*), ng
@@ -189,31 +189,31 @@ contains
        lo = lwb(get_box(F,n))
        hi = upb(get_box(F,n))
 
-!       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-!            open(unit=2, file="hypterm_input")
-!            write(2,*), lo
-!            write(2,*), hi
-!            write(2,*), ng
-!            write(2,*), dx
-!            write(2,*), up
-!            write(2,*), qp
-!            write(2,*), fp
-!            close(2)
-!       end if
+       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+            open(unit=2, file="../testcases/hypterm_input")
+            write(2,*), lo
+            write(2,*), hi
+            write(2,*), ng
+            write(2,*), dx
+            write(2,*), up
+            write(2,*), qp
+            write(2,*), fp
+            close(2)
+       end if
 
        call hypterm(lo,hi,ng,dx,up,qp,fp)
 
-!       if (parallel_IOProcessor() .and. istep == 10 .and. n==1) then
-!            open(unit=3, file="hypterm_output")
-!            write(3,*), lo
-!            write(3,*), hi
-!            write(3,*), ng
-!            write(3,*), dx
-!            write(3,*), up
-!            write(3,*), qp
-!            write(3,*), fp
-!            close(3)
-!       end if
+       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+            open(unit=3, file="../testcases/hypterm_output")
+            write(3,*), lo
+            write(3,*), hi
+            write(3,*), ng
+            write(3,*), dx
+            write(3,*), up
+            write(3,*), qp
+            write(3,*), fp
+            close(3)
+       end if
 
     end do
 

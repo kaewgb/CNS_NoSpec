@@ -334,9 +334,29 @@ void diffterm (
 
 #undef difflux(i,j,k,l)
 
-__global__ void gpu_diffterm_kernel(){
+__global__ void gpu_diffterm_kernel(
+	global_const_t *g,			// i: Global struct containing application parameters
+	double *q,					// i:
+	double *d_flux				// o:
+){
+	int i,j,k;
 }
-void gpu_diffterm(){
+void gpu_diffterm(
+	global_const_t h_const, 	// i: Global struct containing applicatino parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *d_flux				// o:
+){
+	int i, len, dim[3];
+	int grid_dim, block_dim;
+	FOR(i, 0, 3)
+		dim[i] = h_const.dim[i];
+
+	len = dim[0] * dim[1] * dim[2];
+	grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
+	block_dim = BLOCK_DIM;
+
+	gpu_hypterm_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_flux);
 }
 void diffterm_test(
 	global_const_t h_const, // i: Global struct containing applicatino parameters
@@ -396,7 +416,8 @@ void diffterm_test(
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
 
 	printf("Applying diffterm()...\n");
-	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
+//	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
+	gpu_diffterm(h_const, d_const, d_q, d_flux);
 
 	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
 	gpu_copy_to_host_4D(difflux, d_flux, dim, 5);

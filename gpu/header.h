@@ -23,7 +23,12 @@ enum {
 	imz,
 	iene
 };
-
+enum {
+	s_imx=0,
+	s_imy,
+	s_imz,
+	s_iene
+};
 enum {
 	qu=1,
 	qv,
@@ -38,6 +43,7 @@ typedef struct global_const {
 	int hi[3];
 	int dim[3];
 	int dim_ng[3];
+	int comp_offset_ng;
 	double dx[3];
 	double cfl;
 	double eta;

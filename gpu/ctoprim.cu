@@ -67,13 +67,13 @@ void gpu_ctoprim(
     double *q_d, 				// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
     double &courno  			// i/o
 ){
-	int i, len, dim_ng[3];
+	int i, len, dim_g[3];
 	double *d_cour;
 
 	FOR(i, 0, 3)
-		dim_ng[i] = h_const.dim_ng[i];
+		dim_g[i] = h_const.dim_g[i];
 
-	len = dim_ng[0] * dim_ng[1] * dim_ng[2];
+	len = dim_g[0] * dim_g[1] * dim_g[2];
 	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
 	int block_dim = BLOCK_DIM;
 
