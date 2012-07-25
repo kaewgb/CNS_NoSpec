@@ -24,11 +24,11 @@ __global__ void gpu_ctoprim_kernel(
 	double rhoinv, eint, c, courx, coury, courz;
 
 	idx = blockIdx.x * blockDim.x + threadIdx.x;
-	i = idx / (g->dim_ng[2] * g->dim_ng[1]);
-	j = (idx / g->dim_ng[2]) % g->dim_ng[1];
-	k = idx % g->dim_ng[2];
+	i = idx / (g->dim_g[2] * g->dim_g[1]);
+	j = (idx / g->dim_g[2]) % g->dim_g[1];
+	k = idx % g->dim_g[2];
 
-	loffset = g->dim_ng[0] * g->dim_ng[1] * g->dim_ng[2];
+	loffset = g->dim_g[0] * g->dim_g[1] * g->dim_g[2];
 
 	// Calculate Q
 	if( idx < loffset ){

@@ -22,9 +22,12 @@ int main(int argc, char *argv[]){
 	fclose(fin);
 	FOR(i, 0, 3){
 		h_const.dim[i] 		= h_const.hi[i] - h_const.lo[i] + 1;
-		h_const.dim_ng[i] 	= h_const.hi[i] - h_const.lo[i] + 1 + h_const.ng + h_const.ng;
+		h_const.dim_g[i] 	= h_const.hi[i] - h_const.lo[i] + 1 + h_const.ng + h_const.ng;
 	}
-	h_const.comp_offset_ng = h_const.dim_ng[0] * h_const.dim_ng[1] * h_const.dim_ng[2];
+	h_const.comp_offset_g  = h_const.dim_g[0] * h_const.dim_g[1] * h_const.dim_g[2];
+	h_const.comp_offset    = h_const.dim[0]   * h_const.dim[1]   * h_const.dim[2];
+	h_const.plane_offset_g = h_const.dim_g[1] * h_const.dim_g[2];
+	h_const.plane_offset   = h_const.dim[1]   * h_const.dim[2];
 
 	cudaMemcpyToSymbol(d_const, &h_const, sizeof(global_const_t));
 	cudaGetSymbolAddress((void **) &d_const_ptr, d_const);

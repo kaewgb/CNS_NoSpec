@@ -42,8 +42,11 @@ typedef struct global_const {
 	int lo[3];
 	int hi[3];
 	int dim[3];
-	int dim_ng[3];
-	int comp_offset_ng;
+	int dim_g[3];
+	int comp_offset_g;
+	int comp_offset;
+	int plane_offset_g;
+	int plane_offset;
 	double dx[3];
 	double cfl;
 	double eta;
