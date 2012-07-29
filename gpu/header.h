@@ -55,6 +55,7 @@ typedef struct global_const {
 	int gridDim_plane_xz;
 	int gridDim_plane_yz;
 	int blockDim_x_g;
+	int blockDim_y_g;
 	double dx[3];
 	double cfl;
 	double eta;

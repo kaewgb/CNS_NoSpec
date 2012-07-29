@@ -590,62 +590,62 @@ contains
     enddo
     !$OMP END PARALLEL DO
 
-!    !$OMP PARALLEL DO PRIVATE(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
-!    do k=lo(3),hi(3)
-!       do j=lo(2),hi(2)
-!          do i=lo(1),hi(1)
-!
-!             unp1 = q(i,j+1,k,qv)
-!             unp2 = q(i,j+2,k,qv)
-!             unp3 = q(i,j+3,k,qv)
-!             unp4 = q(i,j+4,k,qv)
-!
-!             unm1 = q(i,j-1,k,qv)
-!             unm2 = q(i,j-2,k,qv)
-!             unm3 = q(i,j-3,k,qv)
-!             unm4 = q(i,j-4,k,qv)
-!
-!             flux(i,j,k,irho)=flux(i,j,k,irho) - &
-!                   (ALP*(cons(i,j+1,k,imy)-cons(i,j-1,k,imy)) &
-!                  + BET*(cons(i,j+2,k,imy)-cons(i,j-2,k,imy)) &
-!                  + GAM*(cons(i,j+3,k,imy)-cons(i,j-3,k,imy)) &
-!                  + DEL*(cons(i,j+4,k,imy)-cons(i,j-4,k,imy)))*dxinv(2)
-!
-!             flux(i,j,k,imx)=flux(i,j,k,imx) - &
-!                   (ALP*(cons(i,j+1,k,imx)*unp1-cons(i,j-1,k,imx)*unm1) &
-!                  + BET*(cons(i,j+2,k,imx)*unp2-cons(i,j-2,k,imx)*unm2) &
-!                  + GAM*(cons(i,j+3,k,imx)*unp3-cons(i,j-3,k,imx)*unm3) &
-!                  + DEL*(cons(i,j+4,k,imx)*unp4-cons(i,j-4,k,imx)*unm4))*dxinv(2)
-!
-!             flux(i,j,k,imy)=flux(i,j,k,imy) - &
-!                   (ALP*(cons(i,j+1,k,imy)*unp1-cons(i,j-1,k,imy)*unm1 &
-!                  + (q(i,j+1,k,qpres)-q(i,j-1,k,qpres)))               &
-!                  + BET*(cons(i,j+2,k,imy)*unp2-cons(i,j-2,k,imy)*unm2 &
-!                  + (q(i,j+2,k,qpres)-q(i,j-2,k,qpres)))               &
-!                  + GAM*(cons(i,j+3,k,imy)*unp3-cons(i,j-3,k,imy)*unm3 &
-!                  + (q(i,j+3,k,qpres)-q(i,j-3,k,qpres)))               &
-!                  + DEL*(cons(i,j+4,k,imy)*unp4-cons(i,j-4,k,imy)*unm4 &
-!                  + (q(i,j+4,k,qpres)-q(i,j-4,k,qpres))))*dxinv(2)
-!
-!             flux(i,j,k,imz)=flux(i,j,k,imz) - &
-!                   (ALP*(cons(i,j+1,k,imz)*unp1-cons(i,j-1,k,imz)*unm1) &
-!                  + BET*(cons(i,j+2,k,imz)*unp2-cons(i,j-2,k,imz)*unm2) &
-!                  + GAM*(cons(i,j+3,k,imz)*unp3-cons(i,j-3,k,imz)*unm3) &
-!                  + DEL*(cons(i,j+4,k,imz)*unp4-cons(i,j-4,k,imz)*unm4))*dxinv(2)
-!
-!             flux(i,j,k,iene)=flux(i,j,k,iene) - &
-!                   (ALP*(cons(i,j+1,k,iene)*unp1-cons(i,j-1,k,iene)*unm1 &
-!                  + (q(i,j+1,k,qpres)*unp1-q(i,j-1,k,qpres)*unm1))       &
-!                  + BET*(cons(i,j+2,k,iene)*unp2-cons(i,j-2,k,iene)*unm2 &
-!                  + (q(i,j+2,k,qpres)*unp2-q(i,j-2,k,qpres)*unm2))       &
-!                  + GAM*(cons(i,j+3,k,iene)*unp3-cons(i,j-3,k,iene)*unm3 &
-!                  + (q(i,j+3,k,qpres)*unp3-q(i,j-3,k,qpres)*unm3))       &
-!                  + DEL*(cons(i,j+4,k,iene)*unp4-cons(i,j-4,k,iene)*unm4 &
-!                  + (q(i,j+4,k,qpres)*unp4-q(i,j-4,k,qpres)*unm4)))*dxinv(2)
-!          enddo
-!       enddo
-!    enddo
-!    !$OMP END PARALLEL DO
+    !$OMP PARALLEL DO PRIVATE(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
+    do k=lo(3),hi(3)
+       do j=lo(2),hi(2)
+          do i=lo(1),hi(1)
+
+             unp1 = q(i,j+1,k,qv)
+             unp2 = q(i,j+2,k,qv)
+             unp3 = q(i,j+3,k,qv)
+             unp4 = q(i,j+4,k,qv)
+
+             unm1 = q(i,j-1,k,qv)
+             unm2 = q(i,j-2,k,qv)
+             unm3 = q(i,j-3,k,qv)
+             unm4 = q(i,j-4,k,qv)
+
+             flux(i,j,k,irho)=flux(i,j,k,irho) - &
+                   (ALP*(cons(i,j+1,k,imy)-cons(i,j-1,k,imy)) &
+                  + BET*(cons(i,j+2,k,imy)-cons(i,j-2,k,imy)) &
+                  + GAM*(cons(i,j+3,k,imy)-cons(i,j-3,k,imy)) &
+                  + DEL*(cons(i,j+4,k,imy)-cons(i,j-4,k,imy)))*dxinv(2)
+
+             flux(i,j,k,imx)=flux(i,j,k,imx) - &
+                   (ALP*(cons(i,j+1,k,imx)*unp1-cons(i,j-1,k,imx)*unm1) &
+                  + BET*(cons(i,j+2,k,imx)*unp2-cons(i,j-2,k,imx)*unm2) &
+                  + GAM*(cons(i,j+3,k,imx)*unp3-cons(i,j-3,k,imx)*unm3) &
+                  + DEL*(cons(i,j+4,k,imx)*unp4-cons(i,j-4,k,imx)*unm4))*dxinv(2)
+
+             flux(i,j,k,imy)=flux(i,j,k,imy) - &
+                   (ALP*(cons(i,j+1,k,imy)*unp1-cons(i,j-1,k,imy)*unm1 &
+                  + (q(i,j+1,k,qpres)-q(i,j-1,k,qpres)))               &
+                  + BET*(cons(i,j+2,k,imy)*unp2-cons(i,j-2,k,imy)*unm2 &
+                  + (q(i,j+2,k,qpres)-q(i,j-2,k,qpres)))               &
+                  + GAM*(cons(i,j+3,k,imy)*unp3-cons(i,j-3,k,imy)*unm3 &
+                  + (q(i,j+3,k,qpres)-q(i,j-3,k,qpres)))               &
+                  + DEL*(cons(i,j+4,k,imy)*unp4-cons(i,j-4,k,imy)*unm4 &
+                  + (q(i,j+4,k,qpres)-q(i,j-4,k,qpres))))*dxinv(2)
+
+             flux(i,j,k,imz)=flux(i,j,k,imz) - &
+                   (ALP*(cons(i,j+1,k,imz)*unp1-cons(i,j-1,k,imz)*unm1) &
+                  + BET*(cons(i,j+2,k,imz)*unp2-cons(i,j-2,k,imz)*unm2) &
+                  + GAM*(cons(i,j+3,k,imz)*unp3-cons(i,j-3,k,imz)*unm3) &
+                  + DEL*(cons(i,j+4,k,imz)*unp4-cons(i,j-4,k,imz)*unm4))*dxinv(2)
+
+             flux(i,j,k,iene)=flux(i,j,k,iene) - &
+                   (ALP*(cons(i,j+1,k,iene)*unp1-cons(i,j-1,k,iene)*unm1 &
+                  + (q(i,j+1,k,qpres)*unp1-q(i,j-1,k,qpres)*unm1))       &
+                  + BET*(cons(i,j+2,k,iene)*unp2-cons(i,j-2,k,iene)*unm2 &
+                  + (q(i,j+2,k,qpres)*unp2-q(i,j-2,k,qpres)*unm2))       &
+                  + GAM*(cons(i,j+3,k,iene)*unp3-cons(i,j-3,k,iene)*unm3 &
+                  + (q(i,j+3,k,qpres)*unp3-q(i,j-3,k,qpres)*unm3))       &
+                  + DEL*(cons(i,j+4,k,iene)*unp4-cons(i,j-4,k,iene)*unm4 &
+                  + (q(i,j+4,k,qpres)*unp4-q(i,j-4,k,qpres)*unm4)))*dxinv(2)
+          enddo
+       enddo
+    enddo
+    !$OMP END PARALLEL DO
 !
 !    !$OMP PARALLEL DO PRIVATE(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
 !    do k=lo(3),hi(3)
