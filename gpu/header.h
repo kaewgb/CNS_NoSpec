@@ -96,6 +96,13 @@ extern void hypterm(
 	double ****q,		//i: cons[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[0]-lo[0]+2*ng][6];
 	double ****flux		//o: flux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 );
+extern void gpu_hypterm_merged(
+	global_const_t h_const, 	// i: Global struct containing applicatino parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_cons,				// i:
+	double *d_q,				// i:
+	double *d_flux				// o: flux
+);
 
 extern void diffterm_test(
 	global_const_t h_const, // i: Global struct containing applicatino parameters
