@@ -56,16 +56,6 @@ void hypterm(
 					  + DEL*(cons(i+4,j,k,imx)*unp4-cons(i-4,j,k,imx)*unm4
 					  + (q(i+4,j,k,qpres)-q(i-4,j,k,qpres))))*dxinv(1);
 
-				if(i==ng && j==ng && k==ng){
-					printf("flux[irho]=%le\n", flux(i,j,k,irho));
-					printf("flux[imx]=%le\n", flux(i,j,k,imx));
-					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
-								q(i+1,j,k,qpres), q(i-1,j,k,qpres),
-								q(i+2,j,k,qpres), q(i-2,j,k,qpres),
-								q(i+3,j,k,qpres), q(i-3,j,k,qpres),
-								q(i+4,j,k,qpres), q(i-4,j,k,qpres));
-				}
-
 				flux(i,j,k,imy)= -
 					   (ALP*(cons(i+1,j,k,imy)*unp1-cons(i-1,j,k,imy)*unm1)
 					  + BET*(cons(i+2,j,k,imy)*unp2-cons(i-2,j,k,imy)*unm2)
@@ -87,6 +77,15 @@ void hypterm(
 					  + (q(i+3,j,k,qpres)*unp3-q(i-3,j,k,qpres)*unm3))
 					  + DEL*(cons(i+4,j,k,iene)*unp4-cons(i-4,j,k,iene)*unm4
 					  + (q(i+4,j,k,qpres)*unp4-q(i-4,j,k,qpres)*unm4)))*dxinv(1);
+
+				if(i==ng && j==ng+1 && k==ng+1){
+					printf("flux[iene]=%le\n", flux(i,j,k,iene));
+					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
+								cons(i+1,j,k,iene), cons(i-1,j,k,iene),
+								cons(i+2,j,k,iene), cons(i-2,j,k,iene),
+								cons(i+3,j,k,iene), cons(i-3,j,k,iene),
+								cons(i+4,j,k,iene), cons(i-4,j,k,iene));
+				}
 
 			}
 		}
@@ -573,18 +572,6 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 					  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4
 					  + (s_qpres(4)-s_qpres(-4))))*dxinv;
 
-		if(si == 0 && sj == 0 && sk == 0){
-			values[0] = s_qpres(1);
-			values[1] = s_qpres(2);
-			values[2] = s_qpres(3);
-			values[3] = s_qpres(4);
-			values[4] = s_qpres(-1);
-			values[5] = s_qpres(-2);
-			values[6] = s_qpres(-3);
-			values[7] = s_qpres(-4);
-			values[8] = flux_imx;
-		}
-
 		flux_imy  = - ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1)
 					  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2)
 					  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3)
@@ -604,14 +591,26 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 					  + DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
+		if(si == 0 && sj == 1 && sk == 1){
+			values[0] = s_cons(1, s_iene);
+			values[1] = s_cons(2, s_iene);
+			values[2] = s_cons(3, s_iene);
+			values[3] = s_cons(4, s_iene);
+			values[4] = s_cons(-1, s_iene);
+			values[5] = s_cons(-2, s_iene);
+			values[6] = s_cons(-3, s_iene);
+			values[7] = s_cons(-4, s_iene);
+			values[8] = flux_iene;
+		}
+
 		// Update changes
 		idx = si*g->plane_offset + sj*g->dim[2] + sk;
 
-		flux[idx + irho*g->comp_offset_g] = flux_irho;
-		flux[idx + imx *g->comp_offset_g] = flux_imx;
-		flux[idx + imy *g->comp_offset_g] = flux_imy;
-		flux[idx + imz *g->comp_offset_g] = flux_imz;
-		flux[idx + iene*g->comp_offset_g] = flux_iene;
+		flux[idx + irho*g->comp_offset] = flux_irho;
+		flux[idx + imx *g->comp_offset] = flux_imx;
+		flux[idx + imy *g->comp_offset] = flux_imy;
+		flux[idx + imz *g->comp_offset] = flux_imz;
+		flux[idx + iene*g->comp_offset] = flux_iene;
 	}
 }
 #undef	s_q(i)
@@ -722,13 +721,23 @@ void hypterm_test(
 		read_3D(fin, flux,  dim, l);
 	fclose(fin);
 
+	int j,k;
+
+
 	gpu_copy_from_host_4D(d_cons, cons, dim_g, 5);
 	gpu_copy_from_host_4D(d_q, 	  q, 	dim_g, 6);
 	gpu_copy_from_host_4D(d_flux, flux, dim  , 5);
 
+	FOR(i, 0, dim[0]){
+		FOR(j, 0, dim[1]){
+			FOR(k, 0, dim[2])
+				flux[imx][i][j][k] = 55.55;
+		}
+	}
+
 	FILE *f = fopen("q", "w");
 	FILE *f2 = fopen("plane", "w");
-	int j,k;
+
 	FOR(i, 0, dim_g[0]){
 		FOR(j, 0, dim_g[1]){
 			FOR(k, 0, dim_g[2])
@@ -753,10 +762,10 @@ void hypterm_test(
 	gpu_copy_to_host_4D(q   , d_q   , dim_g, 6);
 	gpu_copy_to_host_4D(flux, d_flux, dim  , 5);
 
-	double vals[8], tmp[BLOCK_DIM_X+NG+NG][BLOCK_DIM_Z];
+	double vals[9], tmp[BLOCK_DIM_X+NG+NG][BLOCK_DIM_Z];
 	cudaMemcpyFromSymbol(vals, values, 9*sizeof(double));
 	printf("vals: ");
-	FOR(i,0,9)
+	FOR(i, 0, 9)
 		printf("%le ", vals[i]);
 	printf("\n");
 	cudaMemcpyFromSymbol(tmp, temp, (BLOCK_DIM_X+NG+NG)*BLOCK_DIM_Z*sizeof(double));

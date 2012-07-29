@@ -147,6 +147,7 @@ void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  
 					if(!FEQ(a[l][i][j][k], a2[l][i][j][k])){
 						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
 								name, l, i, j, k, a[l][i][j][k], a2[l][i][j][k], name, l, i, j, k);
+						printf("diff = %le\n", a[l][i][j][k] - a2[l][i][j][k]);
 						exit(1);
 					}
 				}
