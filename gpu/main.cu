@@ -29,13 +29,28 @@ int main(int argc, char *argv[]){
 	h_const.plane_offset_g = h_const.dim_g[1] * h_const.dim_g[2];
 	h_const.plane_offset   = h_const.dim[1]   * h_const.dim[2];
 
+	h_const.ALP	=  0.8E0;
+	h_const.BET	= -0.2E0;
+	h_const.GAM	=  4.0E0/105.0E0;
+	h_const.DEL	= -1.0E0/280.0E0;
+
+	h_const.OneThird	= 1.0E0/3.0E0;
+	h_const.TwoThirds	= 2.0E0/3.0E0;
+	h_const.FourThirds	= 4.0E0/3.0E0;
+
+	h_const.CENTER		= -205.0E0/72.0E0;
+	h_const.OFF1		=  8.0E0/5.0E0;
+	h_const.OFF2 		= -0.2E0;
+	h_const.OFF3		=  8.0E0/315.0E0;
+	h_const.OFF4		= -1.0E0/560.0E0;
+
 	cudaMemcpyToSymbol(d_const, &h_const, sizeof(global_const_t));
 	cudaGetSymbolAddress((void **) &d_const_ptr, d_const);
 
 	// Calling Test Kernels
 //	ctoprim_test(h_const, d_const_ptr);
-//	diffterm_test(h_const, d_const_ptr);
-	hypterm_test(h_const, d_const_ptr);
+	diffterm_test(h_const, d_const_ptr);
+//	hypterm_test(h_const, d_const_ptr);
 
 //	advance_test();
 

@@ -12,6 +12,13 @@
 	}                                         										\
 }
 
+void gpu_allocate_3D(double *&d_ptr, int dim[]){
+	CUDA_SAFE_CALL(cudaMalloc((void **) &d_ptr, dim[0]*dim[1]*dim[2] * sizeof(double)));
+}
+void gpu_free_3D(double *d_ptr){
+	CUDA_SAFE_CALL(cudaFree(d_ptr));
+}
+
 void gpu_allocate_4D(double *&d_ptr, int dim[], int dl){
 	CUDA_SAFE_CALL(cudaMalloc((void **) &d_ptr, dim[0]*dim[1]*dim[2]*dl * sizeof(double)));
 }

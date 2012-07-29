@@ -46,6 +46,7 @@
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="diffterm_cpu.cpp" />
 		<Unit filename="header.h" />
 		<Unit filename="helper_functions.cu">
 			<Option virtualFolder="CUDA Sources/" />
@@ -54,6 +55,10 @@
 		<Unit filename="hypterm.cu">
 			<Option compile="1" />
 			<Option link="1" />
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
+		<Unit filename="hypterm_cpu.cpp" />
+		<Unit filename="hypterm_merged.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
 		<Unit filename="main.cu">

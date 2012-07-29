@@ -35,7 +35,25 @@ enum {
 	qv,
 	qw,
 	qpres,
-	qfive
+	qt
+};
+enum {
+	s_qu=0,
+	s_qv,
+	s_qw,
+	s_qt,
+	s_qend
+};
+
+enum {
+	ux, 	vx, 	wx,
+	uy, 	vy, 	wy,
+	uz, 	vz, 	wz,
+	uxx,	uyy,	uzz,	vyx,	wzx,
+	vxx,	vyy, 	vzz, 	uxy,	wzy,
+	wxx,	wyy,	wzz, 	uxz, 	vyz,
+	txx,	tyy,	tzz,
+	MAX_TEMP
 };
 
 typedef struct global_const {
@@ -61,6 +79,23 @@ typedef struct global_const {
 	double cfl;
 	double eta;
 	double alam;
+	double *temp[MAX_TEMP];
+
+	double ALP;
+	double BET;
+	double GAM;
+
+	double DEL;
+	double OneThird;
+	double TwoThirds;
+	double FourThirds;
+
+	double CENTER;
+	double OFF1;
+	double OFF2;
+	double OFF3;
+	double OFF4;
+
 } global_const_t;
 
 static const double ALP	=  0.8E0;

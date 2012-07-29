@@ -2,6 +2,8 @@
 #define FEQ(x, y)	((fabs(x-y)<0.01)? true:false)
 
 // Allocations
+void gpu_allocate_3D(double *&d_ptr, int dim[]);
+void gpu_free_3D(double *d_ptr);
 void gpu_allocate_4D(double *&d_ptr, int dim[], int dl);
 void gpu_copy_from_host_4D(double *dev, double ****host, int dim[], int dl);
 void gpu_copy_to_host_4D(double ****host, double *dev, int dim[], int dl);
