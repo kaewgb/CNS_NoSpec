@@ -8,6 +8,7 @@
 // MACROS
 #define SQR(x)          ((x)*(x))
 #define MAX(x, y)       ((x > y)? (x):(y))
+#define CEIL(x, div)	(((x) + (div)-1)/(div))
 
 // CONSTANTS
 #define	DIM		3
@@ -51,6 +52,8 @@ typedef struct global_const {
 	int gridDim_y;
 	int gridDim_z;
 	int gridDim_plane_xy;
+	int gridDim_plane_xz;
+	int gridDim_plane_yz;
 	int blockDim_x_g;
 	double dx[3];
 	double cfl;
