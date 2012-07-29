@@ -78,15 +78,6 @@ void hypterm(
 					  + DEL*(cons(i+4,j,k,iene)*unp4-cons(i-4,j,k,iene)*unm4
 					  + (q(i+4,j,k,qpres)*unp4-q(i-4,j,k,qpres)*unm4)))*dxinv(1);
 
-				if(i==ng && j==ng+1 && k==ng+1){
-					printf("flux[iene]=%le\n", flux(i,j,k,iene));
-					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
-								cons(i+1,j,k,iene), cons(i-1,j,k,iene),
-								cons(i+2,j,k,iene), cons(i-2,j,k,iene),
-								cons(i+3,j,k,iene), cons(i-3,j,k,iene),
-								cons(i+4,j,k,iene), cons(i-4,j,k,iene));
-				}
-
 			}
 		}
 	}
@@ -106,11 +97,23 @@ void hypterm(
 				unm3 = q(i,j-3,k,qv);
 				unm4 = q(i,j-4,k,qv);
 
+				if(i==ng && j==ng+13 && k==ng+1){
+					printf("before: flux[irho] = %le\n", flux(i,j,k,irho));
+				}
 				flux(i,j,k,irho)=flux(i,j,k,irho) -
 					   (ALP*(cons(i,j+1,k,imy)-cons(i,j-1,k,imy))
 					  + BET*(cons(i,j+2,k,imy)-cons(i,j-2,k,imy))
 					  + GAM*(cons(i,j+3,k,imy)-cons(i,j-3,k,imy))
 					  + DEL*(cons(i,j+4,k,imy)-cons(i,j-4,k,imy)))*dxinv(2);
+
+				if(i==ng && j==ng+13 && k==ng+1){
+					printf("flux[irho]=%le\n", flux(i,j,k,irho));
+					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
+								cons(i,j+1,k,imy), cons(i,j-1,k,imy),
+								cons(i,j+2,k,imy), cons(i,j-2,k,imy),
+								cons(i,j+3,k,imy), cons(i,j-3,k,imy),
+								cons(i,j+4,k,imy), cons(i,j-4,k,imy));
+				}
 
 				flux(i,j,k,imx)=flux(i,j,k,imx) -
 					   (ALP*(cons(i,j+1,k,imx)*unp1-cons(i,j-1,k,imx)*unm1)
@@ -208,10 +211,10 @@ void hypterm(
 //	printf("flux[0][0][0][0] = %le\n", flux[0][0][0][0]);
 }
 
-#undef	q(i,j,k,l)
-#undef 	cons(i,j,k,l)
-#undef 	flux(i,j,k,l)
-#undef 	dxinv(i)
+#undef	q
+#undef 	cons
+#undef 	flux
+#undef 	dxinv
 
 
 #define BLOCK_DIM_X		8
@@ -334,49 +337,49 @@ __global__ void gpu_hypterm_kernel(
 //	}
 //
 //
-//	dxinv = 1.0E0/g->dx[1];
-//	unp1 = s_q(1); 		//q(i,j+1,k,qv);
-//	unp2 = s_q(2); 		//q(i,j+2,k,qv);
-//	unp3 = s_q(3); 		//q(i,j+3,k,qv);
-//	unp4 = s_q(4); 		//q(i,j+4,k,qv);
-//
-//	unm1 = s_q(-1); 	//q(i,j-1,k,qv);
-//	unm2 = s_q(-2); 	//q(i,j-2,k,qv);
-//	unm3 = s_q(-3); 	//q(i,j-3,k,qv);
-//	unm4 = s_q(-4); 	//q(i,j-4,k,qv);
-//
-//	flux_irho -=   ( ALP*(s_cons(1, s_imy)-s_cons(-1, s_imy))
-//				  + BET*(s_cons(2, s_imy)-s_cons(-2, s_imy))
-//				  + GAM*(s_cons(3, s_imy)-s_cons(-3, s_imy))
-//				  + DEL*(s_cons(4, s_imy)-s_cons(-4, s_imy)))*dxinv;
-//
-//	flux_imx -=   ( ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1)
-//				  + BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2)
-//				  + GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3)
-//				  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4))*dxinv;
-//
-//	flux_imy -=   ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1
-//				  + (s_qpres(1)-s_qpres(-1)))
-//				  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2
-//				  + (s_qpres(2)-s_qpres(-2)))
-//				  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3
-//				  + (s_qpres(3)-s_qpres(-3)))
-//				  + DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4
-//				  + (s_qpres(4)-s_qpres(-4))))*dxinv;
-//
-//	flux_imz -=   ( ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
-//				  + BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
-//				  + GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
-//				  + DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
-//
-//	flux_iene -=  ( ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
-//				  + (s_qpres(1)*unp1-s_qpres(-1)*unm1))
-//				  + BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
-//				  + (s_qpres(2)*unp2-s_qpres(-2)*unm2))
-//				  + GAM*(s_cons(3, s_iene)*unp3-s_cons(-3, s_iene)*unm3
-//				  + (s_qpres(3)*unp3-s_qpres(-3)*unm3))
-//				  + DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
-//				  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
+	dxinv = 1.0E0/g->dx[1];
+	unp1 = s_q(1); 		//q(i,j+1,k,qv);
+	unp2 = s_q(2); 		//q(i,j+2,k,qv);
+	unp3 = s_q(3); 		//q(i,j+3,k,qv);
+	unp4 = s_q(4); 		//q(i,j+4,k,qv);
+
+	unm1 = s_q(-1); 	//q(i,j-1,k,qv);
+	unm2 = s_q(-2); 	//q(i,j-2,k,qv);
+	unm3 = s_q(-3); 	//q(i,j-3,k,qv);
+	unm4 = s_q(-4); 	//q(i,j-4,k,qv);
+
+	flux_irho -=   ( ALP*(s_cons(1, s_imy)-s_cons(-1, s_imy))
+				  + BET*(s_cons(2, s_imy)-s_cons(-2, s_imy))
+				  + GAM*(s_cons(3, s_imy)-s_cons(-3, s_imy))
+				  + DEL*(s_cons(4, s_imy)-s_cons(-4, s_imy)))*dxinv;
+
+	flux_imx -=   ( ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1)
+				  + BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2)
+				  + GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3)
+				  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4))*dxinv;
+
+	flux_imy -=   ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1
+				  + (s_qpres(1)-s_qpres(-1)))
+				  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2
+				  + (s_qpres(2)-s_qpres(-2)))
+				  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3
+				  + (s_qpres(3)-s_qpres(-3)))
+				  + DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4
+				  + (s_qpres(4)-s_qpres(-4))))*dxinv;
+
+	flux_imz -=   ( ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
+				  + BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
+				  + GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
+				  + DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
+
+	flux_iene -=  ( ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
+				  + (s_qpres(1)*unp1-s_qpres(-1)*unm1))
+				  + BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
+				  + (s_qpres(2)*unp2-s_qpres(-2)*unm2))
+				  + GAM*(s_cons(3, s_iene)*unp3-s_cons(-3, s_iene)*unm3
+				  + (s_qpres(3)*unp3-s_qpres(-3)*unm3))
+				  + DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
+				  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 //
 //
 //
@@ -475,9 +478,9 @@ __global__ void gpu_hypterm_kernel(
 }
 #undef	BLOCK_DIM_X
 #undef	BLOCK_DIM_Y
-#undef	s_q(i)
-#undef 	s_qpres(i)
-#undef	s_cons(i, comp)
+#undef	s_q
+#undef 	s_qpres
+#undef	s_cons
 
 
 #define BLOCK_DIM_X		8
@@ -608,13 +611,13 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 		flux[idx + iene*g->comp_offset] = flux_iene;
 	}
 }
-#undef	s_q(i)
-#undef 	s_qpres(i)
-#undef	s_cons(i, comp)
+#undef	s_q
+#undef 	s_qpres
+#undef	s_cons
 
-#define	s_q(i)			s_q[threadIdx.x+g->ng+i][threadIdx.z]
-#define	s_qpres(i)		s_qpres[threadIdx.x+g->ng+i][threadIdx.z]
-#define	s_cons(i, comp)	s_cons[comp][threadIdx.x+g->ng+i][threadIdx.z]
+#define	s_q(i)			s_q[threadIdx.y+g->ng+i][threadIdx.z]
+#define	s_qpres(i)		s_qpres[threadIdx.y+g->ng+i][threadIdx.z]
+#define	s_cons(i, comp)	s_cons[comp][threadIdx.y+g->ng+i][threadIdx.z]
 
 __global__ void gpu_hypterm_y_stencil_kernel(
 	global_const_t *g,	// i:
@@ -643,9 +646,9 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidy < g->blockDim_y_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+		idx = (si+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + (sk+g->ng);
 
-				   s_q[tidy][tidz]  =     q[idx + qu*g->comp_offset_g];
+				   s_q[tidy][tidz]  =     q[idx + qv*g->comp_offset_g];
 			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g];
 		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g];
 		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g];
@@ -660,42 +663,54 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 	sj = bj*blockDim.y+threadIdx.y;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
-		dxinv = 1.0E0/g->dx[0];
-		unp1 = s_q(1); //q(i+1,j,k,qu);
-		unp2 = s_q(2); //q(i+2,j,k,qu);
-		unp3 = s_q(3); //q(i+3,j,k,qu);
-		unp4 = s_q(4); //q(i+4,j,k,qu);
+		dxinv = 1.0E0/g->dx[1];
+		unp1 = s_q(1); 		//q(i,j+1,k,qv);
+		unp2 = s_q(2); 		//q(i,j+2,k,qv);
+		unp3 = s_q(3); 		//q(i,j+3,k,qv);
+		unp4 = s_q(4); 		//q(i,j+4,k,qv);
 
-		unm1 = s_q(-1); //q(i-1,j,k,qu);
-		unm2 = s_q(-2); //q(i-2,j,k,qu);
-		unm3 = s_q(-3); //q(i-3,j,k,qu);
-		unm4 = s_q(-4); //q(i-4,j,k,qu);
+		unm1 = s_q(-1); 	//q(i,j-1,k,qv);
+		unm2 = s_q(-2); 	//q(i,j-2,k,qv);
+		unm3 = s_q(-3); 	//q(i,j-3,k,qv);
+		unm4 = s_q(-4); 	//q(i,j-4,k,qv);
 
-		flux_irho = - ( ALP*(s_cons(1, s_imx)-s_cons(-1, s_imx))
-					  + BET*(s_cons(2, s_imx)-s_cons(-2, s_imx))
-					  + GAM*(s_cons(3, s_imx)-s_cons(-3, s_imx))
-					  + DEL*(s_cons(4, s_imx)-s_cons(-4, s_imx)))*dxinv;
+		flux_irho =  ( ALP*(s_cons(1, s_imy)-s_cons(-1, s_imy))
+					  + BET*(s_cons(2, s_imy)-s_cons(-2, s_imy))
+					  + GAM*(s_cons(3, s_imy)-s_cons(-3, s_imy))
+					  + DEL*(s_cons(4, s_imy)-s_cons(-4, s_imy)))*dxinv;
 
-		flux_imx  = - ( ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1
+		if(si == 0 && sj == 13 && sk == 1){
+			values[0] = s_cons(1, s_imy);
+			values[1] = s_cons(2, s_imy);
+			values[2] = s_cons(3, s_imy);
+			values[3] = s_cons(4, s_imy);
+			values[4] = s_cons(-1, s_imy);
+			values[5] = s_cons(-2, s_imy);
+			values[6] = s_cons(-3, s_imy);
+			values[7] = s_cons(-4, s_imy);
+			values[8] = flux_irho;
+		}
+
+		flux_imx =   ( ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1)
+					  + BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2)
+					  + GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3)
+					  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4))*dxinv;
+
+		flux_imy =   ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1
 					  + (s_qpres(1)-s_qpres(-1)))
-					  + BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2
+					  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2
 					  + (s_qpres(2)-s_qpres(-2)))
-					  + GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3
+					  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3
 					  + (s_qpres(3)-s_qpres(-3)))
-					  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4
+					  + DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4
 					  + (s_qpres(4)-s_qpres(-4))))*dxinv;
 
-		flux_imy  = - ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1)
-					  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2)
-					  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3)
-					  + DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4))*dxinv;
-
-		flux_imz  = - ( ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
+		flux_imz =   ( ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
 					  + BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
 					  + GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
 					  + DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
 
-		flux_iene = - ( ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
+		flux_iene =  ( ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
 					  + (s_qpres(1)*unp1-s_qpres(-1)*unm1))
 					  + BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
 					  + (s_qpres(2)*unp2-s_qpres(-2)*unm2))
@@ -704,31 +719,19 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 					  + DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
-		if(si == 0 && sj == 1 && sk == 1){
-			values[0] = s_cons(1, s_iene);
-			values[1] = s_cons(2, s_iene);
-			values[2] = s_cons(3, s_iene);
-			values[3] = s_cons(4, s_iene);
-			values[4] = s_cons(-1, s_iene);
-			values[5] = s_cons(-2, s_iene);
-			values[6] = s_cons(-3, s_iene);
-			values[7] = s_cons(-4, s_iene);
-			values[8] = flux_iene;
-		}
-
 		// Update changes
 		idx = si*g->plane_offset + sj*g->dim[2] + sk;
 
-		flux[idx + irho*g->comp_offset] = flux_irho;
-		flux[idx + imx *g->comp_offset] = flux_imx;
-		flux[idx + imy *g->comp_offset] = flux_imy;
-		flux[idx + imz *g->comp_offset] = flux_imz;
-		flux[idx + iene*g->comp_offset] = flux_iene;
+		flux[idx + irho*g->comp_offset] -= flux_irho;
+		flux[idx + imx *g->comp_offset] -= flux_imx;
+		flux[idx + imy *g->comp_offset] -= flux_imy;
+		flux[idx + imz *g->comp_offset] -= flux_imz;
+		flux[idx + iene*g->comp_offset] -= flux_iene;
 	}
 }
-#undef	s_q(i)
-#undef 	s_qpres(i)
-#undef	s_cons(i, comp)
+#undef	s_q
+#undef 	s_qpres
+#undef	s_cons
 
 void gpu_hypterm(
 	global_const_t h_const, 	// i: Global struct containing applicatino parameters
@@ -765,14 +768,26 @@ void gpu_hypterm(
     h_const.gridDim_x = grid_dim_x;
     h_const.gridDim_y = grid_dim_y;
     h_const.gridDim_z = grid_dim_z;
-    printf("grid_dim: %d %d %d\n", grid_dim_x, grid_dim_y, grid_dim_z);
-    printf("dim: %d %d %d\n", h_const.dim[0], h_const.dim[1], h_const.dim[2]);
     h_const.gridDim_plane_xz = grid_dim_x * grid_dim_z;
     h_const.blockDim_x_g = BLOCK_DIM_X + h_const.ng + h_const.ng;
-    printf("blockDim_x_g = %d\n", h_const.blockDim_x_g);
     cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
 
 	gpu_hypterm_x_stencil_kernel<<<grid_dim, block_dim_x_stencil>>>(d_const, d_cons, d_q, d_flux);
+
+	grid_dim_x = h_const.dim[0];
+	grid_dim_y = CEIL(h_const.dim[1], BLOCK_DIM_Y);
+	grid_dim_z = CEIL(h_const.dim[2], BLOCK_DIM_Z);
+	grid_dim = grid_dim_x * grid_dim_y * grid_dim_z;
+
+	dim3 block_dim_y_stencil(1, BLOCK_DIM_Y, BLOCK_DIM_Z);
+	h_const.gridDim_x = grid_dim_x;
+	h_const.gridDim_y = grid_dim_y;
+	h_const.gridDim_z = grid_dim_z;
+	h_const.gridDim_plane_yz = grid_dim_y * grid_dim_z;
+	h_const.blockDim_y_g = BLOCK_DIM_Y + h_const.ng + h_const.ng;
+	cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+
+	gpu_hypterm_y_stencil_kernel<<<grid_dim, block_dim_y_stencil>>>(d_const, d_cons, d_q, d_flux);
 
 }
 
@@ -868,12 +883,12 @@ void hypterm_test(
 	fclose(f2);
 
 	printf("Applying hypterm()...\n");
-	hypterm(lo, hi, ng, dx, cons, q, flux);
-//	gpu_hypterm(h_const, d_const, d_cons, d_q, d_flux);
-//
-//	gpu_copy_to_host_4D(cons, d_cons, dim_g, 5);
-//	gpu_copy_to_host_4D(q   , d_q   , dim_g, 6);
-//	gpu_copy_to_host_4D(flux, d_flux, dim  , 5);
+//	hypterm(lo, hi, ng, dx, cons, q, flux);
+	gpu_hypterm(h_const, d_const, d_cons, d_q, d_flux);
+
+	gpu_copy_to_host_4D(cons, d_cons, dim_g, 5);
+	gpu_copy_to_host_4D(q   , d_q   , dim_g, 6);
+	gpu_copy_to_host_4D(flux, d_flux, dim  , 5);
 
 	double vals[9], tmp[BLOCK_DIM_X+NG+NG][BLOCK_DIM_Z];
 	cudaMemcpyFromSymbol(vals, values, 9*sizeof(double));
@@ -881,7 +896,7 @@ void hypterm_test(
 	FOR(i, 0, 9)
 		printf("%le ", vals[i]);
 	printf("\n");
-	cudaMemcpyFromSymbol(tmp, temp, (BLOCK_DIM_X+NG+NG)*BLOCK_DIM_Z*sizeof(double));
+	cudaMemcpyFromSymbol(tmp, temp, (BLOCK_DIM_Y+NG+NG)*BLOCK_DIM_Z*sizeof(double));
 	FOR(i, 0, BLOCK_DIM_X+NG+NG){
 		FOR(k, 0, BLOCK_DIM_Z)
 			printf("%12.4le ", tmp[i][k]);
