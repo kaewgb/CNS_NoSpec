@@ -6,7 +6,7 @@ OBJ_FILES	= main.o diffterm.o diffterm_cpu.o hypterm.o hypterm_cpu.o hypterm_mer
 HEADERS		= header.h helper_functions.h
 THRUST		= $(HOME)/software/thrust/
 
-NVCCFLAGS	= -I$(THRUST) -arch=sm_13 --ptxas-options=-v
+NVCCFLAGS	= -I$(THRUST) -arch=sm_13 --ptxas-options=-v --disable-warnings
 
 $(TARGET):	$(OBJ_FILES)
 			$(NVCC) -o $(TARGET) $^

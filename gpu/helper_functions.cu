@@ -15,6 +15,9 @@
 void gpu_allocate_3D(double *&d_ptr, int dim[]){
 	CUDA_SAFE_CALL(cudaMalloc((void **) &d_ptr, dim[0]*dim[1]*dim[2] * sizeof(double)));
 }
+void gpu_copy_to_host_3D(double ***host, double *dev, int dim[]){
+	CUDA_SAFE_CALL(cudaMemcpy(host[0][0], dev, dim[0]*dim[1]*dim[2] * sizeof(double), cudaMemcpyDeviceToHost));
+}
 void gpu_free_3D(double *d_ptr){
 	CUDA_SAFE_CALL(cudaFree(d_ptr));
 }

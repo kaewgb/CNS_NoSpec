@@ -5,14 +5,62 @@
 
 #define	BLOCK_DIM	16
 #define	BLOCK_DIM_G	8
+#define	q(i, comp)	s_q[comp][threadIdx.x+g->ng+i][threadIdx.z]
 
 __global__ void gpu_diffterm_x_stencil_kernel(
 	global_const_t *g,			// i: Global struct containing application parameters
 	double *q,					// i:
 	double *d_flux				// o:
 ){
+	int idx, tidx, tidz;
 	int bi, bj, bk, si, sj, sk;
-	__shared__ double       s_q[s_qend][BLOCK_DIM_G+NG+NG][BLOCK_DIM];
+	double dxinv;
+	__shared__ double  s_q[s_qend][BLOCK_DIM_G+NG+NG][BLOCK_DIM];
+
+	// Load to shared mem
+	bi = (blockIdx.x % (g->gridDim_plane_xz)) / g->gridDim_z;
+	bk = (blockIdx.x % (g->gridDim_plane_xz)) % g->gridDim_z;
+	bj =  blockIdx.x / (g->gridDim_plane_xz);
+	si = bi*blockDim.x+threadIdx.x;
+	sj = bj*blockDim.y+threadIdx.y; // = bj
+	sk = bk*blockDim.z+threadIdx.z;
+
+	tidx = threadIdx.x;
+	tidz = threadIdx.z;
+	while( tidx < g->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+
+		idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+
+		s_q[s_qu][tidx][tidz]  =  q[idx + qu*g->comp_offset_g];
+		s_q[s_qv][tidx][tidz]  =  q[idx + qv*g->comp_offset_g];
+		s_q[s_qw][tidx][tidz]  =  q[idx + qw*g->comp_offset_g];
+		s_q[s_qt][tidx][tidz]  =  q[idx + qt*g->comp_offset_g];
+
+		tidx += blockDim.x;
+		si   += blockDim.x;
+	}
+	__syncthreads();
+
+	si = bi*blockDim.x+threadIdx.x;
+	idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	dxinv = 1.0/g->dx[0];
+	if(si < g->dim[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+
+		g->temp[UX][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
+							+ BET*(q(2,s_qu)-q(-2,s_qu))
+							+ GAM*(q(3,s_qu)-q(-3,s_qu))
+							+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
+
+		g->temp[VX][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
+							+ BET*(q(2,s_qv)-q(-2,s_qv))
+							+ GAM*(q(3,s_qv)-q(-3,s_qv))
+							+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
+
+		g->temp[WX][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
+							+ BET*(q(2,s_qw)-q(-2,s_qw))
+							+ GAM*(q(3,s_qw)-q(-3,s_qw))
+							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
+	}
 }
 void gpu_diffterm(
 	global_const_t h_const, 	// i: Global struct containing applicatino parameters
@@ -24,8 +72,8 @@ void gpu_diffterm(
 	int grid_dim, grid_dim_x, grid_dim_y, grid_dim_z;
 
 	grid_dim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
-	grid_dim_y = h_const.dim[1];
-	grid_dim_z = CEIL(h_const.dim[2], BLOCK_DIM);
+	grid_dim_y = h_const.dim_g[1];
+	grid_dim_z = CEIL(h_const.dim_g[2], BLOCK_DIM);
 	grid_dim = grid_dim_x * grid_dim_y * grid_dim_z;
 
 	dim3 block_dim_x_stencil(BLOCK_DIM_G, 1, BLOCK_DIM);
@@ -48,10 +96,12 @@ void diffterm_test(
 	int lo[3], hi[3], ng=4;
 	double dx[3], eta, alam;
 	double ****q, ****difflux;
+	double ***ux;
 
 	int lo2[3], hi2[3], ng2=4;
 	double dx2[3], eta2, alam2;
 	double ****q2, ****difflux2;
+	double ***ux2;
 
 	double *d_q,*d_flux;
 	double *d_ux, *d_vx, *d_wx, *d_uy, *d_vy, *d_wy, *d_uz, *d_vz, *d_wz;
@@ -80,6 +130,8 @@ void diffterm_test(
 		dim[i] = hi[i]-lo[i]+1;
 	}
 
+	allocate_3D(ux, 	dim_g);
+	allocate_3D(ux2, 	dim_g);
 	allocate_4D(q, 		 	dim_g,  6); 	// [40][40][40][6]
 	allocate_4D(difflux, 	dim, 5); 	// [32][32][32][5]
 	allocate_4D(q2, 	 	dim_g,  6); 	// [40][40][40][6]
@@ -89,7 +141,7 @@ void diffterm_test(
 	gpu_allocate_4D(d_flux, dim, 5);
 
 	FOR(i, 0, MAX_TEMP)
-		gpu_allocate_3D(h_const.temp[i], dim);
+		gpu_allocate_3D(h_const.temp[i], dim_g);
 
 	FOR(l, 0, 6)
 		read_3D(fin, q, dim_g, l);
@@ -103,11 +155,28 @@ void diffterm_test(
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
 
 	printf("Applying diffterm()...\n");
-//	diffterm(lo, hi, ng, dx, q, difflux, eta, alam);
-	gpu_diffterm(h_const, d_const, d_q, d_flux);
+	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux);
+//	gpu_diffterm(h_const, d_const, d_q, d_flux);
 
-	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
-	gpu_copy_to_host_4D(difflux, d_flux, dim, 5);
+//	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
+//	gpu_copy_to_host_4D(difflux, d_flux, dim, 5);
+//	gpu_copy_to_host_3D(ux2, h_const.temp[UX], dim);
+
+//	int j,k;
+//	printf("checking...\n");
+//	FOR(i, 0, dim[0]){
+//		FOR(j, 0, dim_g[0]){
+//			FOR(k, 0, dim_g[0]){
+//				if(!FEQ(ux[i][j][k], ux2[i][j][k])){
+//					printf("ux2[%d][%d][%d] = %le != %le = ux[%d][%d][%d]\n",
+//						i,j,k,ux2[i][j][k], ux[i][j][k], i,j,k);
+//					printf("diff = %le\n", ux2[i][j][k]-ux[i][j][k]);
+//					exit(1);
+//				}
+//			}
+//		}
+//	}
+//	printf("ux is correct!\n");
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
@@ -139,5 +208,7 @@ void diffterm_test(
 	free_4D(q,  dim_g, 6);	free_4D(difflux,  dim, 5);
 	free_4D(q2, dim_g, 6);	free_4D(difflux2, dim, 5);
 
+	free_3D(ux,  dim_g);
+	free_3D(ux2, dim_g);
 	printf("Correct!\n");
 }

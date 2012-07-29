@@ -45,14 +45,14 @@ enum {
 	s_qend
 };
 
-enum {
-	ux, 	vx, 	wx,
-	uy, 	vy, 	wy,
-	uz, 	vz, 	wz,
-	uxx,	uyy,	uzz,	vyx,	wzx,
-	vxx,	vyy, 	vzz, 	uxy,	wzy,
-	wxx,	wyy,	wzz, 	uxz, 	vyz,
-	txx,	tyy,	tzz,
+enum diffterm_enum {
+	UX, 	VX, 	WX,
+	UY, 	VY, 	WY,
+	UZ, 	VZ, 	WZ,
+	UXX,	UYY,	UZZ,	VYX,	WZX,
+	VXX,	VYY, 	VZZ, 	UXY,	WZY,
+	WXX,	WYY,	WZZ, 	UXZ, 	VYZ,
+	TXX,	TYY,	TZZ,
 	MAX_TEMP
 };
 
@@ -151,7 +151,8 @@ extern void diffterm (
 	double ****q,		// i: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
 	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 	double eta,			// i
-	double alam			// i
+	double alam,		// i
+	double ***ux
 );
 
 extern void advance_test();
