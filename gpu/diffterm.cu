@@ -276,7 +276,7 @@ void diffterm_test(
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
 
 	printf("Applying diffterm()...\n");
-	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, wz, vz, wz);
+	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, uz, vz, wz);
 	gpu_diffterm(h_const, d_const, d_q, d_flux);
 
 //	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
@@ -285,13 +285,13 @@ void diffterm_test(
 	gpu_copy_to_host_3D(vx2, h_const.temp[VX], dim_g);
 	gpu_copy_to_host_3D(wx2, h_const.temp[WX], dim_g);
 
-	gpu_copy_to_host_3D(uy2, h_const.temp[UX], dim_g);
-	gpu_copy_to_host_3D(vy2, h_const.temp[VX], dim_g);
-	gpu_copy_to_host_3D(wy2, h_const.temp[WX], dim_g);
+	gpu_copy_to_host_3D(uy2, h_const.temp[UY], dim_g);
+	gpu_copy_to_host_3D(vy2, h_const.temp[VY], dim_g);
+	gpu_copy_to_host_3D(wy2, h_const.temp[WY], dim_g);
 
-	gpu_copy_to_host_3D(uz2, h_const.temp[UX], dim_g);
-	gpu_copy_to_host_3D(vz2, h_const.temp[VX], dim_g);
-	gpu_copy_to_host_3D(wz2, h_const.temp[WX], dim_g);
+	gpu_copy_to_host_3D(uz2, h_const.temp[UZ], dim_g);
+	gpu_copy_to_host_3D(vz2, h_const.temp[VZ], dim_g);
+	gpu_copy_to_host_3D(wz2, h_const.temp[WZ], dim_g);
 
 //	double vals[9];
 //	cudaMemcpyFromSymbol(vals, values, 9*sizeof(double));
