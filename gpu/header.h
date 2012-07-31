@@ -152,7 +152,9 @@ extern void diffterm (
 	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 	double eta,			// i
 	double alam,		// i
-	double ***ux, double ***vx, double ***wx
+	double ***ux, double ***vx, double ***wx,
+	double ***uy, double ***vy, double ***wy,
+	double ***uz, double ***vz, double ***wz
 );
 
 extern void advance_test();

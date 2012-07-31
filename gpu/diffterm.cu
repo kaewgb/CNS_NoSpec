@@ -53,18 +53,6 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 							+ GAM*(q(3,s_qu)-q(-3,s_qu))
 							+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
 
-//		if(si == 0 && sj == 1 && sk == 0){
-//			values[0] = q(1,s_qu);
-//			values[1] = q(2,s_qu);
-//			values[2] = q(3,s_qu);
-//			values[3] = q(4,s_qu);
-//			values[4] = q(-1,s_qu);
-//			values[5] = q(-2,s_qu);
-//			values[6] = q(-3,s_qu);
-//			values[7] = q(-4,s_qu);
-//			values[8] = g->temp[UX][idx];
-//		}
-
 		g->temp[VX][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
 							+ BET*(q(2,s_qv)-q(-2,s_qv))
 							+ GAM*(q(3,s_qv)-q(-3,s_qv))
@@ -76,6 +64,93 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
 	}
 }
+#undef	q
+
+__global__ void gpu_diffterm_yz_stencil_kernel(
+	global_const_t *g,			// i: Global struct containing application parameters
+	double *q,					// i:
+	double *d_flux				// o:
+){
+	int idx, tidy, tidz;
+	int bi, bj, bk, si, sj, sk;
+	double dxinv;
+	__shared__ double  s_q[s_qend][BLOCK_DIM_G+NG+NG][BLOCK_DIM_G+NG+NG];
+
+	// Load to shared mem
+	bj = (blockIdx.x % (g->gridDim_plane_yz)) / g->gridDim_z;
+	bk = (blockIdx.x % (g->gridDim_plane_yz)) % g->gridDim_z;
+	bi =  blockIdx.x / (g->gridDim_plane_yz);
+	si = bi*blockDim.x+threadIdx.x;
+	sj = bj*blockDim.y+threadIdx.y;
+	sk = bk*blockDim.z+threadIdx.z;
+
+	tidy = threadIdx.y;
+	tidz = threadIdx.z;
+	while( tidy < g->blockDim_y_g && tidz < g->blockDim_z_g &&
+		   si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+
+		idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+
+		s_q[s_qu][tidy][tidz]  =  q[idx + qu*g->comp_offset_g];
+		s_q[s_qv][tidy][tidz]  =  q[idx + qv*g->comp_offset_g];
+		s_q[s_qw][tidy][tidz]  =  q[idx + qw*g->comp_offset_g];
+		s_q[s_qt][tidy][tidz]  =  q[idx + qt*g->comp_offset_g];
+
+		tidy += blockDim.y;		tidz += blockDim.z;
+		sj   += blockDim.y;		sk 	 += blockDim.z;
+	}
+	__syncthreads();
+
+	sj = bj*blockDim.y+threadIdx.y;
+	sk = bk*blockDim.z+threadIdx.z;
+	idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+
+#define	q(i, comp)	s_q[comp][threadIdx.y+g->ng+i][threadIdx.z]
+
+	dxinv = 1.0/g->dx[1];
+	if(si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim_g[2]){
+
+		g->temp[UY][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
+							+ BET*(q(2,s_qu)-q(-2,s_qu))
+							+ GAM*(q(3,s_qu)-q(-3,s_qu))
+							+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
+
+		g->temp[VY][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
+							+ BET*(q(2,s_qv)-q(-2,s_qv))
+							+ GAM*(q(3,s_qv)-q(-3,s_qv))
+							+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
+
+		g->temp[WY][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
+							+ BET*(q(2,s_qw)-q(-2,s_qw))
+							+ GAM*(q(3,s_qw)-q(-3,s_qw))
+							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
+	}
+
+#undef	q
+#define	q(i, comp)	s_q[comp][threadIdx.y][threadIdx.z+g->ng+i]
+
+	dxinv = 1.0/g->dx[2];
+	if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
+
+		g->temp[UZ][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
+							+ BET*(q(2,s_qu)-q(-2,s_qu))
+							+ GAM*(q(3,s_qu)-q(-3,s_qu))
+							+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
+
+		g->temp[VZ][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
+							+ BET*(q(2,s_qv)-q(-2,s_qv))
+							+ GAM*(q(3,s_qv)-q(-3,s_qv))
+							+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
+
+		g->temp[WZ][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
+							+ BET*(q(2,s_qw)-q(-2,s_qw))
+							+ GAM*(q(3,s_qw)-q(-3,s_qw))
+							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
+	}
+
+#undef 	q
+}
+
 void gpu_diffterm(
 	global_const_t h_const, 	// i: Global struct containing applicatino parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
@@ -99,7 +174,25 @@ void gpu_diffterm(
     cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
 
 	gpu_diffterm_x_stencil_kernel<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_flux);
+
+	grid_dim_x = h_const.dim_g[0];
+	grid_dim_y = CEIL(h_const.dim_g[1], BLOCK_DIM);
+	grid_dim_z = CEIL(h_const.dim_g[2], BLOCK_DIM);
+	grid_dim = grid_dim_x * grid_dim_y * grid_dim_z;
+
+	dim3 block_dim_yz_stencil(1, BLOCK_DIM, BLOCK_DIM);
+    h_const.gridDim_x = grid_dim_x;
+    h_const.gridDim_y = grid_dim_y;
+    h_const.gridDim_z = grid_dim_z;
+    h_const.gridDim_plane_yz = grid_dim_y * grid_dim_z;
+    h_const.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    h_const.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+
+	gpu_diffterm_yz_stencil_kernel<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_flux);
+
 }
+
 void diffterm_test(
 	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
@@ -111,11 +204,15 @@ void diffterm_test(
 	double dx[3], eta, alam;
 	double ****q, ****difflux;
 	double ***ux, ***vx, ***wx;
+	double ***uy, ***vy, ***wy;
+	double ***uz, ***vz, ***wz;
 
 	int lo2[3], hi2[3], ng2=4;
 	double dx2[3], eta2, alam2;
 	double ****q2, ****difflux2;
 	double ***ux2, ***vx2, ***wx2;
+	double ***uy2, ***vy2, ***wy2;
+	double ***uz2, ***vz2, ***wz2;
 
 	double *d_q,*d_flux;
 	double *d_ux, *d_vx, *d_wx, *d_uy, *d_vy, *d_wy, *d_uz, *d_vz, *d_wz;
@@ -148,6 +245,14 @@ void diffterm_test(
 	allocate_3D(vx, 	dim_g);		allocate_3D(vx2, 	dim_g);
 	allocate_3D(wx, 	dim_g);		allocate_3D(wx2, 	dim_g);
 
+	allocate_3D(uy, 	dim_g);		allocate_3D(uy2, 	dim_g);
+	allocate_3D(vy, 	dim_g);		allocate_3D(vy2, 	dim_g);
+	allocate_3D(wy, 	dim_g);		allocate_3D(wy2, 	dim_g);
+
+	allocate_3D(uz, 	dim_g);		allocate_3D(uz2, 	dim_g);
+	allocate_3D(vz, 	dim_g);		allocate_3D(vz2, 	dim_g);
+	allocate_3D(wz, 	dim_g);		allocate_3D(wz2, 	dim_g);
+
 	allocate_4D(q, 		 	dim_g,  6); 	// [40][40][40][6]
 	allocate_4D(difflux, 	dim, 5); 	// [32][32][32][5]
 	allocate_4D(q2, 	 	dim_g,  6); 	// [40][40][40][6]
@@ -171,7 +276,7 @@ void diffterm_test(
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
 
 	printf("Applying diffterm()...\n");
-	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx);
+	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, wz, vz, wz);
 	gpu_diffterm(h_const, d_const, d_q, d_flux);
 
 //	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
@@ -179,6 +284,15 @@ void diffterm_test(
 	gpu_copy_to_host_3D(ux2, h_const.temp[UX], dim_g);
 	gpu_copy_to_host_3D(vx2, h_const.temp[VX], dim_g);
 	gpu_copy_to_host_3D(wx2, h_const.temp[WX], dim_g);
+
+	gpu_copy_to_host_3D(uy2, h_const.temp[UX], dim_g);
+	gpu_copy_to_host_3D(vy2, h_const.temp[VX], dim_g);
+	gpu_copy_to_host_3D(wy2, h_const.temp[WX], dim_g);
+
+	gpu_copy_to_host_3D(uz2, h_const.temp[UX], dim_g);
+	gpu_copy_to_host_3D(vz2, h_const.temp[VX], dim_g);
+	gpu_copy_to_host_3D(wz2, h_const.temp[WX], dim_g);
+
 //	double vals[9];
 //	cudaMemcpyFromSymbol(vals, values, 9*sizeof(double));
 //	FOR(i, 0, 9){
@@ -186,7 +300,7 @@ void diffterm_test(
 //	}
 
 	int j,k;
-	printf("checking ux...\n");
+	printf("checking ux, vx, wx...\n");
 	FOR(i, ng, dim[0]+ng){
 		FOR(j, 0, dim_g[1]){
 			FOR(k, 0, dim_g[2]){
@@ -212,6 +326,33 @@ void diffterm_test(
 		}
 	}
 	printf("ux, vx, wx is correct!\n");
+
+	printf("checking uy\n");
+	FOR(i, 0, dim_g[0]){
+		FOR(j, ng, dim[1]+ng){
+			FOR(k, 0, dim_g[2]){
+				if(!FEQ(uy[i][j][k], uy2[i][j][k])){
+					printf("uy2[%d][%d][%d] = %le != %le = uy[%d][%d][%d]\n",
+						i,j,k,uy2[i][j][k], uy[i][j][k], i,j,k);
+					printf("diff = %le\n", uy2[i][j][k]-uy[i][j][k]);
+					exit(1);
+				}
+//				if(!FEQ(vx[i][j][k], vx2[i][j][k])){
+//					printf("vx2[%d][%d][%d] = %le != %le = vx[%d][%d][%d]\n",
+//						i,j,k,vx2[i][j][k], vx[i][j][k], i,j,k);
+//					printf("diff = %le\n", vx2[i][j][k]-vx[i][j][k]);
+//					exit(1);
+//				}
+//				if(!FEQ(wx[i][j][k], wx2[i][j][k])){
+//					printf("wx2[%d][%d][%d] = %le != %le = wx[%d][%d][%d]\n",
+//						i,j,k,wx2[i][j][k], wx[i][j][k], i,j,k);
+//					printf("diff = %le\n", wx2[i][j][k]-wx[i][j][k]);
+//					exit(1);
+//				}
+			}
+		}
+	}
+	printf("uy, vy, wy is correct!\n");
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
@@ -246,6 +387,14 @@ void diffterm_test(
 	free_3D(ux,  dim_g);	free_3D(ux2, dim_g);
 	free_3D(vx,  dim_g);	free_3D(vx2, dim_g);
 	free_3D(wx,  dim_g);	free_3D(wx2, dim_g);
+
+	free_3D(uy,  dim_g);	free_3D(uy2, dim_g);
+	free_3D(vy,  dim_g);	free_3D(vy2, dim_g);
+	free_3D(wy,  dim_g);	free_3D(wy2, dim_g);
+
+	free_3D(uz,  dim_g);	free_3D(uz2, dim_g);
+	free_3D(vz,  dim_g);	free_3D(vz2, dim_g);
+	free_3D(wz,  dim_g);	free_3D(wz2, dim_g);
 
 	printf("Correct!\n");
 }

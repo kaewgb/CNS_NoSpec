@@ -28,15 +28,13 @@ void diffterm (
 	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 	double eta,			// i
 	double alam,		// i
-	double ***ux, double ***vx, double ***wx
+	double ***ux, double ***vx, double ***wx,
+	double ***uy, double ***vy, double ***wy,
+	double ***uz, double ***vz, double ***wz
 ){
 //	double ***ux, ***uy, ***uz;
 //	double ***vx, ***vy, ***vz;
 //	double ***wx, ***wy, ***wz;
-
-	double ***uy, ***uz;
-	double ***vy, ***vz;
-	double ***wy, ***wz;
 
 	double dxinv[3];
 	double tauxx, tauyy, tauzz, tauxy, tauxz, tauyz;
@@ -64,10 +62,6 @@ void diffterm (
 //	allocate_3D(ux, dim);	allocate_3D(uy, dim);	allocate_3D(uz, dim);
 //	allocate_3D(vx, dim);	allocate_3D(vy, dim);	allocate_3D(vz, dim);
 //	allocate_3D(wx, dim);	allocate_3D(wy, dim);	allocate_3D(wz, dim);
-
-	allocate_3D(uy, dim);	allocate_3D(uz, dim);
-	allocate_3D(vy, dim);	allocate_3D(vz, dim);
-	allocate_3D(wy, dim);	allocate_3D(wz, dim);
 
 	DO(i, lo[0]-ng, hi[0]-ng){
 		DO(j, lo[1]-ng, hi[1]-ng){
@@ -335,9 +329,6 @@ void diffterm (
 //	free_3D(vx, dim);	free_3D(vy, dim);	free_3D(vz, dim);
 //	free_3D(wx, dim);	free_3D(wy, dim);	free_3D(wz, dim);
 
-	free_3D(uy, dim);	free_3D(uz, dim);
-	free_3D(vy, dim);	free_3D(vz, dim);
-	free_3D(wy, dim);	free_3D(wz, dim);
 }
 #undef	lo
 #undef	hi
