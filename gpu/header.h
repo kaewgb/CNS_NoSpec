@@ -76,6 +76,7 @@ typedef struct global_const {
 	int blockDim_y_g;
 	int blockDim_z_g;
 	double dx[3];
+	double dxinv[3];
 	double cfl;
 	double eta;
 	double alam;

@@ -29,6 +29,9 @@ int main(int argc, char *argv[]){
 	h_const.plane_offset_g = h_const.dim_g[1] * h_const.dim_g[2];
 	h_const.plane_offset   = h_const.dim[1]   * h_const.dim[2];
 
+	FOR(i, 0, 3)
+		h_const.dxinv[i] = 1.0E0/h_const.dx[i];
+
 	h_const.ALP	=  0.8E0;
 	h_const.BET	= -0.2E0;
 	h_const.GAM	=  4.0E0/105.0E0;
