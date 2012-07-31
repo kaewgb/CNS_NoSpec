@@ -60,6 +60,30 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 							+ BET*(q(2,s_qw)-q(-2,s_qw))
 							+ GAM*(q(3,s_qw)-q(-3,s_qw))
 							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*g->dxinv[0];
+
+		g->temp[UXX][idx] = ( g->CENTER*q(0,s_qu)
+							+ g->OFF1*(q(1,s_qu)+q(-1,s_qu))
+							+ g->OFF2*(q(2,s_qu)+q(-2,s_qu))
+							+ g->OFF3*(q(3,s_qu)+q(-3,s_qu))
+							+ g->OFF4*(q(4,s_qu)+q(-4,s_qu)))*SQR(g->dxinv[0]);
+
+		g->temp[VXX][idx] = ( g->CENTER*q(0,s_qv)
+							+ g->OFF1*(q(1,s_qv)+q(-1,s_qv))
+							+ g->OFF2*(q(2,s_qv)+q(-2,s_qv))
+							+ g->OFF3*(q(3,s_qv)+q(-3,s_qv))
+							+ g->OFF4*(q(4,s_qv)+q(-4,s_qv)))*SQR(g->dxinv[0]);
+
+		g->temp[WXX][idx] = ( g->CENTER*q(0,s_qw)
+							+ g->OFF1*(q(1,s_qw)+q(-1,s_qw))
+							+ g->OFF2*(q(2,s_qw)+q(-2,s_qw))
+							+ g->OFF3*(q(3,s_qw)+q(-3,s_qw))
+							+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[0]);
+
+		g->temp[TXX][idx] = ( g->CENTER*q(0,s_qt)
+							+ g->OFF1*(q(1,s_qt)+q(-1,s_qt))
+							+ g->OFF2*(q(2,s_qt)+q(-2,s_qt))
+							+ g->OFF3*(q(3,s_qt)+q(-3,s_qt))
+							+ g->OFF4*(q(4,s_qt)+q(-4,s_qt)))*SQR(g->dxinv[0]);
 	}
 }
 #undef	q
@@ -114,21 +138,6 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ GAM*(q(3,s_qu)-q(-3,s_qu))
 								+ DEL*(q(4,s_qu)-q(-4,s_qu)))*g->dxinv[1];
 
-			if(si == 0 && sj+g->ng == 13 && sk == 0){
-	//			values[0] = g->temp[UY][idx];
-	//			values[1] = q(1,s_qu);
-	//			values[2] = q(2,s_qu);
-	//			values[3] = q(3,s_qu);
-	//			values[4] = q(4,s_qu);
-	//			values[5] = q(-1,s_qu);
-	//			values[6] = q(-2,s_qu);
-	//			values[7] = q(-3,s_qu);
-	//			values[8] = q(-4,s_qu);
-				values[6] = q(3, s_qu);
-				values[7] = q(4, s_qu);
-				values[8] = bj;
-			}
-
 			g->temp[VY][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
 								+ BET*(q(2,s_qv)-q(-2,s_qv))
 								+ GAM*(q(3,s_qv)-q(-3,s_qv))
@@ -138,6 +147,30 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ BET*(q(2,s_qw)-q(-2,s_qw))
 								+ GAM*(q(3,s_qw)-q(-3,s_qw))
 								+ DEL*(q(4,s_qw)-q(-4,s_qw)))*g->dxinv[1];
+
+			g->temp[UYY][idx] = ( g->CENTER*q(0,s_qu)
+								+ g->OFF1*(q(1,s_qu)+q(-1,s_qu))
+								+ g->OFF2*(q(2,s_qu)+q(-2,s_qu))
+								+ g->OFF3*(q(3,s_qu)+q(-3,s_qu))
+								+ g->OFF4*(q(4,s_qu)+q(-4,s_qu)))*SQR(g->dxinv[1]);
+
+			g->temp[VYY][idx] = ( g->CENTER*q(0,s_qv)
+								+ g->OFF1*(q(1,s_qv)+q(-1,s_qv))
+								+ g->OFF2*(q(2,s_qv)+q(-2,s_qv))
+								+ g->OFF3*(q(3,s_qv)+q(-3,s_qv))
+								+ g->OFF4*(q(4,s_qv)+q(-4,s_qv)))*SQR(g->dxinv[1]);
+
+			g->temp[WYY][idx] = ( g->CENTER*q(0,s_qw)
+								+ g->OFF1*(q(1,s_qw)+q(-1,s_qw))
+								+ g->OFF2*(q(2,s_qw)+q(-2,s_qw))
+								+ g->OFF3*(q(3,s_qw)+q(-3,s_qw))
+								+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[1]);
+
+			g->temp[TYY][idx] = ( g->CENTER*q(0,s_qt)
+								+ g->OFF1*(q(1,s_qt)+q(-1,s_qt))
+								+ g->OFF2*(q(2,s_qt)+q(-2,s_qt))
+								+ g->OFF3*(q(3,s_qt)+q(-3,s_qt))
+								+ g->OFF4*(q(4,s_qt)+q(-4,s_qt)))*SQR(g->dxinv[1]);
 		}
 
 #undef	q
@@ -160,6 +193,30 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ BET*(q(2,s_qw)-q(-2,s_qw))
 								+ GAM*(q(3,s_qw)-q(-3,s_qw))
 								+ DEL*(q(4,s_qw)-q(-4,s_qw)))*g->dxinv[2];
+
+			g->temp[UZZ][idx] = ( g->CENTER*q(0,s_qu)
+								+ g->OFF1*(q(1,s_qu)+q(-1,s_qu))
+								+ g->OFF2*(q(2,s_qu)+q(-2,s_qu))
+								+ g->OFF3*(q(3,s_qu)+q(-3,s_qu))
+								+ g->OFF4*(q(4,s_qu)+q(-4,s_qu)))*SQR(g->dxinv[2]);
+
+			g->temp[VZZ][idx] = ( g->CENTER*q(0,s_qv)
+								+ g->OFF1*(q(1,s_qv)+q(-1,s_qv))
+								+ g->OFF2*(q(2,s_qv)+q(-2,s_qv))
+								+ g->OFF3*(q(3,s_qv)+q(-3,s_qv))
+								+ g->OFF4*(q(4,s_qv)+q(-4,s_qv)))*SQR(g->dxinv[2]);
+
+			g->temp[WZZ][idx] = ( g->CENTER*q(0,s_qw)
+								+ g->OFF1*(q(1,s_qw)+q(-1,s_qw))
+								+ g->OFF2*(q(2,s_qw)+q(-2,s_qw))
+								+ g->OFF3*(q(3,s_qw)+q(-3,s_qw))
+								+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[2]);
+
+			g->temp[TZZ][idx] = ( g->CENTER*q(0,s_qt)
+								+ g->OFF1*(q(1,s_qt)+q(-1,s_qt))
+								+ g->OFF2*(q(2,s_qt)+q(-2,s_qt))
+								+ g->OFF3*(q(3,s_qt)+q(-3,s_qt))
+								+ g->OFF4*(q(4,s_qt)+q(-4,s_qt)))*SQR(g->dxinv[2]);
 		}
 
 #undef 	q
