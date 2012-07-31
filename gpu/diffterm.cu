@@ -80,75 +80,95 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 	bj = (blockIdx.x % (g->gridDim_plane_yz)) / g->gridDim_z;
 	bk = (blockIdx.x % (g->gridDim_plane_yz)) % g->gridDim_z;
 	bi =  blockIdx.x / (g->gridDim_plane_yz);
-	si = bi*blockDim.x+threadIdx.x;
-	sj = bj*blockDim.y+threadIdx.y;
-	sk = bk*blockDim.z+threadIdx.z;
+	si = bi;
+	sj = bj*BLOCK_DIM_G+threadIdx.y;
+	sk = bk*BLOCK_DIM_G+threadIdx.z;
 
 	tidy = threadIdx.y;
 	tidz = threadIdx.z;
-	while( tidy < g->blockDim_y_g && tidz < g->blockDim_z_g &&
-		   si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
-
-		idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
-
+	idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+		if(si == 0 && sj == 16 && sk == 0){
+			values[0] = tidy;
+			values[1] = tidz;
+			values[2] = g->dim_g[0];
+			values[3] = g->dim_g[1];
+			values[4] = g->dim_g[2];
+			values[5] = q[idx + qu*g->comp_offset_g];
+		}
 		s_q[s_qu][tidy][tidz]  =  q[idx + qu*g->comp_offset_g];
 		s_q[s_qv][tidy][tidz]  =  q[idx + qv*g->comp_offset_g];
 		s_q[s_qw][tidy][tidz]  =  q[idx + qw*g->comp_offset_g];
 		s_q[s_qt][tidy][tidz]  =  q[idx + qt*g->comp_offset_g];
-
-		tidy += blockDim.y;		tidz += blockDim.z;
-		sj   += blockDim.y;		sk 	 += blockDim.z;
 	}
 	__syncthreads();
 
-	sj = bj*blockDim.y+threadIdx.y;
-	sk = bk*blockDim.z+threadIdx.z;
-	idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	sj = bj*BLOCK_DIM_G+threadIdx.y;
+	sk = bk*BLOCK_DIM_G+threadIdx.z;
 
+	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
 #define	q(i, comp)	s_q[comp][threadIdx.y+g->ng+i][threadIdx.z]
 
-	dxinv = 1.0/g->dx[1];
-	if(si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim_g[2]){
+		dxinv = 1.0/g->dx[1];
+		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + sk;
+		if(si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim_g[2]){
 
-		g->temp[UY][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
-							+ BET*(q(2,s_qu)-q(-2,s_qu))
-							+ GAM*(q(3,s_qu)-q(-3,s_qu))
-							+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
+			g->temp[UY][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
+								+ BET*(q(2,s_qu)-q(-2,s_qu))
+								+ GAM*(q(3,s_qu)-q(-3,s_qu))
+								+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
 
-		g->temp[VY][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
-							+ BET*(q(2,s_qv)-q(-2,s_qv))
-							+ GAM*(q(3,s_qv)-q(-3,s_qv))
-							+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
+			if(si == 0 && sj+g->ng == 13 && sk == 0){
+	//			values[0] = g->temp[UY][idx];
+	//			values[1] = q(1,s_qu);
+	//			values[2] = q(2,s_qu);
+	//			values[3] = q(3,s_qu);
+	//			values[4] = q(4,s_qu);
+	//			values[5] = q(-1,s_qu);
+	//			values[6] = q(-2,s_qu);
+	//			values[7] = q(-3,s_qu);
+	//			values[8] = q(-4,s_qu);
+				values[6] = q(3, s_qu);
+				values[7] = q(4, s_qu);
+				values[8] = bj;
+			}
 
-		g->temp[WY][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
-							+ BET*(q(2,s_qw)-q(-2,s_qw))
-							+ GAM*(q(3,s_qw)-q(-3,s_qw))
-							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
-	}
+			g->temp[VY][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
+								+ BET*(q(2,s_qv)-q(-2,s_qv))
+								+ GAM*(q(3,s_qv)-q(-3,s_qv))
+								+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
+
+			g->temp[WY][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
+								+ BET*(q(2,s_qw)-q(-2,s_qw))
+								+ GAM*(q(3,s_qw)-q(-3,s_qw))
+								+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
+		}
 
 #undef	q
 #define	q(i, comp)	s_q[comp][threadIdx.y][threadIdx.z+g->ng+i]
 
-	dxinv = 1.0/g->dx[2];
-	if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
+		dxinv = 1.0/g->dx[2];
+		idx = si*g->plane_offset_g + sj*g->dim_g[2] + (sk+g->ng);
+		if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
 
-		g->temp[UZ][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
-							+ BET*(q(2,s_qu)-q(-2,s_qu))
-							+ GAM*(q(3,s_qu)-q(-3,s_qu))
-							+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
+			g->temp[UZ][idx] =  ( ALP*(q(1,s_qu)-q(-1,s_qu))
+								+ BET*(q(2,s_qu)-q(-2,s_qu))
+								+ GAM*(q(3,s_qu)-q(-3,s_qu))
+								+ DEL*(q(4,s_qu)-q(-4,s_qu)))*dxinv;
 
-		g->temp[VZ][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
-							+ BET*(q(2,s_qv)-q(-2,s_qv))
-							+ GAM*(q(3,s_qv)-q(-3,s_qv))
-							+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
+			g->temp[VZ][idx] = 	( ALP*(q(1,s_qv)-q(-1,s_qv))
+								+ BET*(q(2,s_qv)-q(-2,s_qv))
+								+ GAM*(q(3,s_qv)-q(-3,s_qv))
+								+ DEL*(q(4,s_qv)-q(-4,s_qv)))*dxinv;
 
-		g->temp[WZ][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
-							+ BET*(q(2,s_qw)-q(-2,s_qw))
-							+ GAM*(q(3,s_qw)-q(-3,s_qw))
-							+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
-	}
+			g->temp[WZ][idx] =	( ALP*(q(1,s_qw)-q(-1,s_qw))
+								+ BET*(q(2,s_qw)-q(-2,s_qw))
+								+ GAM*(q(3,s_qw)-q(-3,s_qw))
+								+ DEL*(q(4,s_qw)-q(-4,s_qw)))*dxinv;
+		}
 
 #undef 	q
+	}
 }
 
 void gpu_diffterm(
@@ -176,10 +196,12 @@ void gpu_diffterm(
 	gpu_diffterm_x_stencil_kernel<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_flux);
 
 	grid_dim_x = h_const.dim_g[0];
-	grid_dim_y = CEIL(h_const.dim_g[1], BLOCK_DIM);
-	grid_dim_z = CEIL(h_const.dim_g[2], BLOCK_DIM);
+	grid_dim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
+	grid_dim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
 	grid_dim = grid_dim_x * grid_dim_y * grid_dim_z;
 
+	printf("dim_g = %d %d %d\n", h_const.dim_g[0], h_const.dim_g[1], h_const.dim_g[2]);
+	printf("griddim = %d %d %d\n", grid_dim_x, grid_dim_y, grid_dim_z);
 	dim3 block_dim_yz_stencil(1, BLOCK_DIM, BLOCK_DIM);
     h_const.gridDim_x = grid_dim_x;
     h_const.gridDim_y = grid_dim_y;
@@ -293,11 +315,12 @@ void diffterm_test(
 	gpu_copy_to_host_3D(vz2, h_const.temp[VZ], dim_g);
 	gpu_copy_to_host_3D(wz2, h_const.temp[WZ], dim_g);
 
-//	double vals[9];
-//	cudaMemcpyFromSymbol(vals, values, 9*sizeof(double));
-//	FOR(i, 0, 9){
-//		printf("%le\n", vals[i]);
-//	}
+	double vals[9];
+	cudaMemcpyFromSymbol(vals, values, 9*sizeof(double));
+	printf("--------------\n");
+	FOR(i, 0, 9){
+		printf("%le\n", vals[i]);
+	}
 
 	int j,k;
 	printf("checking ux, vx, wx...\n");

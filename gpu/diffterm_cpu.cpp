@@ -83,14 +83,6 @@ void diffterm (
 						  + GAM*(q(i+3,j,k,qu)-q(i-3,j,k,qu))
 						  + DEL*(q(i+4,j,k,qu)-q(i-4,j,k,qu)))*dxinv(1);
 
-					if(i==ng && j==1 && k==0){
-						printf("ux[%d][%d][%d] = %le\n", i,j,k,ux(i,j,k));
-						printf("%le %le\n", q(i+1,j,k,qu),q(i-1,j,k,qu));
-						printf("%le %le\n", q(i+2,j,k,qu),q(i-2,j,k,qu));
-						printf("%le %le\n", q(i+3,j,k,qu),q(i-3,j,k,qu));
-						printf("%le %le\n", q(i+4,j,k,qu),q(i-4,j,k,qu));
-					}
-
 					vx(i,j,k)=
 						   (ALP*(q(i+1,j,k,qv)-q(i-1,j,k,qv))
 						  + BET*(q(i+2,j,k,qv)-q(i-2,j,k,qv))
@@ -117,6 +109,14 @@ void diffterm (
 						  + BET*(q(i,j+2,k,qu)-q(i,j-2,k,qu))
 						  + GAM*(q(i,j+3,k,qu)-q(i,j-3,k,qu))
 						  + DEL*(q(i,j+4,k,qu)-q(i,j-4,k,qu)))*dxinv(2);
+
+					if(i==0 && j==13 && k==0){
+						printf("uy[%d][%d][%d] = %le\n", i,j,k,uy(i,j,k));
+						printf("%le %le\n", q(i,j+1,k,qu),q(i,j-1,k,qu));
+						printf("%le %le\n", q(i,j+2,k,qu),q(i,j-2,k,qu));
+						printf("%le %le\n", q(i,j+3,k,qu),q(i,j-3,k,qu));
+						printf("%le %le\n", q(i,j+4,k,qu),q(i,j-4,k,qu));
+					}
 
 					vy(i,j,k)=
 						   (ALP*(q(i,j+1,k,qv)-q(i,j-1,k,qv))
