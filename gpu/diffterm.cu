@@ -360,22 +360,49 @@ void diffterm_test(
 					printf("diff = %le\n", uy2[i][j][k]-uy[i][j][k]);
 					exit(1);
 				}
-//				if(!FEQ(vx[i][j][k], vx2[i][j][k])){
-//					printf("vx2[%d][%d][%d] = %le != %le = vx[%d][%d][%d]\n",
-//						i,j,k,vx2[i][j][k], vx[i][j][k], i,j,k);
-//					printf("diff = %le\n", vx2[i][j][k]-vx[i][j][k]);
-//					exit(1);
-//				}
-//				if(!FEQ(wx[i][j][k], wx2[i][j][k])){
-//					printf("wx2[%d][%d][%d] = %le != %le = wx[%d][%d][%d]\n",
-//						i,j,k,wx2[i][j][k], wx[i][j][k], i,j,k);
-//					printf("diff = %le\n", wx2[i][j][k]-wx[i][j][k]);
-//					exit(1);
-//				}
+				if(!FEQ(vy[i][j][k], vy2[i][j][k])){
+					printf("vy2[%d][%d][%d] = %le != %le = vy[%d][%d][%d]\n",
+						i,j,k,vy2[i][j][k], vy[i][j][k], i,j,k);
+					printf("diff = %le\n", vy2[i][j][k]-vy[i][j][k]);
+					exit(1);
+				}
+				if(!FEQ(wy[i][j][k], wy2[i][j][k])){
+					printf("wy2[%d][%d][%d] = %le != %le = wy[%d][%d][%d]\n",
+						i,j,k,wy2[i][j][k], wy[i][j][k], i,j,k);
+					printf("diff = %le\n", wy2[i][j][k]-wy[i][j][k]);
+					exit(1);
+				}
 			}
 		}
 	}
 	printf("uy, vy, wy is correct!\n");
+
+	printf("checking uz\n");
+	FOR(i, 0, dim_g[0]){
+		FOR(j, 0, dim_g[1]){
+			FOR(k, ng, dim[2]+ng){
+				if(!FEQ(uz[i][j][k], uz2[i][j][k])){
+					printf("uz2[%d][%d][%d] = %le != %le = uz[%d][%d][%d]\n",
+						i,j,k,uz2[i][j][k], uz[i][j][k], i,j,k);
+					printf("diff = %le\n", uz2[i][j][k]-uz[i][j][k]);
+					exit(1);
+				}
+				if(!FEQ(vz[i][j][k], vz2[i][j][k])){
+					printf("vz2[%d][%d][%d] = %le != %le = vz[%d][%d][%d]\n",
+						i,j,k,vz2[i][j][k], vz[i][j][k], i,j,k);
+					printf("diff = %le\n", vz2[i][j][k]-vz[i][j][k]);
+					exit(1);
+				}
+				if(!FEQ(wz[i][j][k], wz2[i][j][k])){
+					printf("wz2[%d][%d][%d] = %le != %le = wz[%d][%d][%d]\n",
+						i,j,k,wz2[i][j][k], wz[i][j][k], i,j,k);
+					printf("diff = %le\n", wz2[i][j][k]-wz[i][j][k]);
+					exit(1);
+				}
+			}
+		}
+	}
+	printf("uz, vz, wz is correct!\n");
 
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
