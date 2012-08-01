@@ -30,7 +30,8 @@ void diffterm (
 	double alam,		// i
 	double ***ux, double ***vx, double ***wx,
 	double ***uy, double ***vy, double ***wy,
-	double ***uz, double ***vz, double ***wz
+	double ***uz, double ***vz, double ***wz,
+	double ***vyx_, double ***wzx_
 ){
 //	double ***ux, ***uy, ***uz;
 //	double ***vx, ***vy, ***vz;
@@ -110,14 +111,6 @@ void diffterm (
 						  + GAM*(q(i,j+3,k,qu)-q(i,j-3,k,qu))
 						  + DEL*(q(i,j+4,k,qu)-q(i,j-4,k,qu)))*dxinv(2);
 
-					if(i==0 && j==13 && k==0){
-						printf("uy[%d][%d][%d] = %le\n", i,j,k,uy(i,j,k));
-						printf("%le %le\n", q(i,j+1,k,qu),q(i,j-1,k,qu));
-						printf("%le %le\n", q(i,j+2,k,qu),q(i,j-2,k,qu));
-						printf("%le %le\n", q(i,j+3,k,qu),q(i,j-3,k,qu));
-						printf("%le %le\n", q(i,j+4,k,qu),q(i,j-4,k,qu));
-					}
-
 					vy(i,j,k)=
 						   (ALP*(q(i,j+1,k,qv)-q(i,j-1,k,qv))
 						  + BET*(q(i,j+2,k,qv)-q(i,j-2,k,qv))
@@ -196,6 +189,18 @@ void diffterm (
 					  + DEL*(wz(i+4,j,k)-wz(i-4,j,k)))*dxinv(1);
 
 				difflux(i-ng,j-ng,k-ng,imx) = eta*(FourThirds*uxx + uyy + uzz + OneThird*(vyx+wzx));
+
+				vyx_[i-ng][j-ng][k-ng] = vyx;
+				wzx_[i-ng][j-ng][k-ng] = wzx;
+				if(i==ng && j==ng && k==ng){
+					printf("vyx = %le\n", vyx);
+					printf("wzx = %le\n", wzx);
+					printf("uy[%d][%d][%d] = %le\n", i-ng,j-ng,k-ng, wzx);
+					printf("%le %le\n", wz(i+1,j,k),wz(i-1,j,k));
+					printf("%le %le\n", wz(i+2,j,k),wz(i-2,j,k));
+					printf("%le %le\n", wz(i+3,j,k),wz(i-3,j,k));
+					printf("%le %le\n", wz(i+4,j,k),wz(i-4,j,k));
+				}
 
 			}
 		}
