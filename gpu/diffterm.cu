@@ -92,7 +92,7 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 	double *q,					// i:
 	double *d_flux				// o:
 ){
-	int idx, tidx, tidz;
+	int idx, idx_g, tidx, tidz;
 	int bi, bj, bk, si, sj, sk;
 	__shared__ double  vy[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
 	__shared__ double  wz[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
@@ -138,7 +138,8 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 		}
 	}
 
-	idx = si*g->plane_offset + sj*g->dim[2] + sk;
+	idx 	= si*g->plane_offset + sj*g->dim[2] + sk;
+	idx_g 	= (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		g->temp[VYX][idx] = ( ALP*(vy(1)-vy(-1))
@@ -150,6 +151,12 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 							+ BET*(wz(2)-wz(-2))
 							+ GAM*(wz(3)-wz(-3))
 							+ DEL*(wz(4)-wz(-4)))*g->dxinv[0];
+
+		d_flux[idx + imx*g->comp_offset] =  	 g->eta *
+											   ( g->FourThirds*g->temp[UXX][idx_g] +
+															   g->temp[UYY][idx_g] +
+															   g->temp[UZZ][idx_g] +
+												 g->OneThird *(g->temp[VYX][idx] + g->temp[WZX][idx]));
 
 		if(si==0 && sj==0 && sk==0){
 			values[0] = g->temp[WZX][idx];
@@ -433,7 +440,7 @@ void diffterm_test(
 	gpu_diffterm(h_const, d_const, d_q, d_flux);
 
 //	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
-//	gpu_copy_to_host_4D(difflux, d_flux, dim, 5);
+	gpu_copy_to_host_4D(difflux, d_flux, dim, 5);
 	gpu_copy_to_host_3D(ux2, h_const.temp[UX], dim_g);
 	gpu_copy_to_host_3D(vx2, h_const.temp[VX], dim_g);
 	gpu_copy_to_host_3D(wx2, h_const.temp[WX], dim_g);
@@ -592,11 +599,25 @@ void diffterm_test(
 	fclose(fout);
 
 	// Checking...
-	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-	check_4D_array("q", q, q2, dim_g, 6);
-	check_4D_array("difflux", difflux, difflux2, dim, 5);
-	check_double(eta,  eta2,  "eta");
-	check_double(alam, alam2, "alam");
+//	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
+//	check_4D_array("q", q, q2, dim_g, 6);
+	printf("checking difflux\n");
+	FOR(i, 0, dim[0]){
+		FOR(j, 0, dim[1]){
+			FOR(k, 0, dim[2]){
+				if(!FEQ(difflux[imx][i][j][k], difflux2[imx][i][j][k])){
+					printf("difflux2[imx][%d][%d][%d] = %le != %le = difflux[imx][%d][%d][%d]\n",
+						i,j,k,difflux2[imx][i][j][k], difflux[imx][i][j][k], i,j,k);
+					printf("diff = %le\n", difflux2[imx][i][j][k]-difflux[imx][i][j][k]);
+					exit(1);
+				}
+			}
+		}
+	}
+	printf("difflux[imx] correct!\n");
+//	check_4D_array("difflux", difflux, difflux2, dim, 5);
+//	check_double(eta,  eta2,  "eta");
+//	check_double(alam, alam2, "alam");
 
 	FOR(i, 0, MAX_TEMP)
 		gpu_free_3D(h_const.temp[i]);
