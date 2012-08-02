@@ -156,7 +156,9 @@ extern void diffterm (
 	double ***ux, double ***vx, double ***wx,
 	double ***uy, double ***vy, double ***wy,
 	double ***uz, double ***vz, double ***wz,
-	double ***vyx_, double ***wzx_
+	double ***vyx_, double ***wzx_,
+	double ***uxy_, double ***wzy_,
+	double ***uxz_, double ***vyz_
 );
 
 extern void advance_test();

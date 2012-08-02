@@ -129,15 +129,8 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 
 #define	vy(i)	vy[threadIdx.x+g->ng+i][threadIdx.z]
 #define	wz(i)	wz[threadIdx.x+g->ng+i][threadIdx.z]
-	si = bi*blockDim.x+threadIdx.x;
-	if(si==0 && sj==0 && sk==0){
-		int i, k;
-		FOR(i, 0, BLOCK_DIM){
-			FOR(k, 0, BLOCK_DIM)
-				plane[i][k] = wz[i][k];
-		}
-	}
 
+	si = bi*blockDim.x+threadIdx.x;
 	idx 	= si*g->plane_offset + sj*g->dim[2] + sk;
 	idx_g 	= (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
@@ -157,18 +150,6 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 															   g->temp[UYY][idx_g] +
 															   g->temp[UZZ][idx_g] +
 												 g->OneThird *(g->temp[VYX][idx] + g->temp[WZX][idx]));
-
-		if(si==0 && sj==0 && sk==0){
-			values[0] = g->temp[WZX][idx];
-			values[1] = wz(1);
-			values[2] = wz(2);
-			values[3] = wz(3);
-			values[4] = wz(4);
-			values[5] = wz(-1);
-			values[6] = wz(-2);
-			values[7] = wz(-3);
-			values[8] = wz(-4);
-		}
 	}
 #undef	vy
 #undef	wz
@@ -302,6 +283,96 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 	}
 }
 
+__global__ void gpu_diffterm_yz_stencil_kernel_lv2(
+	global_const_t *g,			// i: Global struct containing application parameters
+	double *q,					// i:
+	double *d_flux				// o:
+){
+	int idx, idx_g, tidy, tidz;
+	int bi, bj, bk, si, sj, sk;
+	__shared__ double  ux[BLOCK_DIM_G+NG+NG][BLOCK_DIM_G+NG+NG];
+	__shared__ double  wz[BLOCK_DIM_G+NG+NG][BLOCK_DIM_G+NG+NG];
+	__shared__ double  vy[BLOCK_DIM_G+NG+NG][BLOCK_DIM_G+NG+NG];
+
+	// Load to shared mem
+	bj = (blockIdx.x % (g->gridDim_plane_yz)) / g->gridDim_z;
+	bk = (blockIdx.x % (g->gridDim_plane_yz)) % g->gridDim_z;
+	bi =  blockIdx.x / (g->gridDim_plane_yz);
+	si = bi;
+	sj = bj*BLOCK_DIM_G+threadIdx.y;
+	sk = bk*BLOCK_DIM_G+threadIdx.z;
+
+	tidy = threadIdx.y;
+	tidz = threadIdx.z;
+	idx = (si+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	if(si < g->dim[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+		ux[tidy][tidz]  =  g->temp[UX][idx];
+		wz[tidy][tidz]  =  g->temp[WZ][idx];
+		vy[tidy][tidz]  =  g->temp[VY][idx];
+	}
+	__syncthreads();
+
+#define	ux(i)	ux[threadIdx.y+g->ng+(i)][threadIdx.z+g->ng]
+#define	wz(i)	wz[threadIdx.y+g->ng+(i)][threadIdx.z+g->ng]
+
+	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
+
+		idx = si*g->plane_offset + sj*g->dim[2] + sk;
+		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+
+			g->temp[UXY][idx] = ( ALP*(ux(1)-ux(-1))
+								+ BET*(ux(2)-ux(-2))
+								+ GAM*(ux(3)-ux(-3))
+								+ DEL*(ux(4)-ux(-4)))*g->dxinv[1];
+
+			g->temp[WZY][idx] = ( ALP*(wz(1)-wz(-1))
+								+ BET*(wz(2)-wz(-2))
+								+ GAM*(wz(3)-wz(-3))
+								+ DEL*(wz(4)-wz(-4)))*g->dxinv[1];
+
+			idx_g = (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+
+			d_flux[idx + imy*g->comp_offset] = 	g->eta * ( g->temp[VXX][idx_g] +
+												g->FourThirds * g->temp[VYY][idx_g] +
+																g->temp[VZZ][idx_g] +
+												g->OneThird*(g->temp[UXY][idx]+g->temp[WZY][idx]));
+		}
+	}
+
+#undef	ux
+#undef 	wz
+#define	ux(i)	ux[threadIdx.y+g->ng][threadIdx.z+g->ng+(i)]
+#define vy(i)	vy[threadIdx.y+g->ng][threadIdx.z+g->ng+(i)]
+
+	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
+
+		idx = si*g->plane_offset + sj*g->dim[2] + sk;
+		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+
+			g->temp[UXZ][idx] = ( ALP*(ux(1)-ux(-1))
+								+ BET*(ux(2)-ux(-2))
+								+ GAM*(ux(3)-ux(-3))
+								+ DEL*(ux(4)-ux(-4)))*g->dxinv[2];
+
+			g->temp[VYZ][idx] = ( ALP*(vy(1)-vy(-1))
+								+ BET*(vy(2)-vy(-2))
+								+ GAM*(vy(3)-vy(-3))
+								+ DEL*(vy(4)-vy(-4)))*g->dxinv[2];
+
+			idx_g = (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+
+			d_flux[idx + imz*g->comp_offset] = 	g->eta * ( g->temp[WXX][idx_g] +
+														   g->temp[WYY][idx_g] +
+														   g->FourThirds * g->temp[WZZ][idx_g] +
+												g->OneThird*(g->temp[UXZ][idx]+g->temp[VYZ][idx]));
+		}
+	}
+
+#undef	ux
+#undef	vy
+
+}
+
 void gpu_diffterm(
 	global_const_t h_const, 	// i: Global struct containing applicatino parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
@@ -331,9 +402,6 @@ void gpu_diffterm(
 	grid_dim = h_const.gridDim_x * h_const.gridDim_plane_yz;
     cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
 
-    printf("dim_g = %d %d %d\n", h_const.dim_g[0], h_const.dim_g[1], h_const.dim_g[2]);
-	printf("griddim = %d %d %d\n", h_const.gridDim_x, h_const.gridDim_y, h_const.gridDim_z);
-
 	gpu_diffterm_yz_stencil_kernel<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_flux);
 
 	h_const.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
@@ -345,6 +413,17 @@ void gpu_diffterm(
     cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
 
 	gpu_diffterm_x_stencil_kernel_lv2<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_flux);
+
+	h_const.gridDim_x = h_const.dim_g[0];
+	h_const.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
+	h_const.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
+	h_const.gridDim_plane_yz = h_const.gridDim_y * h_const.gridDim_z;
+    h_const.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    h_const.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+	grid_dim = h_const.gridDim_x * h_const.gridDim_plane_yz;
+    cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+
+	gpu_diffterm_yz_stencil_kernel_lv2<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_flux);
 
 }
 
@@ -362,6 +441,8 @@ void diffterm_test(
 	double ***uy, ***vy, ***wy;
 	double ***uz, ***vz, ***wz;
 	double ***vyx, ***wzx;
+	double ***uxy, ***wzy;
+	double ***uxz, ***vyz;
 
 	int lo2[3], hi2[3], ng2=4;
 	double dx2[3], eta2, alam2;
@@ -370,6 +451,8 @@ void diffterm_test(
 	double ***uy2, ***vy2, ***wy2;
 	double ***uz2, ***vz2, ***wz2;
 	double ***vyx2, ***wzx2;
+	double ***uxy2, ***wzy2;
+	double ***uxz2, ***vyz2;
 
 	double *d_q,*d_flux;
 	double *d_ux, *d_vx, *d_wx, *d_uy, *d_vy, *d_wy, *d_uz, *d_vz, *d_wz;
@@ -412,6 +495,10 @@ void diffterm_test(
 
 	allocate_3D(vyx,	dim);		allocate_3D(vyx2, 	dim);
 	allocate_3D(wzx,	dim);		allocate_3D(wzx2, 	dim);
+	allocate_3D(uxy,	dim);		allocate_3D(uxy2, 	dim);
+	allocate_3D(wzy,	dim);		allocate_3D(wzy2, 	dim);
+	allocate_3D(uxz,	dim);		allocate_3D(uxz2, 	dim);
+	allocate_3D(vyz,	dim);		allocate_3D(vyz2, 	dim);
 
 	allocate_4D(q, 		 	dim_g,  6); 	// [40][40][40][6]
 	allocate_4D(difflux, 	dim, 5); 	// [32][32][32][5]
@@ -436,7 +523,7 @@ void diffterm_test(
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
 
 	printf("Applying diffterm()...\n");
-	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, uz, vz, wz, vyx, wzx);
+	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, uz, vz, wz, vyx, wzx, uxy, wzy, uxz, vyz);
 	gpu_diffterm(h_const, d_const, d_q, d_flux);
 
 //	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
@@ -455,6 +542,10 @@ void diffterm_test(
 
 	gpu_copy_to_host_3D(vyx2, h_const.temp[VYX], dim);
 	gpu_copy_to_host_3D(wzx2, h_const.temp[WZX], dim);
+	gpu_copy_to_host_3D(uxy2, h_const.temp[UXY], dim);
+	gpu_copy_to_host_3D(wzy2, h_const.temp[WZY], dim);
+	gpu_copy_to_host_3D(uxz2, h_const.temp[UXZ], dim);
+	gpu_copy_to_host_3D(vyz2, h_const.temp[VYZ], dim);
 
 
 	double vals[9];
@@ -584,6 +675,48 @@ void diffterm_test(
 	}
 	printf("vyx, wzx are correct!\n");
 
+	printf("checking uxy, wzy\n");
+	FOR(i, 0, dim[0]){
+		FOR(j, 0, dim[1]){
+			FOR(k, 0, dim[2]){
+				if(!FEQ(uxy[i][j][k], uxy2[i][j][k])){
+					printf("uxy2[%d][%d][%d] = %le != %le = uxy[%d][%d][%d]\n",
+						i,j,k,uxy2[i][j][k], uxy[i][j][k], i,j,k);
+					printf("diff = %le\n", uxy2[i][j][k]-uxy[i][j][k]);
+					exit(1);
+				}
+				if(!FEQ(wzy[i][j][k], wzy2[i][j][k])){
+					printf("wzy2[%d][%d][%d] = %le != %le = wzy[%d][%d][%d]\n",
+						i,j,k,wzy2[i][j][k], wzy[i][j][k], i,j,k);
+					printf("diff = %le\n", wzy2[i][j][k]-wzy[i][j][k]);
+					exit(1);
+				}
+			}
+		}
+	}
+	printf("uxy, wzy are correct!\n");
+
+	printf("checking uxz, vyz\n");
+	FOR(i, 0, dim[0]){
+		FOR(j, 0, dim[1]){
+			FOR(k, 0, dim[2]){
+				if(!FEQ(uxz[i][j][k], uxz2[i][j][k])){
+					printf("uxz2[%d][%d][%d] = %le != %le = uxz[%d][%d][%d]\n",
+						i,j,k,uxz2[i][j][k], uxz[i][j][k], i,j,k);
+					printf("diff = %le\n", uxz2[i][j][k]-uxz[i][j][k]);
+					exit(1);
+				}
+				if(!FEQ(vyz[i][j][k], vyz2[i][j][k])){
+					printf("vyz2[%d][%d][%d] = %le != %le = vyz[%d][%d][%d]\n",
+						i,j,k,vyz2[i][j][k], vyz[i][j][k], i,j,k);
+					printf("diff = %le\n", vyz2[i][j][k]-vyz[i][j][k]);
+					exit(1);
+				}
+			}
+		}
+	}
+	printf("uxz, vyz are correct!\n");
+
 	// Scanning output to check
 	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
 	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
@@ -611,10 +744,22 @@ void diffterm_test(
 					printf("diff = %le\n", difflux2[imx][i][j][k]-difflux[imx][i][j][k]);
 					exit(1);
 				}
+				if(!FEQ(difflux[imy][i][j][k], difflux2[imy][i][j][k])){
+					printf("difflux2[imy][%d][%d][%d] = %le != %le = difflux[imy][%d][%d][%d]\n",
+						i,j,k,difflux2[imy][i][j][k], difflux[imy][i][j][k], i,j,k);
+					printf("diff = %le\n", difflux2[imy][i][j][k]-difflux[imy][i][j][k]);
+					exit(1);
+				}
+				if(!FEQ(difflux[imz][i][j][k], difflux2[imz][i][j][k])){
+					printf("difflux2[imz][%d][%d][%d] = %le != %le = difflux[imz][%d][%d][%d]\n",
+						i,j,k,difflux2[imz][i][j][k], difflux[imz][i][j][k], i,j,k);
+					printf("diff = %le\n", difflux2[imz][i][j][k]-difflux[imz][i][j][k]);
+					exit(1);
+				}
 			}
 		}
 	}
-	printf("difflux[imx] correct!\n");
+	printf("difflux[imx], [imy], [imz] correct!\n");
 //	check_4D_array("difflux", difflux, difflux2, dim, 5);
 //	check_double(eta,  eta2,  "eta");
 //	check_double(alam, alam2, "alam");
@@ -640,8 +785,13 @@ void diffterm_test(
 	free_3D(vz,  dim_g);	free_3D(vz2, dim_g);
 	free_3D(wz,  dim_g);	free_3D(wz2, dim_g);
 
-	free_3D(vyx, dim);
-	free_3D(wzx, dim);
+	free_3D(vyx, dim);		free_3D(vyx2, dim);
+	free_3D(wzx, dim);		free_3D(wzx2, dim);
+	free_3D(uxy, dim);		free_3D(uxy2, dim);
+	free_3D(wzy, dim);		free_3D(wzy2, dim);
+	free_3D(uxz, dim);		free_3D(uxz2, dim);
+	free_3D(vyz, dim);		free_3D(vyz2, dim);
+
 
 	printf("Correct!\n");
 }

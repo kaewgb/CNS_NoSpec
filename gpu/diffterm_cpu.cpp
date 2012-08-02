@@ -31,7 +31,9 @@ void diffterm (
 	double ***ux, double ***vx, double ***wx,
 	double ***uy, double ***vy, double ***wy,
 	double ***uz, double ***vz, double ***wz,
-	double ***vyx_, double ***wzx_
+	double ***vyx_, double ***wzx_,
+	double ***uxy_, double ***wzy_,
+	double ***uxz_, double ***vyz_
 ){
 //	double ***ux, ***uy, ***uz;
 //	double ***vx, ***vy, ***vz;
@@ -239,6 +241,8 @@ void diffterm (
 					  + GAM*(wz(i,j+3,k)-wz(i,j-3,k))
 					  + DEL*(wz(i,j+4,k)-wz(i,j-4,k)))*dxinv(2);
 
+				uxy_[i-ng][j-ng][k-ng] = uxy;
+				wzy_[i-ng][j-ng][k-ng] = wzy;
 				difflux(i-ng,j-ng,k-ng,imy) = eta*(vxx + FourThirds*vyy + vzz + OneThird*(uxy+wzy));
 
 			}
@@ -278,6 +282,8 @@ void diffterm (
 					  + GAM*(vy(i,j,k+3)-vy(i,j,k-3))
 					  + DEL*(vy(i,j,k+4)-vy(i,j,k-4)))*dxinv(3);
 
+				uxz_[i-ng][j-ng][k-ng] = uxz;
+				vyz_[i-ng][j-ng][k-ng] = vyz;
 				difflux(i-ng,j-ng,k-ng,imz) = eta*(wxx + wyy + FourThirds*wzz + OneThird*(uxz+vyz));
 
 			}
