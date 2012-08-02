@@ -33,7 +33,8 @@ void diffterm (
 	double ***uz, double ***vz, double ***wz,
 	double ***vyx_, double ***wzx_,
 	double ***uxy_, double ***wzy_,
-	double ***uxz_, double ***vyz_
+	double ***uxz_, double ***vyz_,
+	double ***txx_, double ***tyy_, double ***tzz_
 ){
 //	double ***ux, ***uy, ***uz;
 //	double ***vx, ***vy, ***vz;
@@ -194,15 +195,6 @@ void diffterm (
 
 				vyx_[i-ng][j-ng][k-ng] = vyx;
 				wzx_[i-ng][j-ng][k-ng] = wzx;
-				if(i==ng && j==ng && k==ng){
-					printf("vyx = %le\n", vyx);
-					printf("wzx = %le\n", wzx);
-					printf("uy[%d][%d][%d] = %le\n", i-ng,j-ng,k-ng, wzx);
-					printf("%le %le\n", wz(i+1,j,k),wz(i-1,j,k));
-					printf("%le %le\n", wz(i+2,j,k),wz(i-2,j,k));
-					printf("%le %le\n", wz(i+3,j,k),wz(i-3,j,k));
-					printf("%le %le\n", wz(i+4,j,k),wz(i-4,j,k));
-				}
 
 			}
 		}
@@ -313,6 +305,10 @@ void diffterm (
 					  + OFF3*(q(i,j,k+3,qt)+q(i,j,k-3,qt))
 					  + OFF4*(q(i,j,k+4,qt)+q(i,j,k-4,qt)))*SQR(dxinv(3));
 
+				txx_[i-ng][j-ng][k-ng] = txx;
+				tyy_[i-ng][j-ng][k-ng] = tyy;
+				tzz_[i-ng][j-ng][k-ng] = tzz;
+
 				divu  = TwoThirds*(ux(i,j,k)+vy(i,j,k)+wz(i,j,k));
 				tauxx = 2.E0*ux(i,j,k) - divu;
 				tauyy = 2.E0*vy(i,j,k) - divu;
@@ -331,6 +327,12 @@ void diffterm (
 					  + difflux(i-ng,j-ng,k-ng,imz)*q(i,j,k,qw);
 
 				difflux(i-ng,j-ng,k-ng,iene) = alam*(txx+tyy+tzz) + mechwork;
+
+				if(i==ng && j==ng+12 && k==ng){
+					printf("difflux[%d][%d][%d] = %le\n", i-ng,j-ng,k-ng, difflux(i-ng,j-ng,k-ng,iene));
+					printf("mechwork: %le\n", mechwork);
+					printf("ux, vy, wz = %le %le %le\n", ux(i,j,k), vy(i,j,k), wz(i,j,k));
+				}
 
 			}
 		}
