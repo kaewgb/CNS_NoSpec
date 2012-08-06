@@ -56,6 +56,19 @@ enum diffterm_enum {
 	MAX_TEMP
 };
 
+typedef struct kernel_const {
+	int gridDim_x;
+	int gridDim_y;
+	int gridDim_z;
+	int gridDim_plane_xy;
+	int gridDim_plane_xz;
+	int gridDim_plane_yz;
+	int blockDim_x_g;
+	int blockDim_y_g;
+	int blockDim_z_g;
+
+}kernel_const_t;
+
 typedef struct global_const {
 	int ng;
 	int lo[3];
@@ -66,6 +79,8 @@ typedef struct global_const {
 	int comp_offset;
 	int plane_offset_g;
 	int plane_offset;
+
+
 	int gridDim_x;
 	int gridDim_y;
 	int gridDim_z;
@@ -75,6 +90,8 @@ typedef struct global_const {
 	int blockDim_x_g;
 	int blockDim_y_g;
 	int blockDim_z_g;
+
+
 	double dx[3];
 	double dxinv[3];
 	double cfl;
@@ -120,7 +137,7 @@ extern void ctoprim (
 );
 
 extern void hypterm_test(
-	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t &h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void hypterm(
@@ -141,7 +158,7 @@ extern void gpu_hypterm_merged(
 );
 
 extern void diffterm_test(
-	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t &h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void diffterm (
@@ -165,6 +182,14 @@ extern void diffterm (
 extern void advance_test();
 extern void advance(
 	double ****U[],	// i/o
+	double &dt,		// o
+	double dx[],	// i: dx[U.dim]
+	double cfl,		// i
+	double eta,		// i
+	double alam		// i
+);
+extern void gpu_advance(
+	double ****U,	// i/o
 	double &dt,		// o
 	double dx[],	// i: dx[U.dim]
 	double cfl,		// i

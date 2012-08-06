@@ -67,13 +67,10 @@ void gpu_ctoprim(
     double *q_d, 				// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
     double &courno  			// i/o
 ){
-	int i, len, dim_g[3];
+	int i, len;
 	double *d_cour;
 
-	FOR(i, 0, 3)
-		dim_g[i] = h_const.dim_g[i];
-
-	len = dim_g[0] * dim_g[1] * dim_g[2];
+	len = h_const.dim_g[0] * h_const.dim_g[1] * h_const.dim_g[2];
 	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
 	int block_dim = BLOCK_DIM;
 
@@ -81,7 +78,6 @@ void gpu_ctoprim(
 	cudaMalloc((void **) &d_cour, len * sizeof(double));
 
 	// TODO: edit parameters
-	printf("calling kernel\n");
 	gpu_ctoprim_kernel<<<grid_dim, block_dim>>>(d_const, u_d, q_d, d_cour);
 
 	// Find max & update courno
@@ -156,12 +152,12 @@ void ctoprim (
     //
     courno = MAX(MAX(courmx, courmy), MAX(courmz, courno));
 }
-#undef u(i,j,k,l)
-#undef q(i,j,k,l)
-#undef dx(i)
+#undef u
+#undef q
+#undef dx
 
 void ctoprim_test(
-	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t h_const, // i: Global struct containing application parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 ){
 

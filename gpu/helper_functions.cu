@@ -38,6 +38,80 @@ void gpu_free_4D(double *d_ptr){
 	CUDA_SAFE_CALL(cudaFree(d_ptr));
 }
 
+#define d_ptr(l,i,j,k)	d_ptr[l*g->comp_offset_g + i*g->plane_offset_g + j*g->dim_g[2] + k]
+__device__ kernel_const_t k_const;
+__global__ void gpu_fill_boundary_z_kernel(
+	global_const_t *g, 		// i: Global Constants
+	double *d_ptr			// i/o:	Device Pointer
+){
+	int i,j,k,l;
+	i = blockIdx.x * blockDim.x + threadIdx.x;
+	j = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if(i < g->dim[0] && j < g->dim[1]){
+		FOR(l, 0, NC){
+			FOR(k, 0, g->ng){
+				d_ptr(l,i,j,k) 					= d_ptr(l,i,j,k+g->dim[2]);
+				d_ptr(l,i,j,k+g->dim[2]+g->ng)	= d_ptr(l,i,j,k+g->ng);
+			}
+		}
+	}
+
+}
+__global__ void gpu_fill_boundary_y_kernel(
+	global_const_t *g, 		// i: Global Constants
+	double *d_ptr			// i/o:	Device Pointer
+){
+	int i,j,k,l;
+	i = blockIdx.x * blockDim.x + threadIdx.x;
+	k = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if(i < g->dim[0] && k < g->dim_g[2]){
+		FOR(l, 0, NC){
+			FOR(j, 0, g->ng){
+				d_ptr(l,i,j,k) 					= d_ptr(l,i,j+g->dim[1],k);
+				d_ptr(l,i,j+g->dim[1]+g->ng,k)	= d_ptr(l,i,j+g->ng,k);
+			}
+		}
+	}
+
+}
+__global__ void gpu_fill_boundary_x_kernel(
+	global_const_t *g, 		// i: Global Constants
+	double *d_ptr			// i/o:	Device Pointer
+){
+	int i,j,k,l;
+	j = blockIdx.x * blockDim.x + threadIdx.x;
+	k = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if(j < g->dim_g[1] && k < g->dim_g[2]){
+		FOR(l, 0, NC){
+			FOR(i, 0, g->ng){
+				d_ptr(l,i,j,k) 					= d_ptr(l,i+g->dim[0],j,k);
+				d_ptr(l,i+g->dim[0]+g->ng,j,k)	= d_ptr(l,i+g->ng,j,k);
+			}
+		}
+	}
+}
+#undef	d_ptr
+void gpu_fill_boundary(
+	global_const_t &h_const,	// i:	Global Constants
+	global_const_t *d_const,	// i:	Device Pointer to Global Constants
+	double *d_ptr		 		// i/o: Device Pointer
+){
+
+	dim3 block_dim(16, 16);
+	dim3 grid_dim(CEIL(h_const.dim[0], 16), CEIL(h_const.dim[1], 16));
+
+	gpu_fill_boundary_z_kernel<<<grid_dim, block_dim>>>(d_const, d_ptr);
+
+	grid_dim.y = CEIL(h_const.dim_g[2], 16);
+	gpu_fill_boundary_y_kernel<<<grid_dim, block_dim>>>(d_const, d_ptr);
+
+	grid_dim.x = CEIL(h_const.dim_g[1], 16);
+	gpu_fill_boundary_x_kernel<<<grid_dim, block_dim>>>(d_const, d_ptr);
+}
+
 void allocate_4D(double ****&ptr, int dim[], int dl){
 
 	int l,i,j;
@@ -166,21 +240,44 @@ void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  
 	}
 }
 
-//void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la){
-//
-//	int i,j,k,l;
-//	FOR(i, 0, dim[0]){
-//		FOR(j, 0, dim[1]){
-//			FOR(k, 0, dim[2]){
-//				FOR(l, 0, la){
-//					if(!FEQ(a[i][j][k][l], a2[i][j][k][l])){
-//						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
-//								name, i, j, k, l, a[i][j][k][l], a2[i][j][k][l], name, i, j, k, l);
-//						exit(1);
-//					}
-//				}
-//			}
-//		}
-//	}
-//}
+void fill_boundary(
+	double ****U,	// Array
+	int dim[],		// Dimensions (ghost cells excluded)
+	int dim_ng[]	// Dimensions (ghost cells included)
+){
+	int i, j, k, l;
+	FOR(i, NG, dim[0]+NG){
+		FOR(j, NG, dim[1]+NG){
+			FOR(k, 0, NG){
+				FOR(l, 0, NC){
+					U[i][j][k][l] = U[i][j][k+dim[2]][l];
+					U[i][j][k+dim[2]+NG][l] = U[i][j][k+NG][l];
+				}
+			}
+		}
+	}
+	FOR(i, NG, dim[0]+NG){
+		FOR(j, 0, NG){
+			FOR(k, 0, dim_ng[2]){
+				FOR(l, 0, NC){
+					U[i][j][k][l] = U[i][j+dim[1]][k][l];
+					U[i][j+dim[1]+NG][k][l] = U[i][j+NG][k][l];
+				}
+			}
+		}
+	}
+	FOR(i, 0, NG){
+		FOR(j, 0, dim_ng[1]){
+			FOR(k, 0, dim_ng[2]){
+				FOR(l, 0, NC){
+					U[i][j][k][l] = U[i+dim[0]][j][k][l];
+					U[i+dim[0]+NG][j][k][l] = U[i+NG][j][k][l];
+				}
+			}
+		}
+	}
+}
 
+void fill_boundary_test(){
+
+}

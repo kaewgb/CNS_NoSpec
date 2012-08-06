@@ -5,10 +5,11 @@
 
 #define	BLOCK_DIM	16
 #define	BLOCK_DIM_G	8
-#define	q(i, comp)	s_q[comp][threadIdx.x+g->ng+i][threadIdx.z]
+#define	q(i, comp)	s_q[comp][threadIdx.x+g->ng+(i)][threadIdx.z]
 
 __device__ double values[9];
 __device__ double plane[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
+__device__ kernel_const_t kc;
 
 __global__ void gpu_diffterm_x_stencil_kernel(
 	global_const_t *g,			// i: Global struct containing application parameters
@@ -20,16 +21,16 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 	__shared__ double  s_q[s_qend][BLOCK_DIM_G+NG+NG][BLOCK_DIM];
 
 	// Load to shared mem
-	bi = (blockIdx.x % (g->gridDim_plane_xz)) / g->gridDim_z;
-	bk = (blockIdx.x % (g->gridDim_plane_xz)) % g->gridDim_z;
-	bj =  blockIdx.x / (g->gridDim_plane_xz);
+	bi = (blockIdx.x % (kc.gridDim_plane_xz)) / kc.gridDim_z;
+	bk = (blockIdx.x % (kc.gridDim_plane_xz)) % kc.gridDim_z;
+	bj =  blockIdx.x / (kc.gridDim_plane_xz);
 	si = bi*blockDim.x+threadIdx.x;
 	sj = bj*blockDim.y+threadIdx.y; // = bj
 	sk = bk*blockDim.z+threadIdx.z;
 
 	tidx = threadIdx.x;
 	tidz = threadIdx.z;
-	while( tidx < g->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+	while( tidx < kc.blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 		idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
 
@@ -101,16 +102,16 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 	__shared__ double  wz[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
 
 	// Load to shared mem
-	bi = (blockIdx.x % (g->gridDim_plane_xz)) / g->gridDim_z;
-	bk = (blockIdx.x % (g->gridDim_plane_xz)) % g->gridDim_z;
-	bj =  blockIdx.x / (g->gridDim_plane_xz);
+	bi = (blockIdx.x % (kc.gridDim_plane_xz)) / kc.gridDim_z;
+	bk = (blockIdx.x % (kc.gridDim_plane_xz)) % kc.gridDim_z;
+	bj =  blockIdx.x / (kc.gridDim_plane_xz);
 	si = bi*blockDim.x+threadIdx.x;
 	sj = bj*blockDim.y+threadIdx.y; // = bj
 	sk = bk*blockDim.z+threadIdx.z;
 
 	tidx = threadIdx.x;
 	tidz = threadIdx.z;
-	while( tidx < g->blockDim_x_g && si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim[2]){
+	while( tidx < kc.blockDim_x_g && si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
 		vy[tidx][tidz]  =  g->temp[VY][idx];
@@ -120,7 +121,7 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 
 	tidx = threadIdx.x;
 	si = bi*blockDim.x+threadIdx.x;
-	while( tidx < g->blockDim_x_g && si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim[2]){
+	while( tidx < kc.blockDim_x_g && si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
 		wz[tidx][tidz]  =  g->temp[WZ][idx];
@@ -130,8 +131,8 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 	}
 	__syncthreads();
 
-#define	vy(i)	vy[threadIdx.x+g->ng+i][threadIdx.z]
-#define	wz(i)	wz[threadIdx.x+g->ng+i][threadIdx.z]
+#define	vy(i)	vy[threadIdx.x+g->ng+(i)][threadIdx.z]
+#define	wz(i)	wz[threadIdx.x+g->ng+(i)][threadIdx.z]
 
 	si = bi*blockDim.x+threadIdx.x;
 	idx 	= si*g->plane_offset + sj*g->dim[2] + sk;
@@ -169,9 +170,9 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 	__shared__ double  s_q[s_qend][BLOCK_DIM_G+NG+NG][BLOCK_DIM_G+NG+NG];
 
 	// Load to shared mem
-	bj = (blockIdx.x % (g->gridDim_plane_yz)) / g->gridDim_z;
-	bk = (blockIdx.x % (g->gridDim_plane_yz)) % g->gridDim_z;
-	bi =  blockIdx.x / (g->gridDim_plane_yz);
+	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
+	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
+	bi =  blockIdx.x / (kc.gridDim_plane_yz);
 	si = bi;
 	sj = bj*BLOCK_DIM_G+threadIdx.y;
 	sk = bk*BLOCK_DIM_G+threadIdx.z;
@@ -191,7 +192,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 	sk = bk*BLOCK_DIM_G+threadIdx.z;
 
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
-#define	q(i, comp)	s_q[comp][threadIdx.y+g->ng+i][threadIdx.z]
+#define	q(i, comp)	s_q[comp][threadIdx.y+g->ng+(i)][threadIdx.z]
 
 		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + sk;
 		if(si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim_g[2]){
@@ -240,7 +241,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 		}
 
 #undef	q
-#define	q(i, comp)	s_q[comp][threadIdx.y][threadIdx.z+g->ng+i]
+#define	q(i, comp)	s_q[comp][threadIdx.y][threadIdx.z+g->ng+(i)]
 
 		idx = si*g->plane_offset_g + sj*g->dim_g[2] + (sk+g->ng);
 		if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
@@ -306,9 +307,9 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 	double divu, tauxx, tauyy, tauzz, tauxy, tauxz, tauyz, mechwork;
 
 	// Load to shared mem
-	bj = (blockIdx.x % (g->gridDim_plane_yz)) / g->gridDim_z;
-	bk = (blockIdx.x % (g->gridDim_plane_yz)) % g->gridDim_z;
-	bi =  blockIdx.x / (g->gridDim_plane_yz);
+	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
+	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
+	bi =  blockIdx.x / (kc.gridDim_plane_yz);
 	si = bi;
 	sj = bj*BLOCK_DIM_G+threadIdx.y;
 	sk = bk*BLOCK_DIM_G+threadIdx.z;
@@ -399,16 +400,16 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 
 			flux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
 
-			if(si == 0 && sj == 12 && sk == 0){
-				values[0] = flux[idx + iene*g->comp_offset];
-				values[1] = mechwork;
-				values[2] = ux(0);
-				values[3] = vy(0);
-				values[4] = wz(0);
-	//			values[5] = tauxy;
-	//			values[6] = tauxz;
-	//			values[7] = tauyz;
-			}
+//			if(si == 0 && sj == 12 && sk == 0){
+//				values[0] = flux[idx + iene*g->comp_offset];
+//				values[1] = mechwork;
+//				values[2] = ux(0);
+//				values[3] = vy(0);
+//				values[4] = wz(0);
+//				values[5] = tauxy;
+//				values[6] = tauxz;
+//				values[7] = tauyz;
+//			}
 		}
 	}
 
@@ -418,61 +419,62 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 }
 
 void gpu_diffterm(
-	global_const_t h_const, 	// i: Global struct containing applicatino parameters
+	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
 	double *d_q,				// i:
 	double *flux				// o:
 ){
 	int grid_dim;
+	kernel_const_t h_kc;
 
 	dim3 block_dim_x_stencil(BLOCK_DIM_G, 1, BLOCK_DIM);
-	h_const.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
-	h_const.gridDim_y = h_const.dim_g[1];
-	h_const.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM);
-	h_const.gridDim_plane_xz = h_const.gridDim_x * h_const.gridDim_z;
-    h_const.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-    grid_dim = h_const.gridDim_plane_xz * h_const.gridDim_y;
-    cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+	h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
+	h_kc.gridDim_y = h_const.dim_g[1];
+	h_kc.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM);
+	h_kc.gridDim_plane_xz = h_kc.gridDim_x * h_kc.gridDim_z;
+    h_kc.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    grid_dim = h_kc.gridDim_plane_xz * h_kc.gridDim_y;
+    cudaMemcpyToSymbol(kc, &h_kc, sizeof(kernel_const_t), 0, cudaMemcpyHostToDevice);
 
 	gpu_diffterm_x_stencil_kernel<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, flux);
 
 	dim3 block_dim_yz_stencil(1, BLOCK_DIM, BLOCK_DIM);
-	h_const.gridDim_x = h_const.dim_g[0];
-	h_const.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
-	h_const.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
-	h_const.gridDim_plane_yz = h_const.gridDim_y * h_const.gridDim_z;
-    h_const.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-    h_const.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-	grid_dim = h_const.gridDim_x * h_const.gridDim_plane_yz;
-    cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+	h_kc.gridDim_x = h_const.dim_g[0];
+	h_kc.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
+	h_kc.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
+	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
+    h_kc.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    h_kc.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+	grid_dim = h_kc.gridDim_x * h_kc.gridDim_plane_yz;
+    cudaMemcpyToSymbol(kc, &h_kc, sizeof(kernel_const_t), 0, cudaMemcpyHostToDevice);
 
 	gpu_diffterm_yz_stencil_kernel<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, flux);
 
-	h_const.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
-	h_const.gridDim_y = h_const.dim[1];
-	h_const.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
-	h_const.gridDim_plane_xz = h_const.gridDim_x * h_const.gridDim_z;
-    h_const.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-    grid_dim = h_const.gridDim_plane_xz * h_const.gridDim_y;
-    cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+	h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
+	h_kc.gridDim_y = h_const.dim[1];
+	h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
+	h_kc.gridDim_plane_xz = h_kc.gridDim_x * h_kc.gridDim_z;
+    h_kc.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    grid_dim = h_kc.gridDim_plane_xz * h_kc.gridDim_y;
+    cudaMemcpyToSymbol(kc, &h_kc, sizeof(kernel_const_t), 0, cudaMemcpyHostToDevice);
 
 	gpu_diffterm_x_stencil_kernel_lv2<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, flux);
 
-	h_const.gridDim_x = h_const.dim_g[0];
-	h_const.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
-	h_const.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
-	h_const.gridDim_plane_yz = h_const.gridDim_y * h_const.gridDim_z;
-    h_const.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-    h_const.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-	grid_dim = h_const.gridDim_x * h_const.gridDim_plane_yz;
-    cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+	h_kc.gridDim_x = h_const.dim_g[0];
+	h_kc.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
+	h_kc.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
+	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
+    h_kc.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    h_kc.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+	grid_dim = h_kc.gridDim_x * h_kc.gridDim_plane_yz;
+    cudaMemcpyToSymbol(kc, &h_kc, sizeof(kernel_const_t), 0, cudaMemcpyHostToDevice);
 
 	gpu_diffterm_yz_stencil_kernel_lv2<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, flux);
 
 }
 
 void diffterm_test(
-	global_const_t h_const, // i: Global struct containing applicatino parameters
+	global_const_t &h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 ){
 	int dim_g[3], dim[3];
@@ -581,6 +583,7 @@ void diffterm_test(
 
 	gpu_copy_from_host_4D(d_q, q, dim_g, 6);
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
+	cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
 
 	printf("Applying diffterm()...\n");
 	diffterm(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, uz, vz, wz, vyx, wzx, uxy, wzy, uxz, vyz,

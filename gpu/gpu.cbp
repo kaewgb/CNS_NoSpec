@@ -36,6 +36,7 @@
 		<Unit filename="advance.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="advance_cpu.cpp" />
 		<Unit filename="ctoprim.cu">
 			<Option compile="1" />
 			<Option link="1" />
