@@ -80,6 +80,15 @@ contains
 
     call multifab_fill_boundary(U)
 
+	if(parallel_IOProcessor() .and. istep == 1) then
+        open(unit=13, file="fill_boundary_output")
+        do n=1,nboxes(U)
+            up => dataptr(U, n)
+            write(13,*), up
+        end do
+        close(13)
+    end if
+
     call multifab_build(D,    la, nc,   0)
     call multifab_build(F,    la, nc,   0)
     call multifab_build(Q,    la, nc+1, ng)

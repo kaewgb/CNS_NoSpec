@@ -38,7 +38,8 @@ void gpu_free_4D(double *d_ptr){
 	CUDA_SAFE_CALL(cudaFree(d_ptr));
 }
 
-#define d_ptr(l,i,j,k)	d_ptr[l*g->comp_offset_g + i*g->plane_offset_g + j*g->dim_g[2] + k]
+#define d_ptr(l,i,j,k)	d_ptr[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
+__device__ double temp;
 __device__ kernel_const_t k_const;
 __global__ void gpu_fill_boundary_z_kernel(
 	global_const_t *g, 		// i: Global Constants
@@ -49,6 +50,8 @@ __global__ void gpu_fill_boundary_z_kernel(
 	j = blockIdx.y * blockDim.y + threadIdx.y;
 
 	if(i < g->dim[0] && j < g->dim[1]){
+		i += g->ng;
+		j += g->ng;
 		FOR(l, 0, NC){
 			FOR(k, 0, g->ng){
 				d_ptr(l,i,j,k) 					= d_ptr(l,i,j,k+g->dim[2]);
@@ -67,6 +70,7 @@ __global__ void gpu_fill_boundary_y_kernel(
 	k = blockIdx.y * blockDim.y + threadIdx.y;
 
 	if(i < g->dim[0] && k < g->dim_g[2]){
+		i += g->ng;
 		FOR(l, 0, NC){
 			FOR(j, 0, g->ng){
 				d_ptr(l,i,j,k) 					= d_ptr(l,i,j+g->dim[1],k);
@@ -94,6 +98,7 @@ __global__ void gpu_fill_boundary_x_kernel(
 	}
 }
 #undef	d_ptr
+
 void gpu_fill_boundary(
 	global_const_t &h_const,	// i:	Global Constants
 	global_const_t *d_const,	// i:	Device Pointer to Global Constants
@@ -250,8 +255,8 @@ void fill_boundary(
 		FOR(j, NG, dim[1]+NG){
 			FOR(k, 0, NG){
 				FOR(l, 0, NC){
-					U[i][j][k][l] = U[i][j][k+dim[2]][l];
-					U[i][j][k+dim[2]+NG][l] = U[i][j][k+NG][l];
+					U[l][i][j][k] = U[l][i][j][k+dim[2]];
+					U[l][i][j][k+dim[2]+NG] = U[l][i][j][k+NG];
 				}
 			}
 		}
@@ -260,8 +265,8 @@ void fill_boundary(
 		FOR(j, 0, NG){
 			FOR(k, 0, dim_ng[2]){
 				FOR(l, 0, NC){
-					U[i][j][k][l] = U[i][j+dim[1]][k][l];
-					U[i][j+dim[1]+NG][k][l] = U[i][j+NG][k][l];
+					U[l][i][j][k] = U[l][i][j+dim[1]][k];
+					U[l][i][j+dim[1]+NG][k] = U[l][i][j+NG][k];
 				}
 			}
 		}
@@ -270,14 +275,63 @@ void fill_boundary(
 		FOR(j, 0, dim_ng[1]){
 			FOR(k, 0, dim_ng[2]){
 				FOR(l, 0, NC){
-					U[i][j][k][l] = U[i+dim[0]][j][k][l];
-					U[i+dim[0]+NG][j][k][l] = U[i+NG][j][k][l];
+					U[l][i][j][k] = U[l][i+dim[0]][j][k];
+					U[l][i+dim[0]+NG][j][k] = U[l][i+NG][j][k];
 				}
 			}
 		}
 	}
 }
 
-void fill_boundary_test(){
+void fill_boundary_test(
+	global_const_t h_const, // i: Global struct containing application parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+){
+	int i, l, n;
+	int nc, dim[3], dim_g[3];
+	double dt, dt2, dx[DIM], cfl, eta, alam;
+	double ****U, ****U2;
+	double *d_u;
+	FILE *fin, *fout;
 
+	nc = NC;
+	dim[0] = dim[1] = dim[2] = NCELLS;
+	dim_g[0] = dim_g[1] = dim_g[2] = NCELLS+NG+NG;
+
+	// Allocation
+	allocate_4D(U, dim_g, nc);
+	allocate_4D(U2, dim_g, nc);
+	gpu_allocate_4D(d_u, dim_g, 5);
+
+	// Initiation
+	fin = fopen("../testcases/advance_input", "r");
+	FOR(l, 0, nc)
+		read_3D(fin, U, dim_g, l);
+
+	fscanf(fin, "%le", &dt);
+	FOR(i, 0, 3)
+		fscanf(fin, "%le", &dx[i]);
+	fscanf(fin, "%le", &cfl);
+	fscanf(fin, "%le", &eta);
+	fscanf(fin, "%le", &alam);
+	fclose(fin);
+
+	gpu_copy_from_host_4D(d_u, U, dim_g, 5);
+
+//	fill_boundary(U, dim, dim_g);
+	gpu_fill_boundary(h_const, d_const, d_u);
+
+	gpu_copy_to_host_4D(U, d_u, dim_g, 5);
+	fout=fopen("../testcases/fill_boundary_output", "r");
+	FOR(l, 0, nc)
+		read_3D(fout, U2, dim_g, l);
+	check_4D_array("U", U, U2, dim_g, nc);
+
+	fclose(fout);
+	printf("Correct!\n");
+
+	// Free memory
+	free_4D(U, dim_g, nc);
+	free_4D(U2, dim_g, nc);
+	gpu_free_4D(d_u);
 }

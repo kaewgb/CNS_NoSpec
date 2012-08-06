@@ -80,18 +80,6 @@ typedef struct global_const {
 	int plane_offset_g;
 	int plane_offset;
 
-
-	int gridDim_x;
-	int gridDim_y;
-	int gridDim_z;
-	int gridDim_plane_xy;
-	int gridDim_plane_xz;
-	int gridDim_plane_yz;
-	int blockDim_x_g;
-	int blockDim_y_g;
-	int blockDim_z_g;
-
-
 	double dx[3];
 	double dxinv[3];
 	double cfl;
@@ -122,6 +110,11 @@ static const double GAM	=  4.0E0/105.0E0;
 static const double DEL	= -1.0E0/280.0E0;
 
 // FUNCTIONS
+extern void fill_boundary_test(
+	global_const_t h_const, // i: Global struct containing application parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
+
 extern void ctoprim_test(
 	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters

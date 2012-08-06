@@ -48,12 +48,14 @@ int main(int argc, char *argv[]){
 	h_const.OFF4		= -1.0E0/560.0E0;
 
 	cudaMemcpyToSymbol(d_const, &h_const, sizeof(global_const_t));
+//	cudaMemcpyToSymbol(d_const, &h_const, sizeof(global_const_t), 0, cudaMemcpyHostToDevice);
 	cudaGetSymbolAddress((void **) &d_const_ptr, d_const);
 
 	// Calling Test Kernels
 	ctoprim_test(h_const, d_const_ptr);
 	diffterm_test(h_const, d_const_ptr);
 	hypterm_test(h_const, d_const_ptr);
+	fill_boundary_test(h_const, d_const_ptr);
 
 //	advance_test();
 
