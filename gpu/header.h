@@ -104,6 +104,8 @@ typedef struct global_const {
 	double OFF3;
 	double OFF4;
 
+	kernel_const_t *kc;
+
 } global_const_t;
 
 //#define ALP		( 0.8E0)
@@ -218,6 +220,13 @@ extern void gpu_diffterm(
 
 extern void advance_test();
 extern void advance_test(
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F
+);
+extern void advance_test(
 	global_const_t &h_const, // i: Global struct containing application parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
@@ -225,8 +234,17 @@ extern void advance_hybrid_test(
 	global_const_t &h_const, // i: Global struct containing application parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
+extern void advance_hybrid_test(
+	global_const_t &h_const, // i: Global struct containing application parameters
+	global_const_t *d_const, // i: Device pointer to global struct containing application paramters
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F
+);
 extern void advance(
-	double ****U[],	// i/o
+	double ****U,	// i/o
 	double &dt,		// o
 	double dx[],	// i: dx[U.dim]
 	double cfl,		// i

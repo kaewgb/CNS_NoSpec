@@ -4,17 +4,19 @@
 #include "helper_functions.h"
 
 void advance(
-	double ****U,	// i/o
-	double &dt,		// o
-	double dx[],	// i: dx[U.dim]
-	double cfl,		// i
-	double eta,		// i
-	double alam		// i
+	double ****U,		// i/o
+	double ****Unew,	// o
+	double ****Q,		// o
+	double ****D,		// o
+	double ****F,		// o
+	double &dt,			// o
+	double dx[],		// i: dx[U.dim]
+	double cfl,			// i
+	double eta,			// i
+	double alam			// i
 ){
 	int lo[3], hi[3], i, j, k, l, n, nc, ng;
 	double courno, courno_proc;
-	double ****D, ****F, ****Unew, ****Q;
-	double ****Q2, ****D2, ****F2, ****Unew2, ****U2;
 
     // Some arithmetic constants.
     double OneThird      = 1.E0/3.E0;
@@ -32,16 +34,6 @@ void advance(
 	lo[0] = lo[1] = lo[2] = NG;
 	hi[0] = hi[1] = hi[2] = NCELLS-1+NG;
 
-	// Allocation
-	allocate_4D(D, dim, nc);
-	allocate_4D(D2, dim, nc);
-	allocate_4D(F, dim, nc);
-	allocate_4D(F2, dim, nc);
-	allocate_4D(Q, dim_ng, nc+1);
-	allocate_4D(Q2, dim_ng, nc+1);
-	allocate_4D(Unew, dim_ng, nc);
-	allocate_4D(Unew2, dim_ng, nc);
-	allocate_4D(U2, dim_ng, nc);
 
 	//
 	// multifab_fill_boundary(U)
@@ -64,6 +56,7 @@ void advance(
     //! Calculate D at time N.
     //!
 	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+	return;
 
     //!
     //! Calculate F at time N.
@@ -152,31 +145,25 @@ void advance(
 			}
 		}
     }
-
-	// Free memory
-	free_4D(D, 		dim, 	nc);
-	free_4D(D2, 	dim,	nc);
-	free_4D(F, 		dim,	nc);
-	free_4D(F2, 	dim,	nc);
-	free_4D(Q, 		dim_ng,	nc+1);
-	free_4D(Q2, 	dim_ng,	nc+1);
-	free_4D(Unew, 	dim_ng,	nc);
-	free_4D(Unew2, 	dim_ng,	nc);
-	free_4D(U2, 	dim_ng,	nc);
 }
 
-void advance_test(){
+void advance_test(
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F
+){
 	int i, l, n;
 	int nc, dim_ng[3];
 	double dt, dt2, dx[DIM], cfl, eta, alam;
-	double ****U, ****U2;
 	FILE *fin, *fout;
+	double ****U2;
 
 	nc = NC;
 	dim_ng[0] = dim_ng[1] = dim_ng[2] = NCELLS+NG+NG;
 
 	// Allocation
-	allocate_4D(U, dim_ng, nc);
 	allocate_4D(U2, dim_ng, nc);
 
 	// Initiation
@@ -192,7 +179,8 @@ void advance_test(){
 	fscanf(fin, "%le", &alam);
 	fclose(fin);
 
-	advance(U, dt, dx, cfl, eta, alam);
+	advance(U, Unew, Q, D, F, dt, dx, cfl, eta, alam);
+	return;
 
 	fout=fopen("../testcases/advance_output", "r");
 	FOR(l, 0, nc)
@@ -205,6 +193,5 @@ void advance_test(){
 	printf("Correct!\n");
 
 	// Free memory
-	free_4D(U,  dim_ng, nc);
 	free_4D(U2, dim_ng, nc);
 }

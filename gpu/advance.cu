@@ -3,7 +3,6 @@
 #include "header.h"
 #include "helper_functions.h"
 
-__device__ kernel_const_t kc;
 
 #define	BLOCK_DIM	16
 #define	Unew(l,i,j,k)	Unew[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
@@ -21,10 +20,11 @@ __global__ void gpu_Unew_1_3_kernel(
 ){
 	int bi,bj,bk;
 	int i,j,k,l;
+	kernel_const_t *kc = g->kc;
 
-	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
-	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
-	bi =  blockIdx.x / (kc.gridDim_plane_yz);
+	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
+	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
+	bi =  blockIdx.x / (kc->gridDim_plane_yz);
 	i = bi;
 	j = bj*BLOCK_DIM+threadIdx.y;
 	k = bk*BLOCK_DIM+threadIdx.z;
@@ -45,10 +45,11 @@ __global__ void gpu_Unew_2_3_kernel(
 ){
 	int bi,bj,bk;
 	int i,j,k,l;
+	kernel_const_t *kc = g->kc;
 
-	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
-	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
-	bi =  blockIdx.x / (kc.gridDim_plane_yz);
+	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
+	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
+	bi =  blockIdx.x / (kc->gridDim_plane_yz);
 	i = bi;
 	j = bj*BLOCK_DIM+threadIdx.y;
 	k = bk*BLOCK_DIM+threadIdx.z;
@@ -72,10 +73,11 @@ __global__ void gpu_Unew_3_3_kernel(
 ){
 	int bi,bj,bk;
 	int i,j,k,l;
+	kernel_const_t *kc = g->kc;
 
-	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
-	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
-	bi =  blockIdx.x / (kc.gridDim_plane_yz);
+	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
+	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
+	bi =  blockIdx.x / (kc->gridDim_plane_yz);
 	i = bi;
 	j = bj*BLOCK_DIM+threadIdx.y;
 	k = bk*BLOCK_DIM+threadIdx.z;
@@ -113,7 +115,7 @@ void gpu_Unew(
 	h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
 	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
 	grid_dim = h_kc.gridDim_x * h_kc.gridDim_plane_yz;
-	cudaMemcpyToSymbol(kc, &h_kc, sizeof(kernel_const_t));
+	cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
 
 	switch(phase){
 		case 1:
@@ -177,10 +179,11 @@ void gpu_advance(
 	gpu_allocate_4D(d_D, 	dim, 	5);
 	gpu_allocate_4D(d_F, 	dim, 	5);
 
+	char *dest = (char *)d_const + ((char *)&h_const.temp - (char *)&h_const);
 	FOR(i, 0, MAX_TEMP)
 		gpu_allocate_3D(h_const.temp[i], dim_g);
-	printf("%d elements\n", MAX_TEMP*dim_g[0]*dim_g[1]*dim_g[2]);
-	printf("%d sub-elements\n", dim_g[0]*dim_g[1]*dim_g[2]);
+	cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
+
 	//
 	// multifab_fill_boundary(U)
 	//

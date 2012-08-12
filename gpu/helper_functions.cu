@@ -229,6 +229,8 @@ void check_lo_hi_ng_dx( int lo[],  int hi[],  int ng,  double dx[],
 void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la){
 
 	int i,j,k,l;
+	int exp, exp2;
+	double sig, sig2;
 	FOR(l, 0, la){
 		FOR(i, 0, dim[0]){
 			FOR(j, 0, dim[1]){
@@ -237,7 +239,18 @@ void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  
 						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
 								name, l, i, j, k, a[l][i][j][k], a2[l][i][j][k], name, l, i, j, k);
 						printf("diff = %le\n", a[l][i][j][k] - a2[l][i][j][k]);
-						exit(1);
+						sig = frexp(a[l][i][j][k], &exp);
+						sig2 = frexp(a2[l][i][j][k], &exp2);
+						if(exp!=exp2){
+							printf("exp = %d != %d = exp2\n", exp, exp2);
+							printf("sig1 = %le, sig2 = %le\n", sig, sig2);
+							exit(1);
+						}
+						if(!FEQ(sig, sig2)){
+							printf("sig = %le != %le = sig2\n", sig, sig2);
+							printf("diff = %le\n", sig - sig2);
+							exit(1);
+						}
 					}
 				}
 			}
