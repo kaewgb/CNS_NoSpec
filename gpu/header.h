@@ -221,6 +221,10 @@ extern void advance_test(
 	global_const_t &h_const, // i: Global struct containing application parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
+extern void advance_hybrid_test(
+	global_const_t &h_const, // i: Global struct containing application parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
 extern void advance(
 	double ****U[],	// i/o
 	double &dt,		// o

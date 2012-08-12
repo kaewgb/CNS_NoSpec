@@ -328,8 +328,8 @@ void gpu_advance(
 }
 
 void advance_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const		// i: Device pointer to global struct containing application paramters
 ){
 	int i, l, n;
 	int nc, dim_g[3];

@@ -102,23 +102,23 @@ void hypterm(
 				unm3 = q(i,j-3,k,qv);
 				unm4 = q(i,j-4,k,qv);
 
-				if(i==ng && j==ng+13 && k==ng+1){
-					printf("before: flux[irho] = %le\n", flux(i,j,k,irho));
-				}
+//				if(i==ng && j==ng+13 && k==ng+1){
+//					printf("before: flux[irho] = %le\n", flux(i,j,k,irho));
+//				}
 				flux(i,j,k,irho)=flux(i,j,k,irho) -
 					   (ALP*(cons(i,j+1,k,imy)-cons(i,j-1,k,imy))
 					  + BET*(cons(i,j+2,k,imy)-cons(i,j-2,k,imy))
 					  + GAM*(cons(i,j+3,k,imy)-cons(i,j-3,k,imy))
 					  + DEL*(cons(i,j+4,k,imy)-cons(i,j-4,k,imy)))*dxinv(2);
 
-				if(i==ng && j==ng+13 && k==ng+1){
-					printf("flux[irho]=%le\n", flux(i,j,k,irho));
-					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
-								cons(i,j+1,k,imy), cons(i,j-1,k,imy),
-								cons(i,j+2,k,imy), cons(i,j-2,k,imy),
-								cons(i,j+3,k,imy), cons(i,j-3,k,imy),
-								cons(i,j+4,k,imy), cons(i,j-4,k,imy));
-				}
+//				if(i==ng && j==ng+13 && k==ng+1){
+//					printf("flux[irho]=%le\n", flux(i,j,k,irho));
+//					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
+//								cons(i,j+1,k,imy), cons(i,j-1,k,imy),
+//								cons(i,j+2,k,imy), cons(i,j-2,k,imy),
+//								cons(i,j+3,k,imy), cons(i,j-3,k,imy),
+//								cons(i,j+4,k,imy), cons(i,j-4,k,imy));
+//				}
 
 				flux(i,j,k,imx)=flux(i,j,k,imx) -
 					   (ALP*(cons(i,j+1,k,imx)*unp1-cons(i,j-1,k,imx)*unm1)

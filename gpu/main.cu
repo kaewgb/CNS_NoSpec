@@ -59,8 +59,7 @@ int main(int argc, char *argv[]){
 //	hypterm_test(h_const, d_const_ptr);
 //	fill_boundary_test(h_const, d_const_ptr);
 
-//	advance_test(h_const, d_const_ptr);
-	advance_test();
+	advance_hybrid_test(h_const, d_const_ptr);
 
 	return 0;
 
