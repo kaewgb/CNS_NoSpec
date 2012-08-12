@@ -8,6 +8,11 @@
 #define flux(i,j,k,l)	flux[l][i-ng][j-ng][k-ng]
 #define dxinv(i)		dxinv[i-1]
 
+static const double ALP	=  0.8E0;
+static const double BET	= -0.2E0;
+static const double GAM	=  4.0E0/105.0E0;
+static const double DEL	= -1.0E0/280.0E0;
+
 void hypterm(
 	int lo[],			//i: lo[3]
 	int hi[],			//i: hi[3]

@@ -95,6 +95,8 @@ typedef struct global_const {
 	double OneThird;
 	double TwoThirds;
 	double FourThirds;
+	double OneQuarter;
+	double ThreeQuarters;
 
 	double CENTER;
 	double OFF1;
@@ -104,17 +106,12 @@ typedef struct global_const {
 
 } global_const_t;
 
-static const double ALP	=  0.8E0;
-static const double BET	= -0.2E0;
-static const double GAM	=  4.0E0/105.0E0;
-static const double DEL	= -1.0E0/280.0E0;
+//#define ALP		( 0.8E0)
+//#define BET	 	(-0.2E0)
+//#define GAM	 	( 4.0E0/105.0E0)
+//#define DEL	 	(-1.0E0/280.0E0)
 
 // FUNCTIONS
-extern void fill_boundary_test(
-	global_const_t h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
-);
-
 extern void ctoprim_test(
 	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
@@ -126,8 +123,30 @@ extern void ctoprim (
     double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
     double dx[],    // i: dx[3]
     int ng,         // i
-    double &courno   // i/o
+    double &courno  // i/o
 );
+extern void ctoprim (
+    int lo[],       // i: lo[3]
+    int hi[],       // i: hi[3]
+    double ****u,   // i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double dx[],    // i: dx[3]
+    int ng         	// i
+);
+extern void gpu_ctoprim(
+	global_const_t h_const,		// i: Global struct containing application parameters
+    global_const_t *d_const,	// i: Device pointer to global struct containing application parameters
+    double *u_d,   				// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q_d, 				// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double &courno  			// i/o
+);
+extern void gpu_ctoprim(
+	global_const_t h_const,		// i: Global struct containing application parameters
+    global_const_t *d_const,	// i: Device pointer to global struct containing application parameters
+    double *u_d,   				// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q_d 				// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+);
+
 
 extern void hypterm_test(
 	global_const_t &h_const, // i: Global struct containing applicatino parameters
@@ -149,12 +168,30 @@ extern void gpu_hypterm_merged(
 	double *d_q,				// i:
 	double *d_flux				// o: flux
 );
+extern void gpu_hypterm(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_cons,				// i:
+	double *d_q,				// i:
+	double *d_flux				// o: flux
+);
+
 
 extern void diffterm_test(
 	global_const_t &h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void diffterm (
+	int lo[],			// i: lo[3]
+	int hi[],			// i: hi[3]
+	int ng,				// i
+	double dx[],		// i: dx[3]
+	double ****q,		// i: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
+	double eta,			// i
+	double alam		// i
+);
+extern void diffterm_debug (
 	int lo[],			// i: lo[3]
 	int hi[],			// i: hi[3]
 	int ng,				// i
@@ -171,8 +208,19 @@ extern void diffterm (
 	double ***uxz_, double ***vyz_,
 	double ***txx_, double ***tyy_, double ***tzz_
 );
+extern void gpu_diffterm(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *flux				// o:
+);
+
 
 extern void advance_test();
+extern void advance_test(
+	global_const_t &h_const, // i: Global struct containing application parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
 extern void advance(
 	double ****U[],	// i/o
 	double &dt,		// o
@@ -189,4 +237,10 @@ extern void gpu_advance(
 	double eta,		// i
 	double alam		// i
 );
+
+extern void fill_boundary_test(
+	global_const_t h_const, // i: Global struct containing application parameters
+	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+);
+
 #endif

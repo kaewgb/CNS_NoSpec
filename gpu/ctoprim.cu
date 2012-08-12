@@ -60,6 +60,39 @@ __global__ void gpu_ctoprim_kernel(
 			courno[idx] = -1.0;		//TODO: make it minus infinity
 	}
 }
+__global__ void gpu_ctoprim_kernel(
+	global_const_t *g,	// i: Application parameters
+    double *u,   		// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q 			// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+){
+
+	int i, j, k, idx, loffset;
+	int numthreads = BLOCK_DIM;
+	double rhoinv, eint, c, courx, coury, courz;
+
+	idx = blockIdx.x * blockDim.x + threadIdx.x;
+	i = idx / (g->dim_g[2] * g->dim_g[1]);
+	j = (idx / g->dim_g[2]) % g->dim_g[1];
+	k = idx % g->dim_g[2];
+
+	loffset = g->dim_g[0] * g->dim_g[1] * g->dim_g[2];
+
+	// Calculate Q
+	if( idx < loffset ){
+
+		rhoinv 				= 1.0E0/u[idx];				//u(i,j,k,1) = u[0][i][j][k]
+		q[idx] 				= u[idx]; 					//u(i,j,k,1) = u[0][i][j][k]
+		q[idx+loffset] 		= u[idx+loffset]*rhoinv; 	//u(i,j,k,2) = u[1][i][j][k]
+		q[idx+2*loffset] 	= u[idx+2*loffset]*rhoinv; 	//u(i,j,k,3) = u[2][i][j][k]
+		q[idx+3*loffset] 	= u[idx+3*loffset]*rhoinv; 	//u(i,j,k,4) = u[3][i][j][k]
+
+		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
+
+		q[idx+4*loffset] = (GAMMA-1.0E0)*eint*u[idx];
+		q[idx+5*loffset] = eint/CV;
+	}
+}
+
 void gpu_ctoprim(
 	global_const_t h_const,		// i: Global struct containing application parameters
     global_const_t *d_const,	// i: Device pointer to global struct containing application parameters
@@ -87,6 +120,26 @@ void gpu_ctoprim(
 
 	// Free temporary memory
 	cudaFree(d_cour);
+
+}
+void gpu_ctoprim(
+	global_const_t h_const,		// i: Global struct containing application parameters
+    global_const_t *d_const,	// i: Device pointer to global struct containing application parameters
+    double *u_d,   				// i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double *q_d					// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+){
+	int i, len;
+	double *d_cour;
+
+	len = h_const.dim_g[0] * h_const.dim_g[1] * h_const.dim_g[2];
+	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
+	int block_dim = BLOCK_DIM;
+
+	// Allocate temporary memory to find maximum courno
+	cudaMalloc((void **) &d_cour, len * sizeof(double));
+
+	// TODO: edit parameters
+	gpu_ctoprim_kernel<<<grid_dim, block_dim>>>(d_const, u_d, q_d);
 
 }
 
@@ -127,30 +180,62 @@ void ctoprim (
         }
     }
 
-    if(courno != -1.0){	// Just my way to check if courno is present, i.e., is passed to the function
-//        #pragma omp parallel for private(i, j, k, c, courx, coury, courz) reduction(max: courmx, courmy, courmz)
-        DO(i, lo[0], hi[0]){
-            DO(j, lo[1], hi[1]){
-                DO(k, lo[2], hi[2]){
+//    #pragma omp parallel for private(i, j, k, c, courx, coury, courz) reduction(max: courmx, courmy, courmz)
+	DO(i, lo[0], hi[0]){
+		DO(j, lo[1], hi[1]){
+			DO(k, lo[2], hi[2]){
 
-					c     = sqrt(GAMMA*q(i,j,k,5)/q(i,j,k,1));
-					courx = ( c+fabs(q(i,j,k,2)) ) / dx(1);
-					coury = ( c+fabs(q(i,j,k,3)) ) / dx(2);
-					courz = ( c+fabs(q(i,j,k,4)) ) / dx(3);
+				c     = sqrt(GAMMA*q(i,j,k,5)/q(i,j,k,1));
+				courx = ( c+fabs(q(i,j,k,2)) ) / dx(1);
+				coury = ( c+fabs(q(i,j,k,3)) ) / dx(2);
+				courz = ( c+fabs(q(i,j,k,4)) ) / dx(3);
 
-					courmx = MAX( courmx, courx );
-					courmy = MAX( courmy, coury );
-					courmz = MAX( courmz, courz );
+				courmx = MAX( courmx, courx );
+				courmy = MAX( courmy, coury );
+				courmz = MAX( courmz, courz );
 
-                }
-            }
-        }
-    }
+			}
+		}
+	}
 
     //
     // Compute running max of Courant number over grids.
     //
     courno = MAX(MAX(courmx, courmy), MAX(courmz, courno));
+}
+
+void ctoprim (
+    int lo[],       // i: lo[3]
+    int hi[],       // i: hi[3]
+    double ****u,   // i: u[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][5]
+    double ****q, 	// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+    double dx[],    // i: dx[3]
+    int ng         	// i
+){
+    int i, j, k;
+    double c, eint, courx, coury, courz, courmx, courmy, courmz, rhoinv;
+
+    const double GAMMA  = 1.4E0;
+    const double CV     = 8.3333333333E6;
+
+//    #pragma omp parallel for private(i, j, k, eint, rhoinv)
+    DO(i, lo[0]-ng, hi[0]+ng){
+        DO(j, lo[1]-ng, hi[1]+ng){
+            DO(k, lo[2]-ng, hi[2]+ng){
+
+				rhoinv     = 1.0E0/u(i,j,k,1);
+				q(i,j,k,1) = u(i,j,k,1);
+				q(i,j,k,2) = u(i,j,k,2)*rhoinv;
+				q(i,j,k,3) = u(i,j,k,3)*rhoinv;
+				q(i,j,k,4) = u(i,j,k,4)*rhoinv;
+
+				eint = u(i,j,k,5)*rhoinv - 0.5E0*(SQR(q(i,j,k,2)) + SQR(q(i,j,k,3)) + SQR(q(i,j,k,4)));
+
+				q(i,j,k,5) = (GAMMA-1.0E0)*eint*u(i,j,k,1);
+				q(i,j,k,6) = eint/CV;
+            }
+        }
+    }
 }
 #undef u
 #undef q

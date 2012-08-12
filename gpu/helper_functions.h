@@ -11,7 +11,11 @@ void gpu_copy_from_host_4D(double *dev, double ****host, int dim[], int dl);
 void gpu_copy_to_host_4D(double ****host, double *dev, int dim[], int dl);
 void gpu_free_4D(double *d_ptr);
 
-void gpu_fill_boundary(global_const_t *g, double *d_ptr);
+void gpu_fill_boundary(
+	global_const_t &h_const,	// i:	Global Constants
+	global_const_t *d_const,	// i:	Device Pointer to Global Constants
+	double *d_ptr		 		// i/o: Device Pointer
+);
 
 void allocate_4D(double ****&ptr, int dim[], int dl);
 void allocate_3D(double ***&ptr, int dim[]);

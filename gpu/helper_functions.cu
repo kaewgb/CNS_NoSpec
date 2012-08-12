@@ -39,7 +39,7 @@ void gpu_free_4D(double *d_ptr){
 }
 
 #define d_ptr(l,i,j,k)	d_ptr[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
-__device__ double temp;
+
 __device__ kernel_const_t k_const;
 __global__ void gpu_fill_boundary_z_kernel(
 	global_const_t *g, 		// i: Global Constants
@@ -251,30 +251,32 @@ void fill_boundary(
 	int dim_ng[]	// Dimensions (ghost cells included)
 ){
 	int i, j, k, l;
-	FOR(i, NG, dim[0]+NG){
-		FOR(j, NG, dim[1]+NG){
-			FOR(k, 0, NG){
-				FOR(l, 0, NC){
+	FOR(l, 0, NC){
+		FOR(i, NG, dim[0]+NG){
+			FOR(j, NG, dim[1]+NG){
+				FOR(k, 0, NG){
 					U[l][i][j][k] = U[l][i][j][k+dim[2]];
 					U[l][i][j][k+dim[2]+NG] = U[l][i][j][k+NG];
 				}
 			}
 		}
 	}
-	FOR(i, NG, dim[0]+NG){
-		FOR(j, 0, NG){
-			FOR(k, 0, dim_ng[2]){
-				FOR(l, 0, NC){
+
+	FOR(l, 0, NC){
+		FOR(i, NG, dim[0]+NG){
+			FOR(j, 0, NG){
+				FOR(k, 0, dim_ng[2]){
 					U[l][i][j][k] = U[l][i][j+dim[1]][k];
 					U[l][i][j+dim[1]+NG][k] = U[l][i][j+NG][k];
 				}
 			}
 		}
 	}
-	FOR(i, 0, NG){
-		FOR(j, 0, dim_ng[1]){
-			FOR(k, 0, dim_ng[2]){
-				FOR(l, 0, NC){
+
+	FOR(l, 0, NC){
+		FOR(i, 0, NG){
+			FOR(j, 0, dim_ng[1]){
+				FOR(k, 0, dim_ng[2]){
 					U[l][i][j][k] = U[l][i+dim[0]][j][k];
 					U[l][i+dim[0]+NG][j][k] = U[l][i+NG][j][k];
 				}
@@ -318,6 +320,7 @@ void fill_boundary_test(
 
 	gpu_copy_from_host_4D(d_u, U, dim_g, 5);
 
+	printf("Applying fill_boundary()...\n");
 //	fill_boundary(U, dim, dim_g);
 	gpu_fill_boundary(h_const, d_const, d_u);
 

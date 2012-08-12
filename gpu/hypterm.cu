@@ -65,37 +65,37 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 		unm3 = s_q(-3); //q(i-3,j,k,qu);
 		unm4 = s_q(-4); //q(i-4,j,k,qu);
 
-		flux_irho = - ( ALP*(s_cons(1, s_imx)-s_cons(-1, s_imx))
-					  + BET*(s_cons(2, s_imx)-s_cons(-2, s_imx))
-					  + GAM*(s_cons(3, s_imx)-s_cons(-3, s_imx))
-					  + DEL*(s_cons(4, s_imx)-s_cons(-4, s_imx)))*dxinv;
+		flux_irho = - ( g->ALP*(s_cons(1, s_imx)-s_cons(-1, s_imx))
+					  + g->BET*(s_cons(2, s_imx)-s_cons(-2, s_imx))
+					  + g->GAM*(s_cons(3, s_imx)-s_cons(-3, s_imx))
+					  + g->DEL*(s_cons(4, s_imx)-s_cons(-4, s_imx)))*dxinv;
 
-		flux_imx  = - ( ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1
+		flux_imx  = - ( g->ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1
 					  + (s_qpres(1)-s_qpres(-1)))
-					  + BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2
+					  + g->BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2
 					  + (s_qpres(2)-s_qpres(-2)))
-					  + GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3
+					  + g->GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3
 					  + (s_qpres(3)-s_qpres(-3)))
-					  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4
+					  + g->DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4
 					  + (s_qpres(4)-s_qpres(-4))))*dxinv;
 
-		flux_imy  = - ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1)
-					  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2)
-					  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3)
-					  + DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4))*dxinv;
+		flux_imy  = - ( g->ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1)
+					  + g->BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2)
+					  + g->GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3)
+					  + g->DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4))*dxinv;
 
-		flux_imz  = - ( ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
-					  + BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
-					  + GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
-					  + DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
+		flux_imz  = - ( g->ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
+					  + g->BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
+					  + g->GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
+					  + g->DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
 
-		flux_iene = - ( ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
+		flux_iene = - ( g->ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
 					  + (s_qpres(1)*unp1-s_qpres(-1)*unm1))
-					  + BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
+					  + g->BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
 					  + (s_qpres(2)*unp2-s_qpres(-2)*unm2))
-					  + GAM*(s_cons(3, s_iene)*unp3-s_cons(-3, s_iene)*unm3
+					  + g->GAM*(s_cons(3, s_iene)*unp3-s_cons(-3, s_iene)*unm3
 					  + (s_qpres(3)*unp3-s_qpres(-3)*unm3))
-					  + DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
+					  + g->DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
@@ -171,37 +171,37 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 		unm3 = s_q(-3); 	//q(i,j-3,k,qv);
 		unm4 = s_q(-4); 	//q(i,j-4,k,qv);
 
-		flux_irho =  ( ALP*(s_cons(1, s_imy)-s_cons(-1, s_imy))
-					  + BET*(s_cons(2, s_imy)-s_cons(-2, s_imy))
-					  + GAM*(s_cons(3, s_imy)-s_cons(-3, s_imy))
-					  + DEL*(s_cons(4, s_imy)-s_cons(-4, s_imy)))*dxinv;
+		flux_irho =  ( g->ALP*(s_cons(1, s_imy)-s_cons(-1, s_imy))
+					  + g->BET*(s_cons(2, s_imy)-s_cons(-2, s_imy))
+					  + g->GAM*(s_cons(3, s_imy)-s_cons(-3, s_imy))
+					  + g->DEL*(s_cons(4, s_imy)-s_cons(-4, s_imy)))*dxinv;
 
-		flux_imx =   ( ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1)
-					  + BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2)
-					  + GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3)
-					  + DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4))*dxinv;
+		flux_imx =   ( g->ALP*(s_cons(1, s_imx)*unp1-s_cons(-1, s_imx)*unm1)
+					  + g->BET*(s_cons(2, s_imx)*unp2-s_cons(-2, s_imx)*unm2)
+					  + g->GAM*(s_cons(3, s_imx)*unp3-s_cons(-3, s_imx)*unm3)
+					  + g->DEL*(s_cons(4, s_imx)*unp4-s_cons(-4, s_imx)*unm4))*dxinv;
 
-		flux_imy =   ( ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1
+		flux_imy =   ( g->ALP*(s_cons(1, s_imy)*unp1-s_cons(-1, s_imy)*unm1
 					  + (s_qpres(1)-s_qpres(-1)))
-					  + BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2
+					  + g->BET*(s_cons(2, s_imy)*unp2-s_cons(-2, s_imy)*unm2
 					  + (s_qpres(2)-s_qpres(-2)))
-					  + GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3
+					  + g->GAM*(s_cons(3, s_imy)*unp3-s_cons(-3, s_imy)*unm3
 					  + (s_qpres(3)-s_qpres(-3)))
-					  + DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4
+					  + g->DEL*(s_cons(4, s_imy)*unp4-s_cons(-4, s_imy)*unm4
 					  + (s_qpres(4)-s_qpres(-4))))*dxinv;
 
-		flux_imz =   ( ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
-					  + BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
-					  + GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
-					  + DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
+		flux_imz =   ( g->ALP*(s_cons(1, s_imz)*unp1-s_cons(-1, s_imz)*unm1)
+					  + g->BET*(s_cons(2, s_imz)*unp2-s_cons(-2, s_imz)*unm2)
+					  + g->GAM*(s_cons(3, s_imz)*unp3-s_cons(-3, s_imz)*unm3)
+					  + g->DEL*(s_cons(4, s_imz)*unp4-s_cons(-4, s_imz)*unm4))*dxinv;
 
-		flux_iene =  ( ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
+		flux_iene =  ( g->ALP*(s_cons(1, s_iene)*unp1-s_cons(-1, s_iene)*unm1
 					  + (s_qpres(1)*unp1-s_qpres(-1)*unm1))
-					  + BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
+					  + g->BET*(s_cons(2, s_iene)*unp2-s_cons(-2, s_iene)*unm2
 					  + (s_qpres(2)*unp2-s_qpres(-2)*unm2))
-					  + GAM*(s_cons(3, s_iene)*unp3-s_cons(-3, s_iene)*unm3
+					  + g->GAM*(s_cons(3, s_iene)*unp3-s_cons(-3, s_iene)*unm3
 					  + (s_qpres(3)*unp3-s_qpres(-3)*unm3))
-					  + DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
+					  + g->DEL*(s_cons(4, s_iene)*unp4-s_cons(-4, s_iene)*unm4
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
@@ -277,37 +277,37 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 		unm3 = s_q(-3);	//q(i,j,k-3,qw);
 		unm4 = s_q(-4);	//q(i,j,k-4,qw);
 
-		flux_irho =  ( ALP*(s_cons(1,s_imz)-s_cons(-1,s_imz))
-					  + BET*(s_cons(2,s_imz)-s_cons(-2,s_imz))
-					  + GAM*(s_cons(3,s_imz)-s_cons(-3,s_imz))
-					  + DEL*(s_cons(4,s_imz)-s_cons(-4,s_imz)))*dxinv;
+		flux_irho =  ( g->ALP*(s_cons(1,s_imz)-s_cons(-1,s_imz))
+					  + g->BET*(s_cons(2,s_imz)-s_cons(-2,s_imz))
+					  + g->GAM*(s_cons(3,s_imz)-s_cons(-3,s_imz))
+					  + g->DEL*(s_cons(4,s_imz)-s_cons(-4,s_imz)))*dxinv;
 
-		flux_imx =   ( ALP*(s_cons(1,s_imx)*unp1-s_cons(-1,s_imx)*unm1)
-					  + BET*(s_cons(2,s_imx)*unp2-s_cons(-2,s_imx)*unm2)
-					  + GAM*(s_cons(3,s_imx)*unp3-s_cons(-3,s_imx)*unm3)
-					  + DEL*(s_cons(4,s_imx)*unp4-s_cons(-4,s_imx)*unm4))*dxinv;
+		flux_imx =   ( g->ALP*(s_cons(1,s_imx)*unp1-s_cons(-1,s_imx)*unm1)
+					  + g->BET*(s_cons(2,s_imx)*unp2-s_cons(-2,s_imx)*unm2)
+					  + g->GAM*(s_cons(3,s_imx)*unp3-s_cons(-3,s_imx)*unm3)
+					  + g->DEL*(s_cons(4,s_imx)*unp4-s_cons(-4,s_imx)*unm4))*dxinv;
 
-		flux_imy =   ( ALP*(s_cons(1,s_imy)*unp1-s_cons(-1,s_imy)*unm1)
-					  + BET*(s_cons(2,s_imy)*unp2-s_cons(-2,s_imy)*unm2)
-					  + GAM*(s_cons(3,s_imy)*unp3-s_cons(-3,s_imy)*unm3)
-					  + DEL*(s_cons(4,s_imy)*unp4-s_cons(-4,s_imy)*unm4))*dxinv;
+		flux_imy =   ( g->ALP*(s_cons(1,s_imy)*unp1-s_cons(-1,s_imy)*unm1)
+					  + g->BET*(s_cons(2,s_imy)*unp2-s_cons(-2,s_imy)*unm2)
+					  + g->GAM*(s_cons(3,s_imy)*unp3-s_cons(-3,s_imy)*unm3)
+					  + g->DEL*(s_cons(4,s_imy)*unp4-s_cons(-4,s_imy)*unm4))*dxinv;
 
-		flux_imz =   ( ALP*(s_cons(1,s_imz)*unp1-s_cons(-1,s_imz)*unm1
+		flux_imz =   ( g->ALP*(s_cons(1,s_imz)*unp1-s_cons(-1,s_imz)*unm1
 					  + (s_qpres(1)-s_qpres(-1)))
-					  + BET*(s_cons(2,s_imz)*unp2-s_cons(-2,s_imz)*unm2
+					  + g->BET*(s_cons(2,s_imz)*unp2-s_cons(-2,s_imz)*unm2
 					  + (s_qpres(2)-s_qpres(-2)))
-					  + GAM*(s_cons(3,s_imz)*unp3-s_cons(-3,s_imz)*unm3
+					  + g->GAM*(s_cons(3,s_imz)*unp3-s_cons(-3,s_imz)*unm3
 					  + (s_qpres(3)-s_qpres(-3)))
-					  + DEL*(s_cons(4,s_imz)*unp4-s_cons(-4,s_imz)*unm4
+					  + g->DEL*(s_cons(4,s_imz)*unp4-s_cons(-4,s_imz)*unm4
 					  + (s_qpres(4)-s_qpres(-4))))*dxinv;
 
-		flux_iene   = ( ALP*(s_cons(1,s_iene)*unp1-s_cons(-1,s_iene)*unm1
+		flux_iene   = ( g->ALP*(s_cons(1,s_iene)*unp1-s_cons(-1,s_iene)*unm1
 					  + (s_qpres(1)*unp1-s_qpres(-1)*unm1))
-					  + BET*(s_cons(2,s_iene)*unp2-s_cons(-2,s_iene)*unm2
+					  + g->BET*(s_cons(2,s_iene)*unp2-s_cons(-2,s_iene)*unm2
 					  + (s_qpres(2)*unp2-s_qpres(-2)*unm2))
-					  + GAM*(s_cons(3,s_iene)*unp3-s_cons(-3,s_iene)*unm3
+					  + g->GAM*(s_cons(3,s_iene)*unp3-s_cons(-3,s_iene)*unm3
 					  + (s_qpres(3)*unp3-s_qpres(-3)*unm3))
-					  + DEL*(s_cons(4,s_iene)*unp4-s_cons(-4,s_iene)*unm4
+					  + g->DEL*(s_cons(4,s_iene)*unp4-s_cons(-4,s_iene)*unm4
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
