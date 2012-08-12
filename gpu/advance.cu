@@ -6,10 +6,10 @@
 __device__ kernel_const_t kc;
 
 #define	BLOCK_DIM	16
-#define	Unew(l,i,j,k)	Unew[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim[2] + (k)]
-#define	U(l,i,j,k)		U[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim[2] + (k)]
-#define	D(l,i,j,k)		D[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim[2] + (k)]
-#define	F(l,i,j,k)		F[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim[2] + (k)]
+#define	Unew(l,i,j,k)	Unew[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
+#define	U(l,i,j,k)		U[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
+#define	D(l,i,j,k)		D[(l)*g->comp_offset + (i)*g->plane_offset + (j)*g->dim[2] + (k)]
+#define	F(l,i,j,k)		F[(l)*g->comp_offset + (i)*g->plane_offset + (j)*g->dim[2] + (k)]
 
 __global__ void gpu_Unew_1_3_kernel(
 	global_const_t *g,	// i: Global Constants
@@ -25,13 +25,13 @@ __global__ void gpu_Unew_1_3_kernel(
 	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
 	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
 	bi =  blockIdx.x / (kc.gridDim_plane_yz);
-	i = bi + g->ng;
-	j = bj*BLOCK_DIM+threadIdx.y + g->ng;
-	k = bk*BLOCK_DIM+threadIdx.z + g->ng;
+	i = bi;
+	j = bj*BLOCK_DIM+threadIdx.y;
+	k = bk*BLOCK_DIM+threadIdx.z;
 
-	if(i < g->dim[0]+g->ng && j < g->dim[1]+g->ng && k < g->dim[2]+g->ng){
+	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, NC)
-			Unew(l,i,j,k) = U(l,i,j,k) + dt*(D(l,i,j,k) + F(l,i,j,k));
+			Unew(l,i+g->ng,j+g->ng,k+g->ng) = U(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k));
 	}
 }
 
@@ -49,14 +49,15 @@ __global__ void gpu_Unew_2_3_kernel(
 	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
 	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
 	bi =  blockIdx.x / (kc.gridDim_plane_yz);
-	i = bi + g->ng;
-	j = bj*BLOCK_DIM+threadIdx.y + g->ng;
-	k = bk*BLOCK_DIM+threadIdx.z + g->ng;
+	i = bi;
+	j = bj*BLOCK_DIM+threadIdx.y;
+	k = bk*BLOCK_DIM+threadIdx.z;
 
-	if(i < g->dim[0]+g->ng && j< g->dim[1]+g->ng && k < g->dim[2]+g->ng){
+	if(i < g->dim[0] && j< g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, NC){
-			Unew(l,i,j,k) = g->ThreeQuarters *  U(l,i,j,k) +
-							g->OneQuarter	 * (Unew(l,i,j,k) + dt*(D(l,i,j,k) + F(l,i,j,k)));
+			Unew(l,i+g->ng,j+g->ng,k+g->ng) =
+				g->ThreeQuarters *  U(l,i+g->ng,j+g->ng,k+g->ng) +
+				g->OneQuarter	 * (Unew(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k)));
 		}
 	}
 }
@@ -75,14 +76,15 @@ __global__ void gpu_Unew_3_3_kernel(
 	bj = (blockIdx.x % (kc.gridDim_plane_yz)) / kc.gridDim_z;
 	bk = (blockIdx.x % (kc.gridDim_plane_yz)) % kc.gridDim_z;
 	bi =  blockIdx.x / (kc.gridDim_plane_yz);
-	i = bi + g->ng;
-	j = bj*BLOCK_DIM+threadIdx.y + g->ng;
-	k = bk*BLOCK_DIM+threadIdx.z + g->ng;
+	i = bi;
+	j = bj*BLOCK_DIM+threadIdx.y;
+	k = bk*BLOCK_DIM+threadIdx.z;
 
-	if(i < g->dim[0]+g->ng && j < g->dim[1]+g->ng && k < g->dim[2]+g->ng){
+	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, NC){
-			U(l,i,j,k) = g->OneThird  *  U(l,i,j,k) +
-						 g->TwoThirds * (Unew(l,i,j,k) + dt*(D(l,i,j,k) + F(l,i,j,k)));
+			U(l,i+g->ng,j+g->ng,k+g->ng) =
+				g->OneThird  *  U(l,i+g->ng,j+g->ng,k+g->ng) +
+				g->TwoThirds * (Unew(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k)));
 		}
 	}
 }
@@ -194,7 +196,7 @@ void gpu_advance(
     printf("ctoprim..\n");
 	courno_proc = 1.0E-50;
 //	ctoprim(lo, hi, U, Q, dx, ng, courno_proc);
-	gpu_ctoprim(h_const, d_const, d_U, d_Q, courno);
+	gpu_ctoprim(h_const, d_const, d_U, d_Q, courno_proc);
 
 	courno = courno_proc;
 	dt = h_const.cfl/courno;

@@ -60,6 +60,7 @@ int main(int argc, char *argv[]){
 //	fill_boundary_test(h_const, d_const_ptr);
 
 	advance_hybrid_test(h_const, d_const_ptr);
+//	advance_test(h_const, d_const_ptr);
 
 	return 0;
 

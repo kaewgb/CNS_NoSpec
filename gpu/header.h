@@ -247,4 +247,15 @@ extern void fill_boundary_test(
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 
+
+extern void gpu_Unew(
+	global_const_t &h_const,	// i: Global Constants
+	global_const_t *d_const,	// i: Device Pointer to Global Constants
+	double *d_Unew,		 		// o: New U
+	double *d_U,				// i: Old U
+	double *d_D,				// i: difflux
+	double *d_F,				// i: flux
+	double dt,					// i: dt
+	int phase					// i: phase
+);
 #endif
