@@ -123,9 +123,9 @@ int main(int argc, char *argv[]){
 //	fill_boundary_test(h_const, d_const_ptr);
 
 //	advance_hybrid_test(h_const, d_const_ptr);
-//	advance_test(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
+	advance_multistep_test(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
 
-	advance_cpu_multistep_test(h_const, U, Unew, Q, D, F);
+//	advance_cpu_multistep_test(h_const, U, Unew, Q, D, F);
 //	advance_hybrid_test(h_const, d_const_ptr, U2, Unew2, Q2, D2, F2);
 //	check_4D_array("D", D, D2, dim, nc);
 

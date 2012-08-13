@@ -286,3 +286,57 @@ void advance_test(
 	// Free memory
 	free_4D(U2, dim_g, nc);
 }
+
+void advance_multistep_test(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,
+	double *d_Unew,
+	double *d_Q,
+	double *d_D,
+	double *d_F
+){
+	int i, l, n;
+	int nc, dim_g[3];
+	double dt, dt2, dx[DIM], cfl, eta, alam;
+	double ****U2;
+	FILE *fin, *fout;
+
+	nc = h_const.nc;
+	FOR(i, 0, DIM)
+		dim_g[i] = h_const.dim_g[i];
+
+	// Allocation
+	allocate_4D(U2, dim_g, nc);
+
+	// Initiation
+	fin = fopen("../testcases/multistep_input", "r");
+	FOR(l, 0, nc)
+		read_3D(fin, U, dim_g, l);
+	fclose(fin);
+
+	gpu_copy_from_host_4D(d_U, U, dim_g, 5);
+
+	FOR(i, 0, h_const.nsteps)
+		gpu_advance(h_const, d_const, d_U, d_Unew, d_Q, d_D, d_F, dt);
+
+	gpu_copy_to_host_4D(U, d_U, dim_g, 5);
+
+	fout=fopen("../testcases/multistep_output", "r");
+	FOR(l, 0, nc)
+		read_3D(fout, U2, dim_g, l);
+	check_4D_array("U", U, U2, dim_g, nc);
+
+	fscanf(fout, "%le", &dt2);
+	check_double(dt, dt2, "dt");
+	fclose(fout);
+	printf("Correct!\n");
+
+	// Free memory
+	free_4D(U2, dim_g, nc);
+}
