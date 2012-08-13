@@ -219,7 +219,7 @@ extern void gpu_diffterm(
 
 
 extern void advance_test();
-extern void advance_test(
+extern void advance_cpu_test(
 	double ****U,
 	double ****Unew,
 	double ****Q,
@@ -227,16 +227,26 @@ extern void advance_test(
 	double ****F
 );
 extern void advance_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,
+	double *d_Unew,
+	double *d_Q,
+	double *d_D,
+	double *d_F
 );
 extern void advance_hybrid_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const		// i: Device pointer to global struct containing application paramters
 );
 extern void advance_hybrid_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const, // i: Device pointer to global struct containing application paramters
+	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const, 	// i: Device pointer to global struct containing application paramters
 	double ****U,
 	double ****Unew,
 	double ****Q,

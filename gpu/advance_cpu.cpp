@@ -147,7 +147,7 @@ void advance(
     }
 }
 
-void advance_test(
+void advance_cpu_test(
 	double ****U,
 	double ****Unew,
 	double ****Q,

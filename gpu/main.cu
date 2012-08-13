@@ -10,10 +10,18 @@ __constant__ kernel_const_t kc;
 
 int main(int argc, char *argv[]){
 
-	int i;
+	//!
+	//! Variable Declaration
+	//!
 	char *dest;
+	int i, dim[3], dim_g[3], nc=NC;
+	double ****U, ****Unew, ****Q, ****D, ****F;
+	double ****U2, ****Unew2, ****Q2, ****D2, ****F2;
+	double *d_U, *d_Unew, *d_Q, *d_D, *d_F;
 
-	// Prepare Global Constants
+	//!
+	//! Prepare Global Constants
+	//!
 	FILE *fin = fopen("../testcases/general_input", "r");
 	fscanf(fin, "%d", &h_const.ng);
 	fscanf(fin, "%d %d %d", &h_const.lo[0], &h_const.lo[1], &h_const.lo[2]);
@@ -71,26 +79,13 @@ int main(int argc, char *argv[]){
 	dest = (char *)d_const_ptr + ((char *)&h_const.dxinv - (char *)&h_const);
 	cudaMemcpy((int *) dest, h_const.dxinv, 3*sizeof(double), cudaMemcpyHostToDevice);
 
-	printf("alloc size = %d\n", h_const.dim_g[0]*h_const.dim_g[1]*h_const.dim_g[2] * 30);
-	// Calling Test Kernels
-//	ctoprim_test(h_const, d_const_ptr);
-//	diffterm_test(h_const, d_const_ptr);
-//	hypterm_test(h_const, d_const_ptr);
-//	fill_boundary_test(h_const, d_const_ptr);
-
-//	advance_hybrid_test(h_const, d_const_ptr);
-	advance_test(h_const, d_const_ptr);
-
-	int dim[3], dim_g[3], nc=NC;
+	//!
+	//! Allocation
+	//!
 	FOR(i, 0, 3){
 		dim[i] = h_const.dim[i];
 		dim_g[i] = h_const.dim_g[i];
 	}
-
-	double ****U, ****Unew, ****Q, ****D, ****F;
-	double ****U2, ****Unew2, ****Q2, ****D2, ****F2;
-
-	// Allocation
 	allocate_4D(U,  	dim_g, 	nc);
 	allocate_4D(Unew,  	dim_g, 	nc);
 	allocate_4D(Q,  	dim_g, 	nc+1);
@@ -103,18 +98,56 @@ int main(int argc, char *argv[]){
 	allocate_4D(D2,  	dim, 	nc);
 	allocate_4D(F2,		dim, 	nc);
 
-//	advance_test(U, Unew, Q, D, F);
-//	advance_hybrid_test(h_const, d_const_ptr, U2, Unew2, Q2, D2, F2);
+	gpu_allocate_4D(d_U, 	dim_g, 	nc);
+	gpu_allocate_4D(d_Unew, dim_g, 	nc);
+	gpu_allocate_4D(d_Q, 	dim_g, 	nc+1);
+	gpu_allocate_4D(d_D, 	dim, 	nc);
+	gpu_allocate_4D(d_F, 	dim, 	nc);
 
-//	check_4D_array("Q",	Q, Q2, dim_g, nc+1);
-//	int k;
-//	FOR(k, 0, 10)
-//		printf("%le\n", D2[0][0][0][k]);
+	dest = (char *)d_const_ptr + ((char *)&h_const.temp - (char *)&h_const);
+	FOR(i, 0, MAX_TEMP)
+		gpu_allocate_3D(h_const.temp[i], dim_g);
+	cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
+
+	//!
+	//! Calling Test Kernels
+	//!
+//	ctoprim_test(h_const, d_const_ptr);
+//	diffterm_test(h_const, d_const_ptr);
+//	hypterm_test(h_const, d_const_ptr);
+//	fill_boundary_test(h_const, d_const_ptr);
+
+//	advance_hybrid_test(h_const, d_const_ptr);
+	advance_test(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
+
+//	advance_cpu_test(U, Unew, Q, D, F);
+//	advance_hybrid_test(h_const, d_const_ptr, U2, Unew2, Q2, D2, F2);
 //	check_4D_array("D", D, D2, dim, nc);
 
 
-	free_4D(D, 		dim, 	nc);
-	free_4D(D2,		dim, 	nc);
+	//!
+	//!	Free Allocations
+	//!
+	free_4D(U,  	dim_g, 	nc);
+	free_4D(Unew,  	dim_g, 	nc);
+	free_4D(Q,  	dim_g, 	nc+1);
+	free_4D(D,  	dim, 	nc);
+	free_4D(F, 		dim, 	nc);
+
+	free_4D(U2,  	dim_g, 	nc);
+	free_4D(Unew2,  dim_g, 	nc);
+	free_4D(Q2,  	dim_g, 	nc+1);
+	free_4D(D2,  	dim, 	nc);
+	free_4D(F2,		dim, 	nc);
+
+	gpu_free_4D(d_U);
+	gpu_free_4D(d_Unew);
+	gpu_free_4D(d_Q);
+	gpu_free_4D(d_D);
+	gpu_free_4D(d_F);
+
+//	FOR(i, 0, MAX_TEMP)
+//		gpu_free_3D(h_const.temp[i]);
 
 	return 0;
 
