@@ -116,6 +116,8 @@ program main
   if(parallel_IOProcessor()) then
     open(unit=9, file="../testcases/general_input")
 	write(9, *), NG
+	write(9, *), NC
+	write(9, *), n_cell
 	lo = lwb(get_box(U,1))
 	hi = upb(get_box(U,1))
 	write(9, *), lo

@@ -14,7 +14,6 @@
 #define	DIM		3
 #define	NC		5
 #define	NG		4
-#define	NCELLS	16
 #define	NBOXES	1
 
 enum {
@@ -71,6 +70,8 @@ typedef struct kernel_const {
 
 typedef struct global_const {
 	int ng;
+	int nc;
+	int ncells;
 	int lo[3];
 	int hi[3];
 	int dim[3];
@@ -222,6 +223,7 @@ extern void gpu_diffterm(
 
 extern void advance_test();
 extern void advance_cpu_test(
+	global_const_t h_const,
 	double ****U,
 	double ****Unew,
 	double ****Q,

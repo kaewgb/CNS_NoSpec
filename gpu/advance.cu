@@ -30,7 +30,7 @@ __global__ void gpu_Unew_1_3_kernel(
 	k = bk*BLOCK_DIM+threadIdx.z;
 
 	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
-		FOR(l, 0, NC)
+		FOR(l, 0, g->nc)
 			Unew(l,i+g->ng,j+g->ng,k+g->ng) = U(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k));
 	}
 }
@@ -55,7 +55,7 @@ __global__ void gpu_Unew_2_3_kernel(
 	k = bk*BLOCK_DIM+threadIdx.z;
 
 	if(i < g->dim[0] && j< g->dim[1] && k < g->dim[2]){
-		FOR(l, 0, NC){
+		FOR(l, 0, g->nc){
 			Unew(l,i+g->ng,j+g->ng,k+g->ng) =
 				g->ThreeQuarters *  U(l,i+g->ng,j+g->ng,k+g->ng) +
 				g->OneQuarter	 * (Unew(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k)));
@@ -83,7 +83,7 @@ __global__ void gpu_Unew_3_3_kernel(
 	k = bk*BLOCK_DIM+threadIdx.z;
 
 	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
-		FOR(l, 0, NC){
+		FOR(l, 0, g->nc){
 			U(l,i+g->ng,j+g->ng,k+g->ng) =
 				g->OneThird  *  U(l,i+g->ng,j+g->ng,k+g->ng) +
 				g->TwoThirds * (Unew(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k)));
@@ -249,7 +249,7 @@ void advance_test(
 	double ****U2;
 	FILE *fin, *fout;
 
-	nc = NC;
+	nc = h_const.nc;
 	FOR(i, 0, DIM)
 		dim_g[i] = h_const.dim_g[i];
 

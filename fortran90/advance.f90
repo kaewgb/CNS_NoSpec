@@ -58,36 +58,36 @@ contains
     ! Sync U prior to calculating D & F.
     !
 
-    if(parallel_IOProcessor() .and. istep == 1) then
-        open(unit=4, file="advance_input")
-        do n=1,nboxes(U)
-            up => dataptr(U, n)
-            write(4,*), up
-        end do
-        write(4,*), dt
-        write(4,*), dx
-        write(4,*), cfl
-        write(4,*), eta
-        write(4,*), alam
-        close(4)
-        open(unit=7, file="advance_unp")
-        do n=1, nboxes(Unew)
-            unp => dataptr(Unew, n)
-            write(7,*), unp
-        end do
-        close(7)
-    end if
+!    if(parallel_IOProcessor() .and. istep == 1) then
+!        open(unit=4, file="advance_input")
+!        do n=1,nboxes(U)
+!            up => dataptr(U, n)
+!            write(4,*), up
+!        end do
+!        write(4,*), dt
+!        write(4,*), dx
+!        write(4,*), cfl
+!        write(4,*), eta
+!        write(4,*), alam
+!        close(4)
+!        open(unit=7, file="advance_unp")
+!        do n=1, nboxes(Unew)
+!            unp => dataptr(Unew, n)
+!            write(7,*), unp
+!        end do
+!        close(7)
+!    end if
 
     call multifab_fill_boundary(U)
 
-	if(parallel_IOProcessor() .and. istep == 1) then
-        open(unit=13, file="fill_boundary_output")
-        do n=1,nboxes(U)
-            up => dataptr(U, n)
-            write(13,*), up
-        end do
-        close(13)
-    end if
+!	if(parallel_IOProcessor() .and. istep == 1) then
+!        open(unit=13, file="fill_boundary_output")
+!        do n=1,nboxes(U)
+!            up => dataptr(U, n)
+!            write(13,*), up
+!        end do
+!        close(13)
+!    end if
 
     call multifab_build(D,    la, nc,   0)
     call multifab_build(F,    la, nc,   0)
@@ -155,33 +155,33 @@ contains
        lo = lwb(get_box(D,n))
        hi = upb(get_box(D,n))
 
-       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
-            open(unit=2, file="../testcases/diffterm_input")
-            write(2,*), lo
-            write(2,*), hi
-            write(2,*), ng
-            write(2,*), dx
-            write(2,*), qp
-            write(2,*), dp
-            write(2,*), ETA
-            write(2,*), ALAM
-            close(2)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+!            open(unit=2, file="../testcases/diffterm_input")
+!            write(2,*), lo
+!            write(2,*), hi
+!            write(2,*), ng
+!            write(2,*), dx
+!            write(2,*), qp
+!            write(2,*), dp
+!            write(2,*), ETA
+!            write(2,*), ALAM
+!            close(2)
+!       end if
 
        call diffterm(lo,hi,ng,dx,qp,dp,ETA,ALAM)
 
-       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
-            open(unit=3, file="../testcases/diffterm_output")
-            write(3,*), lo
-            write(3,*), hi
-            write(3,*), ng
-            write(3,*), dx
-            write(3,*), qp
-            write(3,*), dp
-            write(3,*), ETA
-            write(3,*), ALAM
-            close(3)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+!            open(unit=3, file="../testcases/diffterm_output")
+!            write(3,*), lo
+!            write(3,*), hi
+!            write(3,*), ng
+!            write(3,*), dx
+!            write(3,*), qp
+!            write(3,*), dp
+!            write(3,*), ETA
+!            write(3,*), ALAM
+!            close(3)
+!       end if
 
     end do
 
@@ -198,31 +198,31 @@ contains
        lo = lwb(get_box(F,n))
        hi = upb(get_box(F,n))
 
-       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
-            open(unit=2, file="../testcases/hypterm_input")
-            write(2,*), lo
-            write(2,*), hi
-            write(2,*), ng
-            write(2,*), dx
-            write(2,*), up
-            write(2,*), qp
-            write(2,*), fp
-            close(2)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+!            open(unit=2, file="../testcases/hypterm_input")
+!            write(2,*), lo
+!            write(2,*), hi
+!            write(2,*), ng
+!            write(2,*), dx
+!            write(2,*), up
+!            write(2,*), qp
+!            write(2,*), fp
+!            close(2)
+!       end if
 
        call hypterm(lo,hi,ng,dx,up,qp,fp)
 
-       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
-            open(unit=3, file="../testcases/hypterm_output")
-            write(3,*), lo
-            write(3,*), hi
-            write(3,*), ng
-            write(3,*), dx
-            write(3,*), up
-            write(3,*), qp
-            write(3,*), fp
-            close(3)
-       end if
+!       if (parallel_IOProcessor() .and. istep == 1 .and. n==1) then
+!            open(unit=3, file="../testcases/hypterm_output")
+!            write(3,*), lo
+!            write(3,*), hi
+!            write(3,*), ng
+!            write(3,*), dx
+!            write(3,*), up
+!            write(3,*), qp
+!            write(3,*), fp
+!            close(3)
+!       end if
 
     end do
 
@@ -405,16 +405,16 @@ contains
        end do
     end do
 
-	if(parallel_IOProcessor() .and. istep == 1) then
-        write(*, *), "nboxes(U)", nboxes(U)
-        open(unit=5, file="advance_output")
-        do n=1,nboxes(Q)
-            up => dataptr(U, n)
-            write(5,*), up
-        end do
-		write(5,*), dt
-        close(5)
-    end if
+!	if(parallel_IOProcessor() .and. istep == 1) then
+!        write(*, *), "nboxes(U)", nboxes(U)
+!        open(unit=5, file="advance_output")
+!        do n=1,nboxes(Q)
+!            up => dataptr(U, n)
+!            write(5,*), up
+!        end do
+!		write(5,*), dt
+!        close(5)
+!    end if
 
     call destroy(Unew)
     call destroy(Q)

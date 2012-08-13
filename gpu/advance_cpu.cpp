@@ -4,6 +4,7 @@
 #include "helper_functions.h"
 
 void advance(
+	global_const_t h_const,
 	double ****U,		// i/o
 	double ****Unew,	// o
 	double ****Q,		// o
@@ -24,15 +25,15 @@ void advance(
     double OneQuarter    = 1.E0/4.E0;
     double ThreeQuarters = 3.E0/4.E0;
 
-	nc = NC; // ncomp(U)
-	ng = NG; // nghost(U)
+	nc = h_const.nc; // ncomp(U)
+	ng = h_const.ng; // nghost(U)
 
 	int dim[3], dim_g[3];
-	dim[0] 		= dim[1] 	= dim[2] 	= NCELLS;
-	dim_g[0] 	= dim_g[1]	= dim_g[2]	= NCELLS+NG+NG;
+	dim[0] 		= dim[1] 	= dim[2] 	= h_const.ncells;
+	dim_g[0] 	= dim_g[1]	= dim_g[2]	= h_const.ncells+ng+ng;
 
-	lo[0] = lo[1] = lo[2] = NG;
-	hi[0] = hi[1] = hi[2] = NCELLS-1+NG;
+	lo[0] = lo[1] = lo[2] = ng;
+	hi[0] = hi[1] = hi[2] = h_const.ncells-1+ng;
 
 
 	//
@@ -69,7 +70,7 @@ void advance(
 		FOR(i, 0, dim[0]){
 			FOR(j, 0, dim[1]){
 				FOR(k, 0, dim[2]){
-					Unew[l][i+NG][j+NG][k+NG] = U[l][i+NG][j+NG][k+NG] + dt*(D[l][i][j][k] + F[l][i][j][k]);
+					Unew[l][i+ng][j+ng][k+ng] = U[l][i+ng][j+ng][k+ng] + dt*(D[l][i][j][k] + F[l][i][j][k]);
 				}
 			}
 		}
@@ -102,9 +103,9 @@ void advance(
 		FOR(i, 0, dim[0]){
 			FOR(j, 0, dim[0]){
 				FOR(k, 0, dim[0]){
-					Unew[l][i+NG][j+NG][k+NG] =
-						ThreeQuarters *  U[l][i+NG][j+NG][k+NG] +
-						OneQuarter    * (Unew[l][i+NG][j+NG][k+NG] + dt*(D[l][i][j][k] + F[l][i][j][k]));
+					Unew[l][i+ng][j+ng][k+ng] =
+						ThreeQuarters *  U[l][i+ng][j+ng][k+ng] +
+						OneQuarter    * (Unew[l][i+ng][j+ng][k+ng] + dt*(D[l][i][j][k] + F[l][i][j][k]));
 				}
 			}
 		}
@@ -137,9 +138,9 @@ void advance(
 		FOR(i, 0, dim[0]){
 			FOR(j, 0, dim[0]){
 				FOR(k, 0, dim[0]){
-					U[l][i+NG][j+NG][k+NG] =
-						OneThird    *  U[l][i+NG][j+NG][k+NG] +
-						TwoThirds   * (Unew[l][i+NG][j+NG][k+NG] + dt*(D[l][i][j][k] + F[l][i][j][k]));
+					U[l][i+ng][j+ng][k+ng] =
+						OneThird    *  U[l][i+ng][j+ng][k+ng] +
+						TwoThirds   * (Unew[l][i+ng][j+ng][k+ng] + dt*(D[l][i][j][k] + F[l][i][j][k]));
 				}
 			}
 		}
@@ -147,6 +148,7 @@ void advance(
 }
 
 void advance_cpu_test(
+	global_const_t h_const,
 	double ****U,
 	double ****Unew,
 	double ****Q,
@@ -159,8 +161,8 @@ void advance_cpu_test(
 	FILE *fin, *fout;
 	double ****U2;
 
-	nc = NC;
-	dim_g[0] = dim_g[1] = dim_g[2] = NCELLS+NG+NG;
+	nc = h_const.nc;
+	dim_g[0] = dim_g[1] = dim_g[2] = h_const.ncells+h_const.ng+h_const.ng;
 
 	// Allocation
 	allocate_4D(U2, dim_g, nc);
@@ -178,7 +180,7 @@ void advance_cpu_test(
 	fscanf(fin, "%le", &alam);
 	fclose(fin);
 
-	advance(U, Unew, Q, D, F, dt, dx, cfl, eta, alam);
+	advance(h_const, U, Unew, Q, D, F, dt, dx, cfl, eta, alam);
 
 	fout=fopen("../testcases/advance_output", "r");
 	FOR(l, 0, nc)
@@ -203,13 +205,13 @@ void advance_cpu_multistep_test(
 	double ****D,
 	double ****F
 ){
-	int i, l, n, nsteps;
+	int i, l, n;
 	int nc, dim_g[3];
 	double dt, dt2;
 	FILE *fin, *fout;
 	double ****U2;
 
-	nc = NC;
+	nc = h_const.nc;
 	FOR(i, 0, DIM)
 		dim_g[i] = h_const.dim_g[i];
 
@@ -223,9 +225,10 @@ void advance_cpu_multistep_test(
 	fclose(fin);
 
 	dt = h_const.dt;
+	printf("before applying advance\n");
 	FOR(i, 0, h_const.nsteps)
-		advance(U, Unew, Q, D, F, dt, h_const.dx, h_const.cfl, h_const.eta, h_const.alam);
-
+		advance(h_const, U, Unew, Q, D, F, dt, h_const.dx, h_const.cfl, h_const.eta, h_const.alam);
+	printf("after advance\n");
 	fout=fopen("../testcases/multistep_output", "r");
 	FOR(l, 0, nc)
 		read_3D(fout, U2, dim_g, l);

@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
 	//! Variable Declaration
 	//!
 	char *dest;
-	int i, dim[3], dim_g[3], nc=NC;
+	int i, dim[3], dim_g[3], nc;
 	double ****U, ****Unew, ****Q, ****D, ****F;
 	double ****U2, ****Unew2, ****Q2, ****D2, ****F2;
 	double *d_U, *d_Unew, *d_Q, *d_D, *d_F;
@@ -24,6 +24,8 @@ int main(int argc, char *argv[]){
 	//!
 	FILE *fin = fopen("../testcases/general_input", "r");
 	fscanf(fin, "%d", &h_const.ng);
+	fscanf(fin, "%d", &h_const.nc);
+	fscanf(fin, "%d", &h_const.ncells);
 	fscanf(fin, "%d %d %d", &h_const.lo[0], &h_const.lo[1], &h_const.lo[2]);
 	fscanf(fin, "%d %d %d", &h_const.hi[0], &h_const.hi[1], &h_const.hi[2]);
 	fscanf(fin, "%le %le %le", &h_const.dx[0], &h_const.dx[1], &h_const.dx[2]);
@@ -84,6 +86,7 @@ int main(int argc, char *argv[]){
 	//!
 	//! Allocation
 	//!
+	nc = h_const.nc;
 	FOR(i, 0, 3){
 		dim[i] = h_const.dim[i];
 		dim_g[i] = h_const.dim_g[i];

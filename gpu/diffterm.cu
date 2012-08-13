@@ -8,7 +8,6 @@
 #define	q(i, comp)	s_q[comp][threadIdx.x+g->ng+(i)][threadIdx.z]
 
 __device__ double values[9];
-__device__ double plane[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
 __device__ void *ptr[9];
 
 //#define	D_ALP	0.8E0
