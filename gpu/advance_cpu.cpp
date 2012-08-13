@@ -27,9 +27,9 @@ void advance(
 	nc = NC; // ncomp(U)
 	ng = NG; // nghost(U)
 
-	int dim[3], dim_ng[3];
+	int dim[3], dim_g[3];
 	dim[0] 		= dim[1] 	= dim[2] 	= NCELLS;
-	dim_ng[0] 	= dim_ng[1]	= dim_ng[2]	= NCELLS+NG+NG;
+	dim_g[0] 	= dim_g[1]	= dim_g[2]	= NCELLS+NG+NG;
 
 	lo[0] = lo[1] = lo[2] = NG;
 	hi[0] = hi[1] = hi[2] = NCELLS-1+NG;
@@ -38,7 +38,7 @@ void advance(
 	//
 	// multifab_fill_boundary(U)
 	//
-	fill_boundary(U, dim, dim_ng);
+	fill_boundary(U, dim, dim_g);
 
     //!
     //! Calculate primitive variables based on U.
@@ -56,7 +56,6 @@ void advance(
     //! Calculate D at time N.
     //!
 	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
-	return;
 
     //!
     //! Calculate F at time N.
@@ -79,7 +78,7 @@ void advance(
 	//!
     //! Sync U^1/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
     //!
-	fill_boundary(Unew, dim, dim_ng);
+	fill_boundary(Unew, dim, dim_g);
 
 	//!
     //! Calculate primitive variables based on U^1/3.
@@ -114,7 +113,7 @@ void advance(
 	//!
     //! Sync U^2/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
     //!
-	fill_boundary(Unew, dim, dim_ng);
+	fill_boundary(Unew, dim, dim_g);
 
     //!
     //! Calculate primitive variables based on U^2/3.
@@ -155,21 +154,21 @@ void advance_cpu_test(
 	double ****F
 ){
 	int i, l, n;
-	int nc, dim_ng[3];
+	int nc, dim_g[3];
 	double dt, dt2, dx[DIM], cfl, eta, alam;
 	FILE *fin, *fout;
 	double ****U2;
 
 	nc = NC;
-	dim_ng[0] = dim_ng[1] = dim_ng[2] = NCELLS+NG+NG;
+	dim_g[0] = dim_g[1] = dim_g[2] = NCELLS+NG+NG;
 
 	// Allocation
-	allocate_4D(U2, dim_ng, nc);
+	allocate_4D(U2, dim_g, nc);
 
 	// Initiation
 	fin = fopen("../testcases/advance_input", "r");
 	FOR(l, 0, nc)
-		read_3D(fin, U, dim_ng, l);
+		read_3D(fin, U, dim_g, l);
 
 	fscanf(fin, "%le", &dt);
 	FOR(i, 0, 3)
@@ -180,12 +179,11 @@ void advance_cpu_test(
 	fclose(fin);
 
 	advance(U, Unew, Q, D, F, dt, dx, cfl, eta, alam);
-	return;
 
 	fout=fopen("../testcases/advance_output", "r");
 	FOR(l, 0, nc)
-		read_3D(fout, U2, dim_ng, l);
-	check_4D_array("U", U, U2, dim_ng, nc);
+		read_3D(fout, U2, dim_g, l);
+	check_4D_array("U", U, U2, dim_g, nc);
 
 	fscanf(fout, "%le", &dt2);
 	check_double(dt, dt2, "dt");
@@ -193,5 +191,51 @@ void advance_cpu_test(
 	printf("Correct!\n");
 
 	// Free memory
-	free_4D(U2, dim_ng, nc);
+	free_4D(U2, dim_g, nc);
+
+}
+
+void advance_cpu_multistep_test(
+	global_const_t h_const,
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F
+){
+	int i, l, n, nsteps;
+	int nc, dim_g[3];
+	double dt, dt2;
+	FILE *fin, *fout;
+	double ****U2;
+
+	nc = NC;
+	FOR(i, 0, DIM)
+		dim_g[i] = h_const.dim_g[i];
+
+	// Allocation
+	allocate_4D(U2, dim_g, nc);
+
+	// Initiation
+	fin = fopen("../testcases/multistep_input", "r");
+	FOR(l, 0, nc)
+		read_3D(fin, U, dim_g, l);
+	fclose(fin);
+
+	dt = h_const.dt;
+	FOR(i, 0, h_const.nsteps)
+		advance(U, Unew, Q, D, F, dt, h_const.dx, h_const.cfl, h_const.eta, h_const.alam);
+
+	fout=fopen("../testcases/multistep_output", "r");
+	FOR(l, 0, nc)
+		read_3D(fout, U2, dim_g, l);
+	check_4D_array("U", U, U2, dim_g, nc);
+
+	fscanf(fout, "%le", &dt2);
+	check_double(dt, dt2, "dt");
+	fclose(fout);
+	printf("Correct!\n");
+
+	// Free memory
+	free_4D(U2, dim_g, nc);
 }

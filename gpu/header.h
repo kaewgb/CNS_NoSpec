@@ -79,7 +79,9 @@ typedef struct global_const {
 	int comp_offset;
 	int plane_offset_g;
 	int plane_offset;
+	int nsteps;
 
+	double dt;
 	double dx[3];
 	double dxinv[3];
 	double cfl;
@@ -220,6 +222,14 @@ extern void gpu_diffterm(
 
 extern void advance_test();
 extern void advance_cpu_test(
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F
+);
+void advance_cpu_multistep_test(
+	global_const_t h_const,
 	double ****U,
 	double ****Unew,
 	double ****Q,

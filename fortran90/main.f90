@@ -23,7 +23,7 @@ program main
   !
   integer, parameter :: NC  = 5
 
-  integer            :: nsteps, plot_int, n_cell, max_grid_size
+  integer            :: nsteps, plot_int, n_cell, max_grid_size, n
   integer            :: un, farg, narg
   logical            :: need_inputs_file, found_inputs_file
   character(len=128) :: inputs_file_name
@@ -35,6 +35,7 @@ program main
   type(boxarray)     :: ba
   type(layout)       :: la
   type(multifab)     :: U
+  double precision, pointer, dimension(:,:,:,:) :: up
   !
   ! What's settable via an inputs file.
   !
@@ -102,7 +103,7 @@ program main
   call destroy(ba)
 
   call multifab_build(U,la,NC,NG)
-  
+
   call init_data(U,dx,prob_lo,prob_hi)
 
   istep = 0
@@ -112,23 +113,34 @@ program main
      call write_plotfile(U,istep,dx,time,prob_lo,prob_hi)
   end if
 
-  open(unit=9, file="../testcases/general_input")
-  write(9, *), NG
-  lo = lwb(get_box(U,1))
-  hi = upb(get_box(U,1))
-  write(9, *), lo
-  write(9, *), hi
-  write(9, *), dx
-  write(9, *), cfl
-  write(9, *), eta
-  write(9, *), alam 
-  close(9)
+  if(parallel_IOProcessor()) then
+    open(unit=9, file="../testcases/general_input")
+	write(9, *), NG
+	lo = lwb(get_box(U,1))
+	hi = upb(get_box(U,1))
+	write(9, *), lo
+	write(9, *), hi
+	write(9, *), dx
+	write(9, *), cfl
+	write(9, *), eta
+	write(9, *), alam
+	write(9, *), nsteps
+	write(9, *), dt
+	close(9)
+
+	open(unit=14, file="multistep_input")
+	do n=1,nboxes(U)
+		up => dataptr(U, n)
+		write(14,*), up
+	end do
+	close(14)
+  end if
   do istep=1,nsteps
 
      if (parallel_IOProcessor()) then
         print*,'Advancing time step',istep,'time = ',time
      end if
-     
+
      call advance(U,dt,dx,cfl,eta,alam,istep)
 
      time = time + dt
@@ -140,6 +152,15 @@ program main
      end if
 
   end do
+  if(parallel_IOProcessor()) then
+	open(unit=24, file="multistep_output")
+	do n=1,nboxes(U)
+		up => dataptr(U, n)
+		write(24, *), up
+	end do
+	write(24, *), dt
+	close(24)
+  end if
 
   call destroy(U)
   call destroy(la)

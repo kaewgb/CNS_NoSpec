@@ -30,6 +30,8 @@ int main(int argc, char *argv[]){
 	fscanf(fin, "%le", &h_const.cfl);
 	fscanf(fin, "%le", &h_const.eta);
 	fscanf(fin, "%le", &h_const.alam);
+	fscanf(fin, "%d", &h_const.nsteps);
+	fscanf(fin, "%le", &h_const.dt);
 	fclose(fin);
 	FOR(i, 0, 3){
 		h_const.dim[i] 		= h_const.hi[i] - h_const.lo[i] + 1;
@@ -118,9 +120,9 @@ int main(int argc, char *argv[]){
 //	fill_boundary_test(h_const, d_const_ptr);
 
 //	advance_hybrid_test(h_const, d_const_ptr);
-	advance_test(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
+//	advance_test(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
 
-//	advance_cpu_test(U, Unew, Q, D, F);
+	advance_cpu_multistep_test(h_const, U, Unew, Q, D, F);
 //	advance_hybrid_test(h_const, d_const_ptr, U2, Unew2, Q2, D2, F2);
 //	check_4D_array("D", D, D2, dim, nc);
 
