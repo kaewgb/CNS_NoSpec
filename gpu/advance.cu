@@ -97,7 +97,7 @@ __global__ void gpu_Unew_3_3_kernel(
 #undef	F
 
 void gpu_Unew(
-	global_const_t &h_const,	// i: Global Constants
+	global_const_t h_const,	// i: Global Constants
 	global_const_t *d_const,	// i: Device Pointer to Global Constants
 	double *d_Unew,		 		// o: New U
 	double *d_U,				// i: Old U
@@ -143,16 +143,9 @@ void gpu_advance(
 	int i;
 	double courno, courno_proc;
 
-    // Some arithmetic constants.
-//    double OneThird      = 1.E0/3.E0;
-//    double TwoThirds     = 2.E0/3.E0;
-//    double OneQuarter    = 1.E0/4.E0;
-//    double ThreeQuarters = 3.E0/4.E0;
-
-
-	//
-	// multifab_fill_boundary(U)
-	//
+	//!
+	//! multifab_fill_boundary (U)
+	//!
 	gpu_fill_boundary(h_const, d_const, d_U);
 
     //!
@@ -237,7 +230,7 @@ void gpu_advance(
 }
 
 void advance_test(
-	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
 	double ****U,
 	double ****Unew,

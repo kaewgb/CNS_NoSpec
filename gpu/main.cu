@@ -146,8 +146,8 @@ int main(int argc, char *argv[]){
 	gpu_free_4D(d_D);
 	gpu_free_4D(d_F);
 
-//	FOR(i, 0, MAX_TEMP)
-//		gpu_free_3D(h_const.temp[i]);
+	FOR(i, 0, MAX_TEMP)
+		gpu_free_3D(h_const.temp[i]);
 
 	return 0;
 

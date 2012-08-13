@@ -510,7 +510,7 @@ void gpu_diffterm(
 }
 
 void diffterm_test(
-	global_const_t &h_const, // i: Global struct containing applicatino parameters
+	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 ){
 	int dim_g[3], dim[3];
@@ -606,8 +606,8 @@ void diffterm_test(
 	gpu_allocate_4D(d_q, 	dim_g, 6);
 	gpu_allocate_4D(d_flux, dim, 5);
 
-	FOR(i, 0, MAX_TEMP)
-		gpu_allocate_3D(h_const.temp[i], dim_g);
+//	FOR(i, 0, MAX_TEMP)
+//		gpu_allocate_3D(h_const.temp[i], dim_g);
 
 	FOR(l, 0, 6)
 		read_3D(fin, q, dim_g, l);
@@ -619,7 +619,7 @@ void diffterm_test(
 
 	gpu_copy_from_host_4D(d_q, q, dim_g, 6);
 	gpu_copy_from_host_4D(d_flux, difflux, dim, 5);
-	cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
+//	cudaMemcpy(d_const, &h_const, sizeof(global_const_t), cudaMemcpyHostToDevice);
 
 	printf("Applying diffterm()...\n");
 //	diffterm_debug(lo, hi, ng, dx, q, difflux, eta, alam, ux, vx, wx, uy, vy, wy, uz, vz, wz, vyx, wzx, uxy, wzy, uxz, vyz,
@@ -865,50 +865,12 @@ void diffterm_test(
 	// Checking...
 //	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
 //	check_4D_array("q", q, q2, dim_g, 6);
-	printf("checking difflux\n");
-	FOR(i, 0, dim[0]){
-		FOR(j, 0, dim[1]){
-			FOR(k, 0, dim[2]){
-				if(!FEQ(difflux[irho][i][j][k], difflux2[irho][i][j][k])){
-					printf("difflux2[irho][%d][%d][%d] = %le != %le = difflux[irho][%d][%d][%d]\n",
-						i,j,k,difflux2[irho][i][j][k], difflux[irho][i][j][k], i,j,k);
-					printf("diff = %le\n", difflux2[irho][i][j][k]-difflux[irho][i][j][k]);
-					exit(1);
-				}
-				if(!FEQ(difflux[imx][i][j][k], difflux2[imx][i][j][k])){
-					printf("difflux2[imx][%d][%d][%d] = %le != %le = difflux[imx][%d][%d][%d]\n",
-						i,j,k,difflux2[imx][i][j][k], difflux[imx][i][j][k], i,j,k);
-					printf("diff = %le\n", difflux2[imx][i][j][k]-difflux[imx][i][j][k]);
-					exit(1);
-				}
-				if(!FEQ(difflux[imy][i][j][k], difflux2[imy][i][j][k])){
-					printf("difflux2[imy][%d][%d][%d] = %le != %le = difflux[imy][%d][%d][%d]\n",
-						i,j,k,difflux2[imy][i][j][k], difflux[imy][i][j][k], i,j,k);
-					printf("diff = %le\n", difflux2[imy][i][j][k]-difflux[imy][i][j][k]);
-					exit(1);
-				}
-				if(!FEQ(difflux[imz][i][j][k], difflux2[imz][i][j][k])){
-					printf("difflux2[imz][%d][%d][%d] = %le != %le = difflux[imz][%d][%d][%d]\n",
-						i,j,k,difflux2[imz][i][j][k], difflux[imz][i][j][k], i,j,k);
-					printf("diff = %le\n", difflux2[imz][i][j][k]-difflux[imz][i][j][k]);
-					exit(1);
-				}
-				if(!FEQ(difflux[iene][i][j][k], difflux2[iene][i][j][k])){
-					printf("difflux2[iene][%d][%d][%d] = %le != %le = difflux[iene][%d][%d][%d]\n",
-						i,j,k,difflux2[iene][i][j][k], difflux[iene][i][j][k], i,j,k);
-					printf("diff = %le\n", difflux2[iene][i][j][k]-difflux[iene][i][j][k]);
-					exit(1);
-				}
-			}
-		}
-	}
-	printf("difflux[imx], [imy], [imz] correct!\n");
-//	check_4D_array("difflux", difflux, difflux2, dim, 5);
-//	check_double(eta,  eta2,  "eta");
-//	check_double(alam, alam2, "alam");
-
-	FOR(i, 0, MAX_TEMP)
-		gpu_free_3D(h_const.temp[i]);
+	check_4D_array("difflux", difflux, difflux2, dim, 5);
+	check_double(eta,  eta2,  "eta");
+	check_double(alam, alam2, "alam");
+//
+//	FOR(i, 0, MAX_TEMP)
+//		gpu_free_3D(h_const.temp[i]);
 
 	gpu_free_4D(d_q);
 	gpu_free_4D(d_flux);

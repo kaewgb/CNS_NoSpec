@@ -151,7 +151,7 @@ extern void gpu_ctoprim(
 
 
 extern void hypterm_test(
-	global_const_t &h_const, // i: Global struct containing applicatino parameters
+	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void hypterm(
@@ -180,7 +180,7 @@ extern void gpu_hypterm(
 
 
 extern void diffterm_test(
-	global_const_t &h_const, // i: Global struct containing applicatino parameters
+	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void diffterm (
@@ -227,7 +227,7 @@ extern void advance_cpu_test(
 	double ****F
 );
 extern void advance_test(
-	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
 	double ****U,
 	double ****Unew,
@@ -241,11 +241,11 @@ extern void advance_test(
 	double *d_F
 );
 extern void advance_hybrid_test(
-	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const		// i: Device pointer to global struct containing application paramters
 );
 extern void advance_hybrid_test(
-	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const, 	// i: Device pointer to global struct containing application paramters
 	double ****U,
 	double ****Unew,
@@ -277,7 +277,7 @@ extern void fill_boundary_test(
 
 
 extern void gpu_Unew(
-	global_const_t &h_const,	// i: Global Constants
+	global_const_t h_const,	// i: Global Constants
 	global_const_t *d_const,	// i: Device Pointer to Global Constants
 	double *d_Unew,		 		// o: New U
 	double *d_U,				// i: Old U
