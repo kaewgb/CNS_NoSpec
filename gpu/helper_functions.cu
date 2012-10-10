@@ -52,7 +52,7 @@ __global__ void gpu_fill_boundary_z_kernel(
 	if(i < g->dim[0] && j < g->dim[1]){
 		i += g->ng;
 		j += g->ng;
-		FOR(l, 0, NC){
+		FOR(l, 0, g->nc){
 			FOR(k, 0, g->ng){
 				d_ptr(l,i,j,k) 					= d_ptr(l,i,j,k+g->dim[2]);
 				d_ptr(l,i,j,k+g->dim[2]+g->ng)	= d_ptr(l,i,j,k+g->ng);
@@ -71,7 +71,7 @@ __global__ void gpu_fill_boundary_y_kernel(
 
 	if(i < g->dim[0] && k < g->dim_g[2]){
 		i += g->ng;
-		FOR(l, 0, NC){
+		FOR(l, 0, g->nc){
 			FOR(j, 0, g->ng){
 				d_ptr(l,i,j,k) 					= d_ptr(l,i,j+g->dim[1],k);
 				d_ptr(l,i,j+g->dim[1]+g->ng,k)	= d_ptr(l,i,j+g->ng,k);
@@ -89,7 +89,7 @@ __global__ void gpu_fill_boundary_x_kernel(
 	k = blockIdx.y * blockDim.y + threadIdx.y;
 
 	if(j < g->dim_g[1] && k < g->dim_g[2]){
-		FOR(l, 0, NC){
+		FOR(l, 0, g->nc){
 			FOR(i, 0, g->ng){
 				d_ptr(l,i,j,k) 					= d_ptr(l,i+g->dim[0],j,k);
 				d_ptr(l,i+g->dim[0]+g->ng,j,k)	= d_ptr(l,i+g->ng,j,k);
@@ -309,9 +309,9 @@ void fill_boundary_test(
 	double *d_u;
 	FILE *fin, *fout;
 
-	nc = NC;
-	dim[0] = dim[1] = dim[2] = NCELLS;
-	dim_g[0] = dim_g[1] = dim_g[2] = NCELLS+NG+NG;
+	nc = h_const.nc;
+	dim[0] = dim[1] = dim[2] = h_const.ncells;
+	dim_g[0] = dim_g[1] = dim_g[2] = h_const.ncells+h_const.ng+h_const.ng;
 
 	// Allocation
 	allocate_4D(U, dim_g, nc);

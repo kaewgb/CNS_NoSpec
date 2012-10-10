@@ -4,7 +4,7 @@
 #include "helper_functions.h"
 
 void advance_hybrid(
-	global_const_t &h_const,
+	global_const_t h_const,
 	global_const_t *d_const,
 	double ****U,	// i/o
 	double *d_U,	// i/o
@@ -28,15 +28,15 @@ void advance_hybrid(
     double OneQuarter    = 1.E0/4.E0;
     double ThreeQuarters = 3.E0/4.E0;
 
-	nc = NC; // ncomp(U)
-	ng = NG; // nghost(U)
+	nc = h_const.nc; // ncomp(U)
+	ng = h_const.ng; // nghost(U)
 
 	int dim[3], dim_g[3];
-	dim[0] 		= dim[1] 	= dim[2] 	= NCELLS;
-	dim_g[0] 	= dim_g[1]	= dim_g[2]	= NCELLS+NG+NG;
+	dim[0] 		= dim[1] 	= dim[2] 	= h_const.ncells;
+	dim_g[0] 	= dim_g[1]	= dim_g[2]	= h_const.ncells+ng+ng;
 
-	lo[0] = lo[1] = lo[2] = NG;
-	hi[0] = hi[1] = hi[2] = NCELLS-1+NG;
+	lo[0] = lo[1] = lo[2] = ng;
+	hi[0] = hi[1] = hi[2] = h_const.ncells-1+ng;
 
 	// Allocation
 	allocate_4D(D, dim, nc);
@@ -196,7 +196,7 @@ void advance_hybrid(
 }
 
 void advance_hybrid_test(
-	global_const_t &h_const, 	// i: Global struct containing application parameters
+	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
 	double ****U,
 	double ****Unew,
@@ -211,7 +211,7 @@ void advance_hybrid_test(
 	double *d_U, *d_Unew, *d_Q, *d_D, *d_F;
 	FILE *fin, *fout;
 
-	nc = NC;
+	nc = h_const.nc;
 	FOR(i, 0, 3){
 		dim[i] = h_const.dim[i];
 		dim_g[i] = h_const.dim_g[i];
@@ -226,10 +226,10 @@ void advance_hybrid_test(
 	gpu_allocate_4D(d_D, 	dim, 	5);
 	gpu_allocate_4D(d_F, 	dim, 	5);
 
-	char *dest = (char *)d_const + ((char *)&h_const.temp - (char *)&h_const);
-	FOR(i, 0, MAX_TEMP)
-		gpu_allocate_3D(h_const.temp[i], dim_g);
-	cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
+//	char *dest = (char *)d_const + ((char *)&h_const.temp - (char *)&h_const);
+//	FOR(i, 0, MAX_TEMP)
+//		gpu_allocate_3D(h_const.temp[i], dim_g);
+//	cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
 
 	// Initiation
 	fin = fopen("../testcases/advance_input", "r");
@@ -268,6 +268,6 @@ void advance_hybrid_test(
 	gpu_free_4D(d_D);
 	gpu_free_4D(d_F);
 
-	FOR(i, 0, MAX_TEMP)
-		gpu_free_3D(h_const.temp[i]);
+//	FOR(i, 0, MAX_TEMP)
+//		gpu_free_3D(h_const.temp[i]);
 }

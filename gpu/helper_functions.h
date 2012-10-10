@@ -1,5 +1,5 @@
 #include <math.h>
-#define FEQ(x, y)	((fabs(x-y)<0.00001)? true:false)
+#define FEQ(x, y)	((fabs(x-y)<0.0001)? true:false)
 
 // Allocations
 void gpu_allocate_3D(double *&d_ptr, int dim[]);

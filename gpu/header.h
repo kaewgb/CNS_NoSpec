@@ -14,7 +14,6 @@
 #define	DIM		3
 #define	NC		5
 #define	NG		4
-#define	NCELLS	16
 #define	NBOXES	1
 
 enum {
@@ -71,6 +70,8 @@ typedef struct kernel_const {
 
 typedef struct global_const {
 	int ng;
+	int nc;
+	int ncells;
 	int lo[3];
 	int hi[3];
 	int dim[3];
@@ -79,7 +80,9 @@ typedef struct global_const {
 	int comp_offset;
 	int plane_offset_g;
 	int plane_offset;
+	int nsteps;
 
+	double dt;
 	double dx[3];
 	double dxinv[3];
 	double cfl;
@@ -151,7 +154,7 @@ extern void gpu_ctoprim(
 
 
 extern void hypterm_test(
-	global_const_t &h_const, // i: Global struct containing applicatino parameters
+	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void hypterm(
@@ -180,7 +183,7 @@ extern void gpu_hypterm(
 
 
 extern void diffterm_test(
-	global_const_t &h_const, // i: Global struct containing applicatino parameters
+	global_const_t h_const, // i: Global struct containing applicatino parameters
 	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
 );
 extern void diffterm (
@@ -219,7 +222,16 @@ extern void gpu_diffterm(
 
 
 extern void advance_test();
-extern void advance_test(
+extern void advance_cpu_test(
+	global_const_t h_const,
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F
+);
+void advance_cpu_multistep_test(
+	global_const_t h_const,
 	double ****U,
 	double ****Unew,
 	double ****Q,
@@ -227,16 +239,40 @@ extern void advance_test(
 	double ****F
 );
 extern void advance_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,
+	double *d_Unew,
+	double *d_Q,
+	double *d_D,
+	double *d_F
+);
+void advance_multistep_test(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double ****U,
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,
+	double *d_Unew,
+	double *d_Q,
+	double *d_D,
+	double *d_F
 );
 extern void advance_hybrid_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const		// i: Device pointer to global struct containing application paramters
 );
 extern void advance_hybrid_test(
-	global_const_t &h_const, // i: Global struct containing application parameters
-	global_const_t *d_const, // i: Device pointer to global struct containing application paramters
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const, 	// i: Device pointer to global struct containing application paramters
 	double ****U,
 	double ****Unew,
 	double ****Q,
@@ -267,7 +303,7 @@ extern void fill_boundary_test(
 
 
 extern void gpu_Unew(
-	global_const_t &h_const,	// i: Global Constants
+	global_const_t h_const,	// i: Global Constants
 	global_const_t *d_const,	// i: Device Pointer to Global Constants
 	double *d_Unew,		 		// o: New U
 	double *d_U,				// i: Old U
