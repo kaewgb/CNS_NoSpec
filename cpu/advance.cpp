@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "header.h"
 #include "helper_functions.h"
 
@@ -162,12 +163,20 @@ void advance(
 	free_4D(U2, dim_ng);
 }
 
+double wall_time ()
+{
+	struct timeval t;
+	gettimeofday (&t, NULL);
+	return 1.*t.tv_sec + 1.e-6*t.tv_usec;
+}
+
 void advance_test(){
 	int i, l, n;
 	int nc, dim_ng[3];
 	double dt, dt2, dx[DIM], cfl, eta, alam;
 	double ****U, ****U2;
 	FILE *fin, *fout;
+	double seconds;
 
 	nc = NC;
 	dim_ng[0] = dim_ng[1] = dim_ng[2] = NCELLS+NG+NG;
@@ -177,7 +186,7 @@ void advance_test(){
 	allocate_4D(U2, dim_ng, nc);
 
 	// Initiation
-	fin = fopen("../fortran90/advance_input", "r");
+	fin = fopen("../testcases/advance_input", "r");
 	FOR(l, 0, nc)
 		read_3D(fin, U, dim_ng, l);
 
@@ -189,9 +198,13 @@ void advance_test(){
 	fscanf(fin, "%le", &alam);
 	fclose(fin);
 
-	advance(U, dt, dx, cfl, eta, alam);
+	seconds = -wall_time();
+	FOR(i, 0, 10)
+		advance(U, dt, dx, cfl, eta, alam);
+	seconds += wall_time();
+	printf("time: %lf\n", seconds);
 
-	fout=fopen("../fortran90/advance_output", "r");
+	fout=fopen("../testcases/advance_output", "r");
 	FOR(l, 0, nc)
 		read_3D(fout, U2, dim_ng, l);
 	check_4D_array("U", U, U2, dim_ng, nc);
