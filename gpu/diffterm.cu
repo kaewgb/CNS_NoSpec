@@ -448,15 +448,15 @@ void gpu_diffterm(
 	int grid_dim;
 	kernel_const_t h_kc;
 
-	int i;
-	double sth[10000];
-	FOR(i, 0, h_const.comp_offset)
-		sth[i] = 123.45;
-	cudaMemcpy(d_difflux, sth, 10*sizeof(double), cudaMemcpyHostToDevice);
-	printf("comp_offset_g=%d\n", h_const.comp_offset_g);
-	printf("dim_g[2]=%d\n", h_const.dim_g[2]);
-	printf("temp[UX]=%p %p %p\n", h_const.temp[UX], h_const.temp[UX] + (h_const.dim_g[0]*h_const.dim_g[1]*h_const.dim_g[2]),h_const.temp[UX+1]);
-	printf("d_D = %p - %p\n", d_difflux, d_difflux+(h_const.dim[0]*h_const.dim[1]*h_const.dim[2]));
+//	int i;
+//	double sth[10000];
+//	FOR(i, 0, h_const.comp_offset)
+//		sth[i] = 123.45;
+//	cudaMemcpy(d_difflux, sth, 10*sizeof(double), cudaMemcpyHostToDevice);
+//	printf("comp_offset_g=%d\n", h_const.comp_offset_g);
+//	printf("dim_g[2]=%d\n", h_const.dim_g[2]);
+//	printf("temp[UX]=%p %p %p\n", h_const.temp[UX], h_const.temp[UX] + (h_const.dim_g[0]*h_const.dim_g[1]*h_const.dim_g[2]),h_const.temp[UX+1]);
+//	printf("d_D = %p - %p\n", d_difflux, d_difflux+(h_const.dim[0]*h_const.dim[1]*h_const.dim[2]));
 
 	dim3 block_dim_x_stencil(BLOCK_DIM_G, 1, BLOCK_DIM);
 	h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
@@ -502,10 +502,10 @@ void gpu_diffterm(
 
 	gpu_diffterm_yz_stencil_kernel_lv2<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_difflux);
 
-	void *h_ptr[9];
-	cudaMemcpyFromSymbol(h_ptr, ptr, 9*sizeof(void *));
-	FOR(i, 0, 8)
-		printf("%p\n", h_ptr[i]);
+//	void *h_ptr[9];
+//	cudaMemcpyFromSymbol(h_ptr, ptr, 9*sizeof(void *));
+//	FOR(i, 0, 8)
+//		printf("%p\n", h_ptr[i]);
 }
 
 void diffterm_test(

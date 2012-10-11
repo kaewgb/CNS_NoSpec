@@ -34,4 +34,12 @@ void fill_boundary(
 	int dim[],		// Dimensions (ghost cells excluded)
 	int dim_ng[]	// Dimensions (ghost cells included)
 );
-
+void read_configurations(global_const_t &h_const, global_const_t *d_const_ptr);
+void allocate_variables(
+	double ****&U, double ****&Unew, double ****&Q, double ****&D, double ****&F,
+	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F
+);
+void free_variables(
+	double ****U, double ****Unew, double ****Q, double ****D, double ****F,
+	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F
+);
