@@ -129,14 +129,10 @@ void gpu_ctoprim(
     double *q_d					// o: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
 ){
 	int i, len;
-	double *d_cour;
 
 	len = h_const.dim_g[0] * h_const.dim_g[1] * h_const.dim_g[2];
 	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
 	int block_dim = BLOCK_DIM;
-
-	// Allocate temporary memory to find maximum courno
-	cudaMalloc((void **) &d_cour, len * sizeof(double));
 
 	// TODO: edit parameters
 	gpu_ctoprim_kernel<<<grid_dim, block_dim>>>(d_const, u_d, q_d);

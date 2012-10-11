@@ -298,6 +298,21 @@ extern void gpu_advance(
 	double *d_F,
 	double &dt					// o
 );
+extern void new_advance_hybrid(
+	global_const_t h_const,
+	global_const_t *d_const,
+	double ****U,	// i/o
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,	// i/o
+	double *d_Unew,	// i/o
+	double *d_Q,	// i/o
+	double *d_D,	// i/o
+	double *d_F,	// i/o
+	double &dt		// o
+);
 
 extern void fill_boundary_test(
 	global_const_t h_const, // i: Global struct containing application parameters

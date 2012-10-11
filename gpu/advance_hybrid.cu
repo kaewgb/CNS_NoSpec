@@ -3,6 +3,208 @@
 #include "header.h"
 #include "helper_functions.h"
 
+void new_advance_hybrid(
+	global_const_t h_const,
+	global_const_t *d_const,
+	double ****U,	// i/o
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,	// i/o
+	double *d_Unew,	// i/o
+	double *d_Q,	// i/o
+	double *d_D,	// i/o
+	double *d_F,	// i/o
+	double &dt		// o
+){
+	int lo[3], hi[3], i, j, k, l, n, nc, ng, *dim, *dim_g;
+	double courno, courno_proc;
+	double cfl, eta, alam, *dx;
+	cfl = h_const.cfl;
+	eta = h_const.eta;
+	alam = h_const.alam;
+	dx = h_const.dx;
+	dim = h_const.dim;
+	dim_g = h_const.dim_g;
+
+    // Some arithmetic constants.
+    double OneThird      = h_const.OneThird;
+    double TwoThirds     = h_const.TwoThirds;
+    double OneQuarter    = h_const.OneQuarter;
+    double ThreeQuarters = h_const.ThreeQuarters;
+
+	nc = h_const.nc; // ncomp(U)
+	ng = h_const.ng; // nghost(U)
+
+	lo[0] = lo[1] = lo[2] = ng;
+	hi[0] = hi[1] = hi[2] = h_const.ncells-1+ng;
+
+	//
+	// multifab_fill_boundary(U)
+	//
+//	printf("fill boundary\n");
+	gpu_copy_from_host_4D(d_U, U, dim_g, nc);
+	gpu_fill_boundary(h_const, d_const, d_U);
+	gpu_copy_to_host_4D(U, d_U, dim_g, nc);
+//	fill_boundary(U, dim, dim_g);
+
+    //!
+    //! Calculate primitive variables based on U.
+    //!
+    //! Also calculate courno so we can set "dt".
+    //!
+//    printf("ctoprim\n");
+	courno_proc = 1.0E-50;
+//	gpu_ctoprim(h_const, d_const, d_U, d_Q, courno_proc);
+//	gpu_copy_to_host_4D(Q, d_Q, dim_g, nc+1);
+	ctoprim(lo, hi, U, Q, dx, ng, courno_proc);
+	courno = courno_proc;
+	dt = cfl/courno;
+	printf("dt, courno = %le, %le\n", dt, courno);
+
+    //!
+    //! Calculate D at time N.
+    //!
+//    printf("diffterm\n");
+//    gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
+//    gpu_diffterm(h_const, d_const, d_Q, d_D);
+//    gpu_copy_to_host_4D(D, d_D, dim, nc);
+
+	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+//	gpu_copy_from_host_4D(d_D, D, dim, nc);
+
+    //!
+    //! Calculate F at time N.
+    //!
+//    printf("hypterm\n");
+//    gpu_hypterm(h_const, d_const, d_U, d_Q, d_F);
+//    gpu_copy_to_host_4D(F, d_F, dim, nc);
+	hypterm(lo, hi, ng, dx, U, Q, F);
+
+    //!
+    //! Calculate U at time N+1/3.
+    //!
+//    printf("Unew\n");
+	FOR(l, 0, nc){
+		FOR(i, 0, dim[0]){
+			FOR(j, 0, dim[1]){
+				FOR(k, 0, dim[2]){
+					Unew[l][i+NG][j+NG][k+NG] = U[l][i+NG][j+NG][k+NG] + dt*(D[l][i][j][k] + F[l][i][j][k]);
+				}
+			}
+		}
+	}
+
+//	gpu_Unew(h_const, d_const, d_Unew, d_U, d_D, d_F, dt, 1);
+//	gpu_copy_to_host_4D(Unew, d_Unew, dim_g, nc);
+
+
+	//!
+    //! Sync U^1/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
+    //!
+//    printf("fill boundary2\n");
+//	fill_boundary(Unew, dim, dim_g);
+	gpu_copy_from_host_4D(d_Unew, Unew, dim_g, nc);
+	gpu_fill_boundary(h_const, d_const, d_Unew);
+	gpu_copy_to_host_4D(Unew, d_Unew, dim_g, nc);
+
+	//!
+    //! Calculate primitive variables based on U^1/3.
+    //!
+//    printf("ctoprim2\n");
+	ctoprim(lo, hi, Unew, Q, dx, ng);
+//	gpu_ctoprim(h_const, d_const, d_Unew, d_Q);
+
+    //!
+    //! Calculate D at time N+1/3.
+    //!
+//    printf("diffterm2\n");
+	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+//	gpu_diffterm(h_const, d_const, d_Q, d_D);
+
+	//!
+    //! Calculate F at time N+1/3.
+    //!
+//    printf("hypterm2\n");
+	hypterm(lo, hi, ng, dx, Unew, Q, F);
+//	gpu_hypterm(h_const, d_const, d_Unew, d_Q, d_F);
+
+	//!
+    //! Calculate U at time N+2/3.
+    //!
+//    printf("Unew2\n");
+    FOR(l, 0, nc){
+		FOR(i, 0, dim[0]){
+			FOR(j, 0, dim[0]){
+				FOR(k, 0, dim[0]){
+					Unew[l][i+NG][j+NG][k+NG] =
+						ThreeQuarters *  U[l][i+NG][j+NG][k+NG] +
+						OneQuarter    * (Unew[l][i+NG][j+NG][k+NG] + dt*(D[l][i][j][k] + F[l][i][j][k]));
+				}
+			}
+		}
+    }
+//    gpu_copy_from_host_4D(d_Unew, 	Unew, 	dim_g, 	nc);
+//	gpu_copy_from_host_4D(d_U, 		U, 		dim_g, 	nc);
+//	gpu_copy_from_host_4D(d_D, 		D, 		dim, 	nc);
+//	gpu_copy_from_host_4D(d_F, 		F, 		dim, 	nc);
+
+//	gpu_Unew(h_const, d_const, d_Unew, d_U, d_D, d_F, dt, 2);
+//	gpu_copy_to_host_4D(Unew, d_Unew, dim_g, nc);
+
+	//!
+    //! Sync U^2/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
+    //!
+//    printf("fill boundary3\n");
+//	fill_boundary(Unew, dim, dim_g);
+	gpu_copy_from_host_4D(d_Unew, Unew, dim_g, nc);
+	gpu_fill_boundary(h_const, d_const, d_Unew);
+	gpu_copy_to_host_4D(Unew, d_Unew, dim_g, nc);
+
+    //!
+    //! Calculate primitive variables based on U^2/3.
+    //!
+//    printf("ctoprim3\n");
+	ctoprim(lo, hi, Unew, Q, dx, ng);
+
+    //!
+    //! Calculate D at time N+2/3.
+    //!
+//    printf("diffterm3\n");
+    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+
+    //!
+    //! Calculate F at time N+2/3.
+    //!
+//    printf("hypterm3\n");
+	hypterm(lo, hi, ng, dx, Unew, Q, F);
+
+    //!
+    //! Calculate U at time N+1.
+    //!
+//    printf("Unew3\n");
+    FOR(l, 0, nc){
+		FOR(i, 0, dim[0]){
+			FOR(j, 0, dim[0]){
+				FOR(k, 0, dim[0]){
+					U[l][i+NG][j+NG][k+NG] =
+						OneThird    *  U[l][i+NG][j+NG][k+NG] +
+						TwoThirds   * (Unew[l][i+NG][j+NG][k+NG] + dt*(D[l][i][j][k] + F[l][i][j][k]));
+				}
+			}
+		}
+    }
+
+//    gpu_copy_from_host_4D(d_Unew, 	Unew, 	dim_g, 	nc);
+	gpu_copy_from_host_4D(d_U, 		U, 		dim_g, 	nc);
+//	gpu_copy_from_host_4D(d_D, 		D, 		dim, 	nc);
+//	gpu_copy_from_host_4D(d_F, 		F, 		dim, 	nc);
+//	gpu_Unew(h_const, d_const, d_Unew, d_U, d_D, d_F, dt, 3);
+//	gpu_copy_to_host_4D(U, d_U, dim_g, nc);
+//	printf("exiting\n");
+}
+
 void advance_hybrid(
 	global_const_t h_const,
 	global_const_t *d_const,
