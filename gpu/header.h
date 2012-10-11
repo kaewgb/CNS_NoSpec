@@ -7,6 +7,7 @@
 
 // MACROS
 #define SQR(x)          ((x)*(x))
+#define MIN(x, y)       ((x < y)? (x):(y))
 #define MAX(x, y)       ((x > y)? (x):(y))
 #define CEIL(x, div)	(((x) + (div)-1)/(div))
 
@@ -288,12 +289,14 @@ extern void advance(
 	double alam		// i
 );
 extern void gpu_advance(
-	double ****U,	// i/o
-	double &dt,		// o
-	double dx[],	// i: dx[U.dim]
-	double cfl,		// i
-	double eta,		// i
-	double alam		// i
+	global_const_t &h_const,	// i: Global constants
+	global_const_t *d_const,	// i: Device pointer to global constants
+	double *d_U,				// i/o
+	double *d_Unew,
+	double *d_Q,
+	double *d_D,
+	double *d_F,
+	double &dt					// o
 );
 
 extern void fill_boundary_test(

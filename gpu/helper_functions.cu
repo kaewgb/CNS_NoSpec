@@ -467,3 +467,18 @@ void free_variables(
 	FOR(i, 0, MAX_TEMP)
 		gpu_free_3D(h_const.temp[i]);
 }
+
+void print_4D(FILE *f, double ****ptr, int dim[], int dl){
+	int i,j,k,l;
+	FOR(l, 0, dl){
+		FOR(k, 0, dim[2]){
+			FOR(j, 0, dim[1]){
+				FOR(i, 0, dim[0])
+					fprintf(f, "%.17e\t", ptr[l][i][j][k]);
+				fprintf(f, "\n");
+			}
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\n");
+	}
+}

@@ -43,3 +43,4 @@ void free_variables(
 	double ****U, double ****Unew, double ****Q, double ****D, double ****F,
 	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F
 );
+void print_4D(FILE *f, double ****ptr, int dim[], int dl);
