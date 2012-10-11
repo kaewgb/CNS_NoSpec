@@ -56,9 +56,9 @@ void new_advance_hybrid(
     //!
 //    printf("ctoprim\n");
 	courno_proc = 1.0E-50;
-//	gpu_ctoprim(h_const, d_const, d_U, d_Q, courno_proc);
-//	gpu_copy_to_host_4D(Q, d_Q, dim_g, nc+1);
-	ctoprim(lo, hi, U, Q, dx, ng, courno_proc);
+	gpu_ctoprim(h_const, d_const, d_U, d_Q, courno_proc);
+	gpu_copy_to_host_4D(Q, d_Q, dim_g, nc+1);
+//	ctoprim(lo, hi, U, Q, dx, ng, courno_proc);
 	courno = courno_proc;
 	dt = cfl/courno;
 	printf("dt, courno = %le, %le\n", dt, courno);
@@ -113,8 +113,9 @@ void new_advance_hybrid(
     //! Calculate primitive variables based on U^1/3.
     //!
 //    printf("ctoprim2\n");
-	ctoprim(lo, hi, Unew, Q, dx, ng);
-//	gpu_ctoprim(h_const, d_const, d_Unew, d_Q);
+//	ctoprim(lo, hi, Unew, Q, dx, ng);
+	gpu_ctoprim(h_const, d_const, d_Unew, d_Q);
+	gpu_copy_to_host_4D(Q, d_Q, dim_g, nc+1);
 
     //!
     //! Calculate D at time N+1/3.
@@ -166,7 +167,9 @@ void new_advance_hybrid(
     //! Calculate primitive variables based on U^2/3.
     //!
 //    printf("ctoprim3\n");
-	ctoprim(lo, hi, Unew, Q, dx, ng);
+//	ctoprim(lo, hi, Unew, Q, dx, ng);
+	gpu_ctoprim(h_const, d_const, d_Unew, d_Q);
+	gpu_copy_to_host_4D(Q, d_Q, dim_g, nc+1);
 
     //!
     //! Calculate D at time N+2/3.
