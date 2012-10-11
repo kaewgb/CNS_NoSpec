@@ -7,6 +7,9 @@ HEADERS		= header.h helper_functions.h
 $(TARGET):	$(OBJ_FILES)
 			$(CC) -o $(TARGET) $^
 
+ddiff:		ddiff.cpp
+			$(CC) -o $@ $^
+
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
 clean:

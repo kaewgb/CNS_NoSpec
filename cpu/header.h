@@ -32,22 +32,57 @@ enum {
 	qfive
 };
 
-typedef struct global_const {
+enum diffterm_enum {
+	UX, 	VX, 	WX,
+	UY, 	VY, 	WY,
+	UZ, 	VZ, 	WZ,
+	UXX,	UYY,	UZZ,	VYX,	WZX,
+	VXX,	VYY, 	VZZ, 	UXY,	WZY,
+	WXX,	WYY,	WZZ, 	UXZ, 	VYZ,
+	TXX,	TYY,	TZZ,
+	MAX_TEMP
+};
 
+typedef struct global_const {
 	int ng;
-	int padder;
-	int lo[DIM];
-	int hi[DIM];
-	int dim[DIM];
-	int dim_ng[DIM];
-	double dx[DIM];
+	int nc;
+	int ncells;
+	int lo[3];
+	int hi[3];
+	int dim[3];
+	int dim_g[3];
+	int comp_offset_g;
+	int comp_offset;
+	int plane_offset_g;
+	int plane_offset;
+	int nsteps;
+
+	double dt;
+	double dx[3];
+	double dxinv[3];
 	double cfl;
 	double eta;
 	double alam;
+	double *temp[MAX_TEMP];
+
+	double ALP;
+	double BET;
+	double GAM;
+
+	double DEL;
+	double OneThird;
+	double TwoThirds;
+	double FourThirds;
+	double OneQuarter;
+	double ThreeQuarters;
+
+	double CENTER;
+	double OFF1;
+	double OFF2;
+	double OFF3;
+	double OFF4;
 
 } global_const_t;
-
-extern global_const_t *d_const_ptr;
 
 static const double ALP	=  0.8E0;
 static const double BET	= -0.2E0;
@@ -109,5 +144,13 @@ extern void advance(
 	double cfl,		// i
 	double eta,		// i
 	double alam		// i
+);
+extern void new_advance(
+	double ****U,		// i/o
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double &dt			// o
 );
 #endif

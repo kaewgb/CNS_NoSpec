@@ -27,7 +27,7 @@ program main
   integer            :: un, farg, narg
   logical            :: need_inputs_file, found_inputs_file
   character(len=128) :: inputs_file_name
-  integer            :: i, lo(DM), hi(DM), istep
+  integer            :: i, lo(DM), hi(DM), istep, dim(DM)
   double precision   :: prob_lo(DM), prob_hi(DM), cfl, eta, alam
   double precision   :: dx(DM), dt, time, start_time, end_time
   logical            :: is_periodic(DM)
@@ -156,6 +156,11 @@ program main
   end do
   if(parallel_IOProcessor()) then
 	open(unit=24, file="multistep_output")
+	write(24, *), NC
+	lo = lwb(get_box(U,1))
+	hi = upb(get_box(U,1))
+	dim = hi-lo+1+NG+NG
+	write(24, *), dim
 	do n=1,nboxes(U)
 		up => dataptr(U, n)
 		write(24, *), up
