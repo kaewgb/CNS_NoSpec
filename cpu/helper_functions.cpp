@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "header.h"
 #include "helper_functions.h"
 
@@ -258,4 +259,11 @@ void fill_boundary(
 			}
 		}
 	}
+}
+
+double get_time()
+{
+    struct timeval t;
+    gettimeofday( &t, NULL );
+    return t.tv_sec + 1.0e-6 * t.tv_usec;
 }

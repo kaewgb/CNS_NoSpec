@@ -17,6 +17,7 @@ void fill_boundary(
 	int dim[],		// Dimensions (ghost cells excluded)
 	int dim_ng[]	// Dimensions (ghost cells included)
 );
+double get_time();
 
 // Read and check
 void read_3D(FILE *f, double ****ptr, int dim[], int l);
