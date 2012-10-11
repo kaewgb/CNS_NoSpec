@@ -1,0 +1,11 @@
+#PBS -V
+#PBS -q dirac_reg
+#PBS -l nodes=1:ppn=8:fermi
+#PBS -l walltime=00:10:00
+#PBS -j oe
+#PBS -o job-test.out
+
+
+cd $PBS_O_WORKDIR
+mpirun -np 1 ./gpu
+
