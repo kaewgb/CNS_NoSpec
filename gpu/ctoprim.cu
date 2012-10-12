@@ -41,9 +41,9 @@ __global__ void gpu_ctoprim_kernel(
 		q[idx+2*loffset] 	= u[idx+2*loffset]*rhoinv; 	//u(i,j,k,3) = u[2][i][j][k]
 		q[idx+3*loffset] 	= u[idx+3*loffset]*rhoinv; 	//u(i,j,k,4) = u[3][i][j][k]
 
-//		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
-		eint = __dadd_rn(__dmul_rn(u[idx+4*loffset], rhoinv),
-						-__dmul_rn(0.5E0, __dadd_rn(__dadd_rn(SQR(q[idx+loffset]), SQR(q[idx+2*loffset])), SQR(q[idx+3*loffset]))));
+		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
+//		eint = __dadd_rn(__dmul_rn(u[idx+4*loffset], rhoinv),
+//						-__dmul_rn(0.5E0, __dadd_rn(__dadd_rn(SQR(q[idx+loffset]), SQR(q[idx+2*loffset])), SQR(q[idx+3*loffset]))));
 
 
 		q[idx+4*loffset] = (GAMMA-1.0E0)*eint*u[idx];
@@ -54,15 +54,15 @@ __global__ void gpu_ctoprim_kernel(
 			g->ng <= j && j <= g->hi[1]+g->ng &&
 			g->ng <= k && k <= g->hi[2]+g->ng ){
 
-//			c 		= sqrt(GAMMA*q[idx+4*loffset]/q[idx]);
-//			courx 	= (c+fabs(q[idx+loffset]))	/g->dx[0];
-//			coury	= (c+fabs(q[idx+2*loffset]))/g->dx[1];
-//			courz	= (c+fabs(q[idx+3*loffset]))/g->dx[2];
+			c 		= sqrt(GAMMA*q[idx+4*loffset]/q[idx]);
+			courx 	= (c+fabs(q[idx+loffset]))	/g->dx[0];
+			coury	= (c+fabs(q[idx+2*loffset]))/g->dx[1];
+			courz	= (c+fabs(q[idx+3*loffset]))/g->dx[2];
 
-			c		= sqrt(__dmul_rn(GAMMA, q[idx+4*loffset])/q[idx]);
-			courx	= __dadd_rn(c, fabs(q[idx+loffset]))/g->dx[0];
-			coury	= __dadd_rn(c, fabs(q[idx+2*loffset]))/g->dx[1];
-			courz	= __dadd_rn(c, fabs(q[idx+3*loffset]))/g->dx[2];
+//			c		= sqrt(__dmul_rn(GAMMA, q[idx+4*loffset])/q[idx]);
+//			courx	= __dadd_rn(c, fabs(q[idx+loffset]))/g->dx[0];
+//			coury	= __dadd_rn(c, fabs(q[idx+2*loffset]))/g->dx[1];
+//			courz	= __dadd_rn(c, fabs(q[idx+3*loffset]))/g->dx[2];
 
 			courno[idx] = MAX(courx, MAX(coury, courz));
 		}
@@ -96,9 +96,9 @@ __global__ void gpu_ctoprim_kernel(
 		q[idx+2*loffset] 	= u[idx+2*loffset]*rhoinv; 	//u(i,j,k,3) = u[2][i][j][k]
 		q[idx+3*loffset] 	= u[idx+3*loffset]*rhoinv; 	//u(i,j,k,4) = u[3][i][j][k]
 
-//		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
-		eint = __dadd_rn(__dmul_rn(u[idx+4*loffset], rhoinv),
-						-__dmul_rn(0.5E0, __dadd_rn(__dadd_rn(SQR(q[idx+loffset]), SQR(q[idx+2*loffset])), SQR(q[idx+3*loffset]))));
+		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
+//		eint = __dadd_rn(__dmul_rn(u[idx+4*loffset], rhoinv),
+//						-__dmul_rn(0.5E0, __dadd_rn(__dadd_rn(SQR(q[idx+loffset]), SQR(q[idx+2*loffset])), SQR(q[idx+3*loffset]))));
 
 
 		q[idx+4*loffset] = (GAMMA-1.0E0)*eint*u[idx];

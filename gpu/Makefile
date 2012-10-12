@@ -9,7 +9,7 @@ THRUST		= $(HOME)/software/
 BENCHMARK	= advance
 B_OBJ_FILES	= benchmark.o advance_cpu.o ctoprim.o diffterm.o diffterm_cpu.o hypterm.o hypterm_cpu.o hypterm_merged.o helper_functions.o
 
-NVCCFLAGS	= -I$(THRUST) -arch=sm_13 --ptxas-options=-v --disable-warnings
+NVCCFLAGS	= -I$(THRUST) -arch=sm_20 --fmad=false --ptxas-options=-v --disable-warnings
 
 $(TARGET):		$(OBJ_FILES)
 				$(NVCC) -o $@ $^
