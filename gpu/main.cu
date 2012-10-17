@@ -44,9 +44,10 @@ int main(int argc, char *argv[]){
 	total_time = -get_time();
 	gpu_copy_from_host_4D(d_U, U, h_const.dim_g, h_const.nc);
 	FOR(i, 0, h_const.nsteps)
-		new_advance_hybrid(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, dt);
+//		new_advance_hybrid(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, dt);
+		advance(h_const, U, Unew, Q, D, F, dt);
 //		gpu_advance(h_const, d_const_ptr, d_U, d_Unew, d_Q, d_D, d_F, dt);
-	gpu_copy_to_host_4D(U, d_U, h_const.dim_g, h_const.nc);
+//	gpu_copy_to_host_4D(U, d_U, h_const.dim_g, h_const.nc);
 	total_time += get_time();
 	printf("Total time: %lf\n", total_time);
 

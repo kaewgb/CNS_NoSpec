@@ -281,12 +281,13 @@ extern void advance_hybrid_test(
 	double ****F
 );
 extern void advance(
-	double ****U,	// i/o
-	double &dt,		// o
-	double dx[],	// i: dx[U.dim]
-	double cfl,		// i
-	double eta,		// i
-	double alam		// i
+	global_const_t h_const,
+	double ****U,		// i/o
+	double ****Unew,	// o
+	double ****Q,		// o
+	double ****D,		// o
+	double ****F,		// o
+	double &dt			// o
 );
 extern void gpu_advance(
 	global_const_t &h_const,	// i: Global constants

@@ -10,20 +10,22 @@ void advance(
 	double ****Q,		// o
 	double ****D,		// o
 	double ****F,		// o
-	double &dt,			// o
-	double dx[],		// i: dx[U.dim]
-	double cfl,			// i
-	double eta,			// i
-	double alam			// i
+	double &dt			// o
 ){
 	int lo[3], hi[3], i, j, k, l, n, nc, ng;
 	double courno, courno_proc;
+	double *dx = h_const.dx;
+	double cfl, eta, alam;
 
     // Some arithmetic constants.
     double OneThird      = 1.E0/3.E0;
     double TwoThirds     = 2.E0/3.E0;
     double OneQuarter    = 1.E0/4.E0;
     double ThreeQuarters = 3.E0/4.E0;
+
+	cfl = h_const.cfl;
+	eta = h_const.eta;
+	alam = h_const.alam;
 
 	nc = h_const.nc; // ncomp(U)
 	ng = h_const.ng; // nghost(U)
@@ -180,7 +182,7 @@ void advance_cpu_test(
 	fscanf(fin, "%le", &alam);
 	fclose(fin);
 
-	advance(h_const, U, Unew, Q, D, F, dt, dx, cfl, eta, alam);
+	advance(h_const, U, Unew, Q, D, F, dt);
 
 	fout=fopen("../testcases/advance_output", "r");
 	FOR(l, 0, nc)
@@ -227,7 +229,7 @@ void advance_cpu_multistep_test(
 	dt = h_const.dt;
 	printf("before applying advance\n");
 	FOR(i, 0, h_const.nsteps)
-		advance(h_const, U, Unew, Q, D, F, dt, h_const.dx, h_const.cfl, h_const.eta, h_const.alam);
+		advance(h_const, U, Unew, Q, D, F, dt);
 	printf("after advance\n");
 	fout=fopen("../testcases/multistep_output", "r");
 	FOR(l, 0, nc)
