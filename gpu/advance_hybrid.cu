@@ -69,10 +69,26 @@ void new_advance_hybrid(
     //!
 //    printf("diffterm\n");
 //    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+	double ***ux;
+    allocate_3D(ux, dim_g);
+    set_3D(0.0, ux, dim_g);
+    gpu_copy_from_host_3D(h_const.temp[UX], ux, dim_g);
     gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
     gpu_diffterm(h_const, d_const, d_Q, d_D);
     gpu_copy_to_host_4D(D, d_D, dim, nc);
 
+
+    FILE *fdebug=fopen("debug", "w");
+    fprintf(fdebug, "1\n%d %d %d\n", dim_g[0], dim_g[1], dim_g[2]);
+	gpu_copy_to_host_3D(ux, h_const.temp[UX], dim_g);
+    print_3D(fdebug, ux, dim_g);
+    free_3D(ux, dim_g);
+    fclose(fdebug);
+    FILE *fd = fopen("dgpu", "w");
+    fprintf(fd, "%d\n%d %d %d\n", h_const.nc, dim[0], dim[1], dim[2]);
+	print_4D(fd, D, dim, nc);
+    fclose(fd);
+	return;
 
     //!
     //! Calculate F at time N.

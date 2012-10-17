@@ -96,13 +96,13 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 							+ g->OFF3*(q(3,s_qt)+q(-3,s_qt))
 							+ g->OFF4*(q(4,s_qt)+q(-4,s_qt)))*SQR(g->dxinv[0]);
 	}
-
-	if(threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 && blockIdx.x == 0 && blockIdx.y == 0){
-		ptr[0] = g->temp[UX];
-		ptr[1] = g->temp[UX]+(g->comp_offset_g);
-		ptr[2] = g->temp[UX+1];
-		ptr[3] = difflux;
-	}
+//
+//	if(threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 && blockIdx.x == 0 && blockIdx.y == 0){
+//		ptr[0] = g->temp[UX];
+//		ptr[1] = g->temp[UX]+(g->comp_offset_g);
+//		ptr[2] = g->temp[UX+1];
+//		ptr[3] = difflux;
+//	}
 }
 __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 	global_const_t *g,			// i: Global struct containing application parameters

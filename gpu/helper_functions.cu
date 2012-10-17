@@ -19,6 +19,9 @@ extern global_const_t *d_const_ptr;
 void gpu_allocate_3D(double *&d_ptr, int dim[]){
 	CUDA_SAFE_CALL(cudaMalloc((void **) &d_ptr, dim[0]*dim[1]*dim[2] * sizeof(double)));
 }
+void gpu_copy_from_host_3D(double *dev, double ***host, int dim[]){
+	CUDA_SAFE_CALL(cudaMemcpy(dev, host[0][0], dim[0]*dim[1]*dim[2] * sizeof(double), cudaMemcpyHostToDevice));
+}
 void gpu_copy_to_host_3D(double ***host, double *dev, int dim[]){
 	CUDA_SAFE_CALL(cudaMemcpy(host[0][0], dev, dim[0]*dim[1]*dim[2] * sizeof(double), cudaMemcpyDeviceToHost));
 }
@@ -481,6 +484,28 @@ void print_4D(FILE *f, double ****ptr, int dim[], int dl){
 			fprintf(f, "\n");
 		}
 		fprintf(f, "\n");
+	}
+}
+
+void print_3D(FILE *f, double ***ptr, int dim[]){
+	int i,j,k;
+	FOR(k, 0, dim[2]){
+		FOR(j, 0, dim[1]){
+			FOR(i, 0, dim[0])
+				fprintf(f, "%.17e\t", ptr[i][j][k]);
+			fprintf(f, "\n");
+		}
+		fprintf(f, "\n");
+	}
+}
+
+void set_3D(double val, double ***ptr, int dim[]){
+	int i,j,k;
+	FOR(i, 0, dim[0]){
+		FOR(j, 0, dim[1]){
+			FOR(k, 0, dim[2])
+				ptr[i][j][k] = val;
+		}
 	}
 }
 

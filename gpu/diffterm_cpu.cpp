@@ -65,6 +65,8 @@ void diffterm (
 	allocate_3D(vx, dim);	allocate_3D(vy, dim);	allocate_3D(vz, dim);
 	allocate_3D(wx, dim);	allocate_3D(wy, dim);	allocate_3D(wz, dim);
 
+	set_3D(0.0, ux, dim);
+
 	DO(i, lo[0]-ng, hi[0]-ng){
 		DO(j, lo[1]-ng, hi[1]-ng){
 			DO(k, lo[2]-ng, hi[2]-ng)
@@ -325,6 +327,10 @@ void diffterm (
 		}
 	}
 
+	FILE *fdebug=fopen("debug_cpu", "w");
+	fprintf(fdebug, "1\n%d %d %d\n", dim[0], dim[1], dim[2]);
+	print_3D(fdebug, ux, dim);
+	fclose(fdebug);
 	free_3D(ux, dim);	free_3D(uy, dim);	free_3D(uz, dim);
 	free_3D(vx, dim);	free_3D(vy, dim);	free_3D(vz, dim);
 	free_3D(wx, dim);	free_3D(wy, dim);	free_3D(wz, dim);
@@ -375,7 +381,7 @@ void diffterm_debug (
 		dxinv[i] = 1.0E0/dx[i];
 	}
 
-//	allocate_3D(ux, dim);	allocate_3D(uy, dim);	allocate_3D(uz, dim);
+	allocate_3D(ux, dim);	allocate_3D(uy, dim);	allocate_3D(uz, dim);
 //	allocate_3D(vx, dim);	allocate_3D(vy, dim);	allocate_3D(vz, dim);
 //	allocate_3D(wx, dim);	allocate_3D(wy, dim);	allocate_3D(wz, dim);
 
@@ -640,11 +646,11 @@ void diffterm_debug (
 
 				difflux(i-ng,j-ng,k-ng,iene) = alam*(txx+tyy+tzz) + mechwork;
 
-				if(i==ng && j==ng+12 && k==ng){
-					printf("difflux[%d][%d][%d] = %le\n", i-ng,j-ng,k-ng, difflux(i-ng,j-ng,k-ng,iene));
-					printf("mechwork: %le\n", mechwork);
-					printf("ux, vy, wz = %le %le %le\n", ux(i,j,k), vy(i,j,k), wz(i,j,k));
-				}
+//				if(i==ng && j==ng+12 && k==ng){
+//					printf("difflux[%d][%d][%d] = %le\n", i-ng,j-ng,k-ng, difflux(i-ng,j-ng,k-ng,iene));
+//					printf("mechwork: %le\n", mechwork);
+//					printf("ux, vy, wz = %le %le %le\n", ux(i,j,k), vy(i,j,k), wz(i,j,k));
+//				}
 
 			}
 		}

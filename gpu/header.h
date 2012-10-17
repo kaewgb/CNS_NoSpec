@@ -70,18 +70,18 @@ typedef struct kernel_const {
 }kernel_const_t;
 
 typedef struct global_const {
-	int ng;
-	int nc;
+	int ng;						// Number of ghost cells
+	int nc;						// Number of components
 	int ncells;
 	int lo[3];
 	int hi[3];
-	int dim[3];
-	int dim_g[3];
+	int dim[3];					// Dimension
+	int dim_g[3];				// Dimension, including ghost cells
 	int comp_offset_g;
 	int comp_offset;
 	int plane_offset_g;
 	int plane_offset;
-	int nsteps;
+	int nsteps;					// Number of simulation iterations
 
 	double dt;
 	double dx[3];
@@ -89,7 +89,7 @@ typedef struct global_const {
 	double cfl;
 	double eta;
 	double alam;
-	double *temp[MAX_TEMP];
+	double *temp[MAX_TEMP];	// Temporary arrays for diffterm
 
 	double ALP;
 	double BET;

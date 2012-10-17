@@ -3,6 +3,7 @@
 
 // Allocations
 void gpu_allocate_3D(double *&d_ptr, int dim[]);
+void gpu_copy_from_host_3D(double *dev, double ***host, int dim[]);
 void gpu_copy_to_host_3D(double ***host, double *dev, int dim[]);
 void gpu_free_3D(double *d_ptr);
 
@@ -44,4 +45,6 @@ void free_variables(
 	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F
 );
 void print_4D(FILE *f, double ****ptr, int dim[], int dl);
+void print_3D(FILE *f, double ***ptr, int dim[]);
+void set_3D(double val, double ***ptr, int dim[]);
 double get_time();
