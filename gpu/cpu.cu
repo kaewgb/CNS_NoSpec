@@ -42,37 +42,19 @@ int main(int argc, char *argv[]){
 	fclose(fin);
 
 	total_time = -get_time();
-	gpu_copy_from_host_4D(d_U, U, h_const.dim_g, h_const.nc);
 //	FOR(i, 0, h_const.nsteps)
-		new_advance_hybrid(h_const, d_const_ptr, U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, dt);
-//		advance(h_const, U, Unew, Q, D, F, dt);
+		advance(h_const, U, Unew, Q, D, F, dt);
 //		gpu_advance(h_const, d_const_ptr, d_U, d_Unew, d_Q, d_D, d_F, dt);
-	gpu_copy_to_host_4D(U, d_U, h_const.dim_g, h_const.nc);
 	total_time += get_time();
 	printf("Total time: %lf\n", total_time);
 
 
-	fout = fopen("output", "w");
+	fout = fopen("correct", "w");
 	fprintf(fout, "%d\n", h_const.nc);
 	fprintf(fout, "%d %d %d\n", h_const.dim_g[0], h_const.dim_g[1], h_const.dim_g[2]);
 	print_4D(fout, U, h_const.dim_g, h_const.nc);
 	fclose(fout);
 
-//	gpu_copy_to_host_4D(Q, d_Q, h_const.dim_g, h_const.nc+1);
-//
-//	fout = fopen("ctoprim.out", "w");
-//	fprintf(fout, "%d\n", h_const.nc+1);
-//	fprintf(fout, "%d %d %d\n", h_const.dim_g[0], h_const.dim_g[1], h_const.dim_g[2]);
-//	print_4D(fout, Q, h_const.dim_g, h_const.nc+1);
-//	fclose(fout);
-//
-//	gpu_copy_to_host_4D(D, d_D, h_const.dim, h_const.nc);
-//
-//	fout = fopen("diffterm.out", "w");
-//	fprintf(fout, "%d\n", h_const.nc);
-//	fprintf(fout, "%d %d %d\n", h_const.dim[0], h_const.dim[1], h_const.dim[2]);
-//	print_4D(fout, D, h_const.dim, h_const.nc);
-//	fclose(fout);
 
 	//!
 	//!	Free Allocations
