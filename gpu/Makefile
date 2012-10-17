@@ -17,6 +17,8 @@ $(TARGET):		$(OBJ_FILES)
 $(BENCHMARK):	$(B_OBJ_FILES)
 				$(NVCC) -o $@ $^
 
+ddiff:		ddiff.cpp
+			$(CC) $(CFLAGS) -o $@ $<
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
 %.o:		%.cu $(HEADERS)

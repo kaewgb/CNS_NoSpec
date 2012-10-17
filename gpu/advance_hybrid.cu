@@ -68,10 +68,10 @@ void new_advance_hybrid(
     //! Calculate D at time N.
     //!
 //    printf("diffterm\n");
-    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
-//    gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
-//    gpu_diffterm(h_const, d_const, d_Q, d_D);
-//    gpu_copy_to_host_4D(D, d_D, dim, nc);
+//    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+    gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
+    gpu_diffterm(h_const, d_const, d_Q, d_D);
+    gpu_copy_to_host_4D(D, d_D, dim, nc);
 
 
     //!
