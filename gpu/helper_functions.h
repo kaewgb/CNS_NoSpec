@@ -47,4 +47,5 @@ void free_variables(
 void print_4D(FILE *f, double ****ptr, int dim[], int dl);
 void print_3D(FILE *f, double ***ptr, int dim[]);
 void set_3D(double val, double ***ptr, int dim[]);
+void number_3D(double ***ptr, int dim[]);
 double get_time();

@@ -40,11 +40,13 @@
 		<Unit filename="advance_hybrid.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="cpu.cu" />
 		<Unit filename="ctoprim.cu">
 			<Option compile="1" />
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="ddiff.cpp" />
 		<Unit filename="diffterm.cu">
 			<Option compile="1" />
 			<Option link="1" />

@@ -509,6 +509,16 @@ void set_3D(double val, double ***ptr, int dim[]){
 	}
 }
 
+void number_3D(double ***ptr, int dim[]){
+	int i,j,k,count=0;
+	FOR(i, 0, dim[0]){
+		FOR(j, 0, dim[1]){
+			FOR(k, 0, dim[2])
+				ptr[i][j][k] = count++;
+		}
+	}
+}
+
 double get_time()
 {
     struct timeval t;
