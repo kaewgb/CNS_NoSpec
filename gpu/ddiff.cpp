@@ -74,12 +74,12 @@ int main(int argc, char *argv[]){
 	}
 
 	count = nc1 * dim1[0] * dim1[1] * dim1[2];
-	printf("Average diff:         %lf\n", sum/count);
-	printf("Minimum diff:         %lf\n", min);
-	printf("Maximum diff:         %lf\n", max);
-	printf("Average diff_sig:     %lf\n", sum_sig/count);
-	printf("Minimum diff_sig:     %lf\n", min_sig);
-	printf("Maximum diff_sig:     %lf\n", max_sig);
+	printf("Average diff:         %.18lf\n", sum/count);
+	printf("Minimum diff:         %.18lf\n", min);
+	printf("Maximum diff:         %.18lf\n", max);
+	printf("Average diff_sig:     %.18lf\n", sum_sig/count);
+	printf("Minimum diff_sig:     %.18lf\n", min_sig);
+	printf("Maximum diff_sig:     %.18lf\n", max_sig);
 	fclose(f1);
 	fclose(f2);
 	return 0;

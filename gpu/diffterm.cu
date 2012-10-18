@@ -88,8 +88,11 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 							+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[0]);
 	}
 
-	idx = si*g->plane_offset + sj*g->dim[2] + sk;
-	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+	idx = si*g->plane_offset + (sj-g->ng)*g->dim[2] + sk-g->ng;
+	if(                si < g->dim[0] &&
+		g->ng <= sj && sj < g->dim[1] + g->ng &&
+		g->ng <= sk && sk < g->dim[2] + g->ng ){
+
 		g->temp[TXX][idx] = ( g->CENTER*q(0,s_qt)
 							+ g->OFF1*(q(1,s_qt)+q(-1,s_qt))
 							+ g->OFF2*(q(2,s_qt)+q(-2,s_qt))
@@ -246,8 +249,11 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[1]);
 		}
 
-		idx = si*g->plane_offset + sj*g->dim[2] + sk;
-		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+		idx = (si-g->ng)*g->plane_offset + sj*g->dim[2] + sk-g->ng;
+		if( g->ng <= si && si < g->dim[0] + g->ng &&
+			               sj < g->dim[1] &&
+			g->ng <= sk && sk < g->dim[2] + g->ng ){
+
 			g->temp[TYY][idx] = ( g->CENTER*q(0,s_qt)
 								+ g->OFF1*(q(1,s_qt)+q(-1,s_qt))
 								+ g->OFF2*(q(2,s_qt)+q(-2,s_qt))
@@ -295,8 +301,11 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[2]);
 		}
 
-		idx = si*g->plane_offset + sj*g->dim[2] + sk;
-		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+		idx = (si-g->ng)*g->plane_offset + (sj-g->ng)*g->dim[2] + sk;
+		if( g->ng <= si && si < g->dim[0] + g->ng &&
+			g->ng <= sj && sj < g->dim[1] + g->ng &&
+						   sk < g->dim[2] ){
+
 			g->temp[TZZ][idx] = ( g->CENTER*q(0,s_qt)
 								+ g->OFF1*(q(1,s_qt)+q(-1,s_qt))
 								+ g->OFF2*(q(2,s_qt)+q(-2,s_qt))
@@ -370,12 +379,12 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 #undef	ux
 #define	ux(i)	ux[threadIdx.y+g->ng][threadIdx.z+g->ng+(i)]
 #define vy(i)	vy[threadIdx.y+g->ng][threadIdx.z+g->ng+(i)]
-	if(threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 && blockIdx.x == 0 && blockIdx.y == 0){
-		ptr[4] = g->temp[UX];
-		ptr[5] = g->temp[UX]+(g->comp_offset_g);
-		ptr[6] = g->temp[UX+1];
-		ptr[7] = difflux;
-	}
+//	if(threadIdx.x == 0 && threadIdx.y == 0 && threadIdx.z == 0 && blockIdx.x == 0 && blockIdx.y == 0){
+//		ptr[4] = g->temp[UX];
+//		ptr[5] = g->temp[UX]+(g->comp_offset_g);
+//		ptr[6] = g->temp[UX+1];
+//		ptr[7] = difflux;
+//	}
 	idx = si*g->plane_offset + sj*g->dim[2] + sk;
 	idx_g = (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){

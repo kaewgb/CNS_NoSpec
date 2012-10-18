@@ -69,25 +69,32 @@ void new_advance_hybrid(
     //!
 //    printf("diffterm\n");
 //    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
-	double ***ux;
-    allocate_3D(ux, dim_g);
-    set_3D(0.0, ux, dim_g);
-    gpu_copy_from_host_3D(h_const.temp[UX], ux, dim_g);
+	double ***tmp;
+    allocate_3D(tmp, dim);
+    set_3D(0.0, tmp, dim);
+//    number_3D(Q[5], dim_g);
+//    set_3D(55.55, Q[5], dim_g);
+    gpu_copy_from_host_3D(h_const.temp[TXX], tmp, dim);
     gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
     gpu_diffterm(h_const, d_const, d_Q, d_D);
     gpu_copy_to_host_4D(D, d_D, dim, nc);
+	gpu_copy_to_host_4D(Q, d_Q, dim_g, nc+1);
+	gpu_copy_to_host_3D(tmp, h_const.temp[TXX], dim);
 
 
-    FILE *fdebug=fopen("debug", "w");
-    fprintf(fdebug, "1\n%d %d %d\n", dim_g[0], dim_g[1], dim_g[2]);
-	gpu_copy_to_host_3D(ux, h_const.temp[UX], dim_g);
-    print_3D(fdebug, ux, dim_g);
-    free_3D(ux, dim_g);
+    FILE *fdebug=fopen("txx", "w");
+    fprintf(fdebug, "1\n%d %d %d\n", dim[0], dim[1], dim[2]);
+    print_3D(fdebug, tmp, dim);
+    free_3D(tmp, dim);
     fclose(fdebug);
     FILE *fd = fopen("dgpu", "w");
     fprintf(fd, "%d\n%d %d %d\n", h_const.nc, dim[0], dim[1], dim[2]);
 	print_4D(fd, D, dim, nc);
     fclose(fd);
+    FILE *fq = fopen("qgpu", "w");
+    fprintf(fq, "%d\n%d %d %d\n", h_const.nc+1, dim_g[0], dim_g[1], dim_g[2]);
+	print_4D(fq, Q, dim_g, nc+1);
+    fclose(fq);
 	return;
 
     //!
