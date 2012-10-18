@@ -339,9 +339,9 @@ void diffterm (
 		}
 	}
 
-	FILE *fdebug=fopen("tyy_cpu", "w");
+	FILE *fdebug=fopen("txx_cpu", "w");
 	fprintf(fdebug, "1\n%d %d %d\n", dim_txx[0], dim_txx[1], dim_txx[2]);
-	print_3D(fdebug, tyy_, dim_txx);
+	print_3D(fdebug, txx_, dim_txx);
 	fclose(fdebug);
 
 	free_3D(txx_, dim_txx);
