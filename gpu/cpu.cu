@@ -42,9 +42,9 @@ int main(int argc, char *argv[]){
 	fclose(fin);
 
 	total_time = -get_time();
-//	FOR(i, 0, h_const.nsteps)
+	FOR(i, 0, h_const.nsteps)
 		advance(h_const, U, Unew, Q, D, F, dt);
-//		gpu_advance(h_const, d_const_ptr, d_U, d_Unew, d_Q, d_D, d_F, dt);
+
 	total_time += get_time();
 	printf("Total time: %lf\n", total_time);
 

@@ -37,7 +37,7 @@ void diffterm (
 	double ***ux, ***uy, ***uz;
 	double ***vx, ***vy, ***vz;
 	double ***wx, ***wy, ***wz;
-	double ***txx_, ***tyy_, ***tzz_;
+//	double ***txx_, ***tyy_, ***tzz_;
 
 	double dxinv[3];
 	double tauxx, tauyy, tauzz, tauxy, tauxz, tauyz;
@@ -66,14 +66,14 @@ void diffterm (
 	allocate_3D(vx, dim);	allocate_3D(vy, dim);	allocate_3D(vz, dim);
 	allocate_3D(wx, dim);	allocate_3D(wy, dim);	allocate_3D(wz, dim);
 
-	int dim_txx[3];
-	FOR(i, 0, 3)
-		dim_txx[i] = hi[i]-lo[i]+1;
-	allocate_3D(txx_, dim_txx); allocate_3D(tyy_, dim_txx); allocate_3D(tzz_, dim_txx);
+//	int dim_txx[3];
+//	FOR(i, 0, 3)
+//		dim_txx[i] = hi[i]-lo[i]+1;
+//	allocate_3D(txx_, dim_txx); allocate_3D(tyy_, dim_txx); allocate_3D(tzz_, dim_txx);
 
-	set_3D(0.0, txx_, dim_txx);
-	set_3D(0.0, tyy_, dim_txx);
-	set_3D(0.0, tzz_, dim_txx);
+//	set_3D(0.0, txx_, dim_txx);
+//	set_3D(0.0, tyy_, dim_txx);
+//	set_3D(0.0, tzz_, dim_txx);
 
 	DO(i, lo[0]-ng, hi[0]-ng){
 		DO(j, lo[1]-ng, hi[1]-ng){
@@ -306,9 +306,9 @@ void diffterm (
 					  + OFF3*(q(i,j,k+3,qt)+q(i,j,k-3,qt))
 					  + OFF4*(q(i,j,k+4,qt)+q(i,j,k-4,qt)))*SQR(dxinv(3));
 
-				txx_[i-ng][j-ng][k-ng] = txx;
-				tyy_[i-ng][j-ng][k-ng] = tyy;
-				tzz_[i-ng][j-ng][k-ng] = tzz;
+//				txx_[i-ng][j-ng][k-ng] = txx;
+//				tyy_[i-ng][j-ng][k-ng] = tyy;
+//				tzz_[i-ng][j-ng][k-ng] = tzz;
 
 				divu  = TwoThirds*(ux(i,j,k)+vy(i,j,k)+wz(i,j,k));
 				tauxx = 2.E0*ux(i,j,k) - divu;
@@ -329,24 +329,18 @@ void diffterm (
 
 				difflux(i-ng,j-ng,k-ng,iene) = alam*(txx+tyy+tzz) + mechwork;
 
-//				if(i==ng && j==ng+12 && k==ng){
-//					printf("difflux[%d][%d][%d] = %le\n", i-ng,j-ng,k-ng, difflux(i-ng,j-ng,k-ng,iene));
-//					printf("mechwork: %le\n", mechwork);
-//					printf("ux, vy, wz = %le %le %le\n", ux(i,j,k), vy(i,j,k), wz(i,j,k));
-//				}
-
 			}
 		}
 	}
 
-	FILE *fdebug=fopen("txx_cpu", "w");
-	fprintf(fdebug, "1\n%d %d %d\n", dim_txx[0], dim_txx[1], dim_txx[2]);
-	print_3D(fdebug, txx_, dim_txx);
-	fclose(fdebug);
+//	FILE *fdebug=fopen("txx_cpu", "w");
+//	fprintf(fdebug, "1\n%d %d %d\n", dim_txx[0], dim_txx[1], dim_txx[2]);
+//	print_3D(fdebug, txx_, dim_txx);
+//	fclose(fdebug);
 
-	free_3D(txx_, dim_txx);
-	free_3D(tyy_, dim_txx);
-	free_3D(tzz_, dim_txx);
+//	free_3D(txx_, dim_txx);
+//	free_3D(tyy_, dim_txx);
+//	free_3D(tzz_, dim_txx);
 
 	free_3D(ux, dim);	free_3D(uy, dim);	free_3D(uz, dim);
 	free_3D(vx, dim);	free_3D(vy, dim);	free_3D(vz, dim);
