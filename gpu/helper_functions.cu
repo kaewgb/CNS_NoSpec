@@ -266,11 +266,15 @@ void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  
 }
 
 void fill_boundary(
-	double ****U,	// Array
-	int dim[],		// Dimensions (ghost cells excluded)
-	int dim_ng[]	// Dimensions (ghost cells included)
+	global_const_t h,	// Application parameters
+	double ****U		// Array
 ){
 	int i, j, k, l;
+	static int *dim = NULL, *dim_g;
+	if(dim == NULL){
+		dim = h.dim;	dim_g = h.dim_g;
+	}
+
 	FOR(l, 0, NC){
 		FOR(i, NG, dim[0]+NG){
 			FOR(j, NG, dim[1]+NG){
@@ -285,7 +289,7 @@ void fill_boundary(
 	FOR(l, 0, NC){
 		FOR(i, NG, dim[0]+NG){
 			FOR(j, 0, NG){
-				FOR(k, 0, dim_ng[2]){
+				FOR(k, 0, dim_g[2]){
 					U[l][i][j][k] = U[l][i][j+dim[1]][k];
 					U[l][i][j+dim[1]+NG][k] = U[l][i][j+NG][k];
 				}
@@ -295,8 +299,8 @@ void fill_boundary(
 
 	FOR(l, 0, NC){
 		FOR(i, 0, NG){
-			FOR(j, 0, dim_ng[1]){
-				FOR(k, 0, dim_ng[2]){
+			FOR(j, 0, dim_g[1]){
+				FOR(k, 0, dim_g[2]){
 					U[l][i][j][k] = U[l][i+dim[0]][j][k];
 					U[l][i+dim[0]+NG][j][k] = U[l][i+NG][j][k];
 				}

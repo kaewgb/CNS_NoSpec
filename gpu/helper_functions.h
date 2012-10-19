@@ -31,9 +31,8 @@ void check_lo_hi_ng_dx( int lo[],  int hi[],  int ng,  double dx[],
 void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la);
 
 void fill_boundary(
-	double ****U,	// Array
-	int dim[],		// Dimensions (ghost cells excluded)
-	int dim_ng[]	// Dimensions (ghost cells included)
+	global_const_t h,	// Application parameters
+	double ****U		// Array
 );
 void read_configurations(global_const_t &h_const, global_const_t *d_const_ptr);
 void allocate_variables(

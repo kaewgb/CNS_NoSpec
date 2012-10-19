@@ -14,10 +14,7 @@ static const double GAM	=  4.0E0/105.0E0;
 static const double DEL	= -1.0E0/280.0E0;
 
 void hypterm(
-	int lo[],			//i: lo[3]
-	int hi[],			//i: hi[3]
-	int ng,				//i
-	double dx[],		//i: dx[3]
+	global_const_t h,
 	double ****cons,	//i: cons[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[0]-lo[0]+2*ng][5];
 	double ****q,		//i: cons[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[0]-lo[0]+2*ng][6];
 	double ****flux		//o: flux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
@@ -25,10 +22,14 @@ void hypterm(
 
 	int i, j, k;
 	double unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4;
-	double dxinv[3];
 
-	FOR(i, 0, 3)
-		dxinv[i] = 1.0E0/dx[i];
+	static int *lo=NULL, *hi, ng;
+	static double *dxinv;
+
+	if(lo==NULL){
+		lo = h.lo;	hi = h.hi;
+		ng = h.ng;	dxinv = h.dxinv;
+	}
 
 //	#pragma omp parallel for private(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
 	DO(i, lo[0], hi[0]){
@@ -102,23 +103,11 @@ void hypterm(
 				unm3 = q(i,j-3,k,qv);
 				unm4 = q(i,j-4,k,qv);
 
-//				if(i==ng && j==ng+13 && k==ng+1){
-//					printf("before: flux[irho] = %le\n", flux(i,j,k,irho));
-//				}
 				flux(i,j,k,irho)=flux(i,j,k,irho) -
 					   (ALP*(cons(i,j+1,k,imy)-cons(i,j-1,k,imy))
 					  + BET*(cons(i,j+2,k,imy)-cons(i,j-2,k,imy))
 					  + GAM*(cons(i,j+3,k,imy)-cons(i,j-3,k,imy))
 					  + DEL*(cons(i,j+4,k,imy)-cons(i,j-4,k,imy)))*dxinv(2);
-
-//				if(i==ng && j==ng+13 && k==ng+1){
-//					printf("flux[irho]=%le\n", flux(i,j,k,irho));
-//					printf("%le %le\n%le %le\n%le %le\n%le %le\n",
-//								cons(i,j+1,k,imy), cons(i,j-1,k,imy),
-//								cons(i,j+2,k,imy), cons(i,j-2,k,imy),
-//								cons(i,j+3,k,imy), cons(i,j-3,k,imy),
-//								cons(i,j+4,k,imy), cons(i,j-4,k,imy));
-//				}
 
 				flux(i,j,k,imx)=flux(i,j,k,imx) -
 					   (ALP*(cons(i,j+1,k,imx)*unp1-cons(i,j-1,k,imx)*unm1)

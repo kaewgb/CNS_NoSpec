@@ -41,7 +41,7 @@ void advance(
 	//
 	// multifab_fill_boundary(U)
 	//
-	fill_boundary(U, dim, dim_g);
+	fill_boundary(h_const, U);
 
     //!
     //! Calculate primitive variables based on U.
@@ -49,7 +49,7 @@ void advance(
     //! Also calculate courno so we can set "dt".
     //!
 	courno_proc = 1.0E-50;
-	ctoprim(lo, hi, U, Q, dx, ng, courno_proc);
+	ctoprim(h_const, U, Q, courno_proc);
 
 	courno = courno_proc;
 	dt = cfl/courno;
@@ -63,7 +63,7 @@ void advance(
     //!
     //! Calculate F at time N.
     //!
-	hypterm(lo, hi, ng, dx, U, Q, F);
+	hypterm(h_const, U, Q, F);
 
     //!
     //! Calculate U at time N+1/3.
@@ -81,12 +81,12 @@ void advance(
 	//!
     //! Sync U^1/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
     //!
-	fill_boundary(Unew, dim, dim_g);
+	fill_boundary(h_const, Unew);
 
 	//!
     //! Calculate primitive variables based on U^1/3.
     //!
-	ctoprim(lo, hi, Unew, Q, dx, ng);
+	ctoprim(h_const, Unew, Q);
 
     //!
     //! Calculate D at time N+1/3.
@@ -96,7 +96,7 @@ void advance(
 	//!
     //! Calculate F at time N+1/3.
     //!
-	hypterm(lo, hi, ng, dx, Unew, Q, F);
+	hypterm(h_const, Unew, Q, F);
 
 	//!
     //! Calculate U at time N+2/3.
@@ -116,12 +116,12 @@ void advance(
 	//!
     //! Sync U^2/3 prior to calculating D & F. -- multifab_fill_boundary(Unew)
     //!
-	fill_boundary(Unew, dim, dim_g);
+	fill_boundary(h_const, Unew);
 
     //!
     //! Calculate primitive variables based on U^2/3.
     //!
-	ctoprim(lo, hi, Unew, Q, dx, ng);
+	ctoprim(h_const, Unew, Q);
 
     //!
     //! Calculate D at time N+2/3.
@@ -131,7 +131,7 @@ void advance(
     //!
     //! Calculate F at time N+2/3.
     //!
-	hypterm(lo, hi, ng, dx, Unew, Q, F);
+	hypterm(h_const, Unew, Q, F);
 
     //!
     //! Calculate U at time N+1.

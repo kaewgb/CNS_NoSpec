@@ -40,7 +40,9 @@
 		<Unit filename="advance_hybrid.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
-		<Unit filename="cpu.cu" />
+		<Unit filename="cpu.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="ctoprim.cu">
 			<Option compile="1" />
 			<Option link="1" />
