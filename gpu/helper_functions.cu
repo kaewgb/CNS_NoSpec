@@ -378,6 +378,8 @@ void read_configurations(global_const_t &h_const, global_const_t *d_const_ptr){
 	fclose(fin);
 
 	FOR(i, 0, 3){
+		h_const.lo[i] += h_const.ng;
+		h_const.hi[i] += h_const.ng;
 		h_const.dim[i] 		= h_const.hi[i] - h_const.lo[i] + 1;
 		h_const.dim_g[i] 	= h_const.hi[i] - h_const.lo[i] + 1 + h_const.ng + h_const.ng;
 	}
@@ -425,7 +427,8 @@ void read_configurations(global_const_t &h_const, global_const_t *d_const_ptr){
 
 void allocate_variables(
 	double ****&U, double ****&Unew, double ****&Q, double ****&D, double ****&F,
-	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F
+	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F,
+	bool gpu=true
 ){
 	int i, nc, *dim=h_const.dim, *dim_g=h_const.dim_g;
 	char *dest;
@@ -437,21 +440,30 @@ void allocate_variables(
 	allocate_4D(D,  	dim, 	nc);
 	allocate_4D(F, 		dim, 	nc);
 
-	gpu_allocate_4D(d_U, 	dim_g, 	nc);
-	gpu_allocate_4D(d_Unew, dim_g, 	nc);
-	gpu_allocate_4D(d_Q, 	dim_g, 	nc+1);
-	gpu_allocate_4D(d_D, 	dim, 	nc);
-	gpu_allocate_4D(d_F, 	dim, 	nc);
+	if(gpu){
+		gpu_allocate_4D(d_U, 	dim_g, 	nc);
+		gpu_allocate_4D(d_Unew, dim_g, 	nc);
+		gpu_allocate_4D(d_Q, 	dim_g, 	nc+1);
+		gpu_allocate_4D(d_D, 	dim, 	nc);
+		gpu_allocate_4D(d_F, 	dim, 	nc);
 
-	dest = (char *)d_const_ptr + ((char *)&h_const.temp - (char *)&h_const);
-	FOR(i, 0, MAX_TEMP)
-		gpu_allocate_3D(h_const.temp[i], dim_g);
-	cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
+		dest = (char *)d_const_ptr + ((char *)&h_const.temp - (char *)&h_const);
+
+		FOR(i, 0, MAX_TEMP)
+			gpu_allocate_3D(h_const.temp[i], dim_g);
+		cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
+	}
+	else {
+		printf("here\n");
+		DO(i, 0, WZ)
+			allocate_3D(h_const.cpu_temp[i], dim_g);
+	}
 }
 
 void free_variables(
 	double ****U, double ****Unew, double ****Q, double ****D, double ****F,
-	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F
+	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F,
+	bool gpu=true
 ){
 	int i, nc, *dim=h_const.dim, *dim_g=h_const.dim_g;
 	nc = h_const.nc;
@@ -462,14 +474,20 @@ void free_variables(
 	free_4D(D,  	dim, 	nc);
 	free_4D(F, 		dim, 	nc);
 
-	gpu_free_4D(d_U);
-	gpu_free_4D(d_Unew);
-	gpu_free_4D(d_Q);
-	gpu_free_4D(d_D);
-	gpu_free_4D(d_F);
+	if(gpu){
+		gpu_free_4D(d_U);
+		gpu_free_4D(d_Unew);
+		gpu_free_4D(d_Q);
+		gpu_free_4D(d_D);
+		gpu_free_4D(d_F);
 
-	FOR(i, 0, MAX_TEMP)
-		gpu_free_3D(h_const.temp[i]);
+		FOR(i, 0, MAX_TEMP)
+			gpu_free_3D(h_const.temp[i]);
+	}
+	else {
+		DO(i, 0, WZ)
+			free_3D(h_const.cpu_temp[i], dim_g);
+	}
 }
 
 void print_4D(FILE *f, double ****ptr, int dim[], int dl){

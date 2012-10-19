@@ -90,6 +90,7 @@ typedef struct global_const {
 	double eta;
 	double alam;
 	double *temp[MAX_TEMP];	// Temporary arrays for diffterm
+	double ***cpu_temp[WZ+1];
 
 	double ALP;
 	double BET;
@@ -183,36 +184,10 @@ extern void gpu_hypterm(
 );
 
 
-extern void diffterm_test(
-	global_const_t h_const, // i: Global struct containing applicatino parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
-);
-extern void diffterm (
-	int lo[],			// i: lo[3]
-	int hi[],			// i: hi[3]
-	int ng,				// i
-	double dx[],		// i: dx[3]
-	double ****q,		// i: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
-	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
-	double eta,			// i
-	double alam		// i
-);
-extern void diffterm_debug (
-	int lo[],			// i: lo[3]
-	int hi[],			// i: hi[3]
-	int ng,				// i
-	double dx[],		// i: dx[3]
-	double ****q,		// i: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
-	double ****difflux,	// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
-	double eta,			// i
-	double alam,		// i
-	double ***ux, double ***vx, double ***wx,
-	double ***uy, double ***vy, double ***wy,
-	double ***uz, double ***vz, double ***wz,
-	double ***vyx_, double ***wzx_,
-	double ***uxy_, double ***wzy_,
-	double ***uxz_, double ***vyz_,
-	double ***txx_, double ***tyy_, double ***tzz_
+extern void diffterm(
+	global_const_t c,		// i: global application parameters
+	double ****q,			// i: q[hi[0]-lo[0]+2*ng][hi[1]-lo[1]+2*ng][hi[2]-lo[2]+2*ng][6]
+	double ****difflux		// i/o: difflux[hi[0]-lo[0]][hi[1]-lo[1]][hi[2]-lo[2]][5]
 );
 extern void gpu_diffterm(
 	global_const_t h_const, 	// i: Global struct containing application parameters

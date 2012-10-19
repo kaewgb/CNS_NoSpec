@@ -38,11 +38,13 @@ void fill_boundary(
 void read_configurations(global_const_t &h_const, global_const_t *d_const_ptr);
 void allocate_variables(
 	double ****&U, double ****&Unew, double ****&Q, double ****&D, double ****&F,
-	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F
+	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F,
+	bool gpu // == true by default
 );
 void free_variables(
 	double ****U, double ****Unew, double ****Q, double ****D, double ****F,
-	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F
+	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F,
+	bool gpu // == true by default
 );
 void print_4D(FILE *f, double ****ptr, int dim[], int dl);
 void print_3D(FILE *f, double ***ptr, int dim[]);

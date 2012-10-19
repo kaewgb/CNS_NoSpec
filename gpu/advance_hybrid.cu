@@ -68,7 +68,7 @@ void new_advance_hybrid(
     //! Calculate D at time N.
     //!
 //    printf("diffterm\n");
-//    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+//    diffterm(h_const, Q, D);
 	double ***tmp;
     allocate_3D(tmp, dim);
     set_3D(0.0, tmp, dim);
@@ -148,7 +148,7 @@ void new_advance_hybrid(
     //! Calculate D at time N+1/3.
     //!
 //    printf("diffterm2\n");
-	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+	diffterm(h_const, Q, D);
 //	gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
 //    gpu_diffterm(h_const, d_const, d_Q, d_D);
 //    gpu_copy_to_host_4D(D, d_D, dim, nc);
@@ -207,7 +207,7 @@ void new_advance_hybrid(
     //! Calculate D at time N+2/3.
     //!
 //    printf("diffterm3\n");
-    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+    diffterm(h_const, Q, D);
 //    gpu_copy_from_host_4D(d_Q, Q, dim_g, nc+1);
 //    gpu_diffterm(h_const, d_const, d_Q, d_D);
 //    gpu_copy_to_host_4D(D, d_D, dim, nc);
@@ -318,7 +318,7 @@ void advance_hybrid(
     gpu_diffterm(h_const, d_const, d_Q, d_D);
 //    gpu_copy_to_host_4D(D, d_D, dim, nc);
 
-//	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+//	diffterm(h_const, Q, D);
 //	gpu_copy_from_host_4D(d_D, D, dim, nc);
 
     //!
@@ -360,7 +360,7 @@ void advance_hybrid(
     //!
     //! Calculate D at time N+1/3.
     //!
-//	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+//	diffterm(h_const, Q, D);
 	gpu_diffterm(h_const, d_const, d_Q, d_D);
 
 	//!
@@ -403,7 +403,7 @@ void advance_hybrid(
     //!
     //! Calculate D at time N+2/3.
     //!
-    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+    diffterm(h_const, Q, D);
 
     //!
     //! Calculate F at time N+2/3.

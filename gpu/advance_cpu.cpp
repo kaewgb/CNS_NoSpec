@@ -58,13 +58,7 @@ void advance(
     //!
     //! Calculate D at time N.
     //!
-//    number_3D(Q[5], dim_g);
-	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
-//	FILE *fd = fopen("dcpu", "w");
-//	fprintf(fd, "%d\n%d %d %d\n", nc, dim[0], dim[1], dim[2]);
-//	print_4D(fd, D, dim, nc);
-//	fclose(fd);
-//	return;
+	diffterm(h_const, Q, D);
 
     //!
     //! Calculate F at time N.
@@ -97,7 +91,7 @@ void advance(
     //!
     //! Calculate D at time N+1/3.
     //!
-	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+	diffterm(h_const, Q, D);
 
 	//!
     //! Calculate F at time N+1/3.
@@ -132,7 +126,7 @@ void advance(
     //!
     //! Calculate D at time N+2/3.
     //!
-    diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+    diffterm(h_const, Q, D);
 
     //!
     //! Calculate F at time N+2/3.
