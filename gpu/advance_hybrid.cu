@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "header.h"
-#include "helper_functions.h"
+#include "util.h"
 
 void new_advance_hybrid(
 	global_const_t h_const,

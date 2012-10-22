@@ -59,6 +59,8 @@ int main(int argc, char *argv[]){
 							printf("[%d][%d][%d][%d]: %le vs %le, diff=%lf\n", l,i,j,k, u1, u2, diff);
 							return 1;
 						}
+						else
+							printf("[%d][%d][%d][%d]: %le vs %le, diff=%lf\n", l,i,j,k, u1, u2, diff);
 
 						sum += diff;
 						min = MIN(min, diff);

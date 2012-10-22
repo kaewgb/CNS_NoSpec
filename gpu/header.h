@@ -70,6 +70,10 @@ typedef struct kernel_const {
 }kernel_const_t;
 
 typedef struct global_const {
+
+	char *input_file_name;
+	char *output_file_name;
+
 	int ng;						// Number of ghost cells
 	int nc;						// Number of components
 	int ncells;

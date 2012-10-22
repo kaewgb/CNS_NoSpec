@@ -55,11 +55,11 @@
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
 		<Unit filename="diffterm_cpu.cpp" />
-		<Unit filename="header.h" />
-		<Unit filename="helper_functions.cu">
-			<Option virtualFolder="CUDA Sources/" />
+		<Unit filename="extract.cpp">
+			<Option compile="0" />
+			<Option link="0" />
 		</Unit>
-		<Unit filename="helper_functions.h" />
+		<Unit filename="header.h" />
 		<Unit filename="hypterm.cu">
 			<Option compile="1" />
 			<Option link="1" />
@@ -76,6 +76,12 @@
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="util.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
+		<Unit filename="util.h" />
+		<Unit filename="util_cpu.cpp" />
+		<Unit filename="util_cpu.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

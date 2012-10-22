@@ -26,7 +26,8 @@ program main
   integer            :: nsteps, plot_int, n_cell, max_grid_size, n
   integer            :: un, farg, narg
   logical            :: need_inputs_file, found_inputs_file
-  character(len=128) :: inputs_file_name
+  character(len=128) :: inputs_file_name, temp_file_name
+  integer			  :: temp_file_name_start
   integer            :: i, lo(DM), hi(DM), istep, dim(DM)
   double precision   :: prob_lo(DM), prob_hi(DM), cfl, eta, alam
   double precision   :: dx(DM), dt, time, start_time, end_time
@@ -54,6 +55,7 @@ program main
   cfl           = 0.5d0
   eta           = 1.8d-4 ! Diffusion coefficient.
   alam          = 1.5d2  ! Diffusion coefficient.
+
   !
   ! Read inputs file and overwrite any default values.
   !
@@ -70,6 +72,12 @@ program main
         read(unit=un, nml = probin)
         close(unit=un)
         need_inputs_file = .false.
+
+        temp_file_name = inputs_file_name
+        temp_file_name_start = len_trim(inputs_file_name)+1
+	else
+		temp_file_name = ""
+		temp_file_name_start = 1
      end if
   end if
 
@@ -114,7 +122,8 @@ program main
   end if
 
   if(parallel_IOProcessor()) then
-    open(unit=9, file="../testcases/general_input")
+	temp_file_name(temp_file_name_start:) = "_general_input"
+    open(unit=9, file= temp_file_name)
 	write(9, *), NG
 	write(9, *), NC
 	write(9, *), n_cell
@@ -130,7 +139,8 @@ program main
 	write(9, *), dt
 	close(9)
 
-	open(unit=14, file="multistep_input")
+	temp_file_name(temp_file_name_start:) = "_multistep_input"
+	open(unit=14, file= temp_file_name)
 	do n=1,nboxes(U)
 		up => dataptr(U, n)
 		write(14,*), up
@@ -155,7 +165,8 @@ program main
 
   end do
   if(parallel_IOProcessor()) then
-	open(unit=24, file="multistep_output")
+    temp_file_name(temp_file_name_start:) = "_multistep_output"
+	open(unit=24, file= temp_file_name)
 	write(24, *), NC
 	lo = lwb(get_box(U,1))
 	hi = upb(get_box(U,1))

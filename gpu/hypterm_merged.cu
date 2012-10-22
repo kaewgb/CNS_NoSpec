@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "header.h"
-#include "helper_functions.h"
+#include "util.h"
 
 #define BLOCK_DIM		16		// Dimension that doesn't have ghost cells
 #define	BLOCK_DIM_G		8		// Dimension that has ghost cells

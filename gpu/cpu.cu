@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <cuda.h>
 #include "header.h"
-#include "helper_functions.h"
+#include "util.h"
 
 global_const_t h_const;
 global_const_t *d_const_ptr;
@@ -26,7 +26,8 @@ int main(int argc, char *argv[]){
 	//!
 	//! Prepare Global Constants
 	//!
-	read_configurations(h_const, d_const_ptr);
+	read_configurations(h_const, argc, argv);
+	copy_configurations(h_const, d_const_ptr);
 
 	//!
 	//! Allocation
@@ -36,10 +37,11 @@ int main(int argc, char *argv[]){
 	//!
 	//! Advance
 	//!
-	fin = fopen("../testcases/multistep_input", "r");
+	fin = fopen(h_const.input_file_name, "r");
 	FOR(l, 0, h_const.nc)
 		read_3D(fin, U, h_const.dim_g, l);
 	fclose(fin);
+//	init_data(h_const, U);
 
 	total_time = -get_time();
 	FOR(i, 0, h_const.nsteps)

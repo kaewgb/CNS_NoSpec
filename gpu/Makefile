@@ -1,28 +1,32 @@
 CC			= g++
 NVCC		= nvcc
 
-GPU			= gpu
-OBJ_FILES	= advance.o advance_cpu.o advance_hybrid.o ctoprim.o diffterm.o diffterm_cpu.o hypterm.o hypterm_cpu.o hypterm_merged.o helper_functions.o
-HEADERS		= header.h helper_functions.h
-THRUST		= $(HOME)/software/
 
 CPU			= cpu
+CPU_OBJS	= advance_cpu.o diffterm_cpu.o hypterm_cpu.o util_cpu.o ctoprim.o util.o
+
+GPU			= gpu
+GPU_OBJS	= advance.o advance_hybrid.o ctoprim.o diffterm.o hypterm.o hypterm_merged.o util.o $(CPU_OBJS)
+HEADERS		= header.h util.h
+THRUST		= $(HOME)/software/
 
 
-BENCHMARK	= advance
-B_OBJ_FILES	= benchmark.o advance_cpu.o ctoprim.o diffterm.o diffterm_cpu.o hypterm.o hypterm_cpu.o hypterm_merged.o helper_functions.o
 
 NVCCFLAGS	= -I$(THRUST) -arch=sm_20 --fmad=false --ptxas-options=-v --disable-warnings
 
-$(GPU):			main.o $(OBJ_FILES)
+$(GPU):			main.o $(GPU_OBJS)
 				$(NVCC) -o $@ $^
-$(CPU):			cpu.o $(OBJ_FILES)
+$(CPU):			cpu.o $(CPU_OBJS)
 				$(NVCC) -o $@ $^
-$(BENCHMARK):	$(B_OBJ_FILES)
-				$(NVCC) -o $@ $^
+
 
 ddiff:		ddiff.cpp
 			$(CC) $(CFLAGS) -o $@ $<
+extract:	extract.o util_cpu.o
+			$(CC) $(CFLAGS) -o $@ $^
+convert:	convert.o util_cpu.o
+			$(CC) $(CFLAGS) -o $@ $^
+
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
 %.o:		%.cu $(HEADERS)

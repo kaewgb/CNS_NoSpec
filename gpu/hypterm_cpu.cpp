@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "header.h"
-#include "helper_functions.h"
+#include "util.h"
 
 #define	q(i,j,k,l)		q[l][i][j][k]
 #define cons(i,j,k,l)	cons[l][i][j][k]

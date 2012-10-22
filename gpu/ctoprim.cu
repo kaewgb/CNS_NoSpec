@@ -4,7 +4,7 @@
 #include "thrust/reduce.h"
 #include "thrust/device_ptr.h"
 #include "header.h"
-#include "helper_functions.h"
+#include "util.h"
 
 #define	BLOCK_DIM	512
 
