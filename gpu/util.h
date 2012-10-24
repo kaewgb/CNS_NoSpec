@@ -25,12 +25,12 @@ void copy_configurations(global_const_t h_const, global_const_t *d_const_ptr);
 void allocate_variables(
 	double ****&U, double ****&Unew, double ****&Q, double ****&D, double ****&F,
 	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F,
-	bool gpu=true
+	bool gpu=true, bool cpu=false
 );
 void free_variables(
 	double ****U, double ****Unew, double ****Q, double ****D, double ****F,
 	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F,
-	bool gpu=true
+	bool gpu=true, bool cpu=false
 );
 
 #endif

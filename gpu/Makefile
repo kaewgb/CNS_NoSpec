@@ -11,7 +11,7 @@ HEADERS		= header.h util.h
 THRUST		= $(HOME)/software/
 
 
-
+CFLAGS		=
 NVCCFLAGS	= -I$(THRUST) -arch=sm_20 --fmad=false --ptxas-options=-v --disable-warnings
 
 $(GPU):			main.o $(GPU_OBJS)
@@ -26,10 +26,12 @@ extract:	extract.o util_cpu.o
 			$(CC) $(CFLAGS) -o $@ $^
 convert:	convert.o util_cpu.o
 			$(CC) $(CFLAGS) -o $@ $^
+3d:			3d.cu
+			$(NVCC) -o $@ $^
 
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
 %.o:		%.cu $(HEADERS)
 			$(NVCC) -c $< -o $@ $(NVCCFLAGS)
 clean:
-			rm -f $(OBJ_FILES) $(TARGET)
+			rm -f $(GPU_OBJS) $(CPU_OBJS) gpu cpu

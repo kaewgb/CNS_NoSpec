@@ -37,7 +37,7 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + si;
 
 				   s_q[tidx][tidz]  =     q[idx + qu*g->comp_offset_g];
 			   s_qpres[tidx][tidz]	=     q[idx + qpres*g->comp_offset_g];
@@ -99,7 +99,7 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = si*g->plane_offset + sj*g->dim[2] + sk;
+		idx = sk*g->plane_offset + sj*g->dim[2] + si;
 
 		flux[idx + irho*g->comp_offset] = flux_irho;
 		flux[idx + imx *g->comp_offset] = flux_imx;
@@ -144,7 +144,7 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidy < kc->blockDim_y_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = (si+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + (sk+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + (si+g->ng);
 
 				   s_q[tidy][tidz]  =     q[idx + qv*g->comp_offset_g];
 			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g];
@@ -206,7 +206,7 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = si*g->plane_offset + sj*g->dim[2] + sk;
+		idx = sk*g->plane_offset + sj*g->dim[2] + si;
 
 		flux[idx + irho*g->comp_offset] -= flux_irho;
 		flux[idx + imx *g->comp_offset] -= flux_imx;
@@ -251,7 +251,7 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidz < kc->blockDim_z_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + sk;
+		idx = sk*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
 
 				   s_q[tidy][tidz]  =     q[idx + qw*g->comp_offset_g];
 			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g];
@@ -313,7 +313,7 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = si*g->plane_offset + sj*g->dim[2] + sk;
+		idx = sk*g->plane_offset + sj*g->dim[2] + si;
 
 		flux[idx + irho*g->comp_offset] -= flux_irho;
 		flux[idx + imx *g->comp_offset] -= flux_imx;
@@ -369,106 +369,4 @@ void gpu_hypterm(
 
 	gpu_hypterm_z_stencil_kernel<<<grid_dim, block_dim_z_stencil>>>(d_const, d_cons, d_q, d_flux);
 
-}
-
-void hypterm_test(
-	global_const_t h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
-){
-
-	int lo[3], hi[3], ng;
-	double dx[3];
-	double ****cons, ****q, ****flux;
-
-	int lo2[3], hi2[3], ng2;
-	double dx2[3];
-	double ****cons2, ****q2, ****flux2;
-
-	double *d_cons, *d_q, *d_flux;
-
-	int i, l;
-	int dim_g[3], dim[3];
-
-	FILE *fin = fopen("../testcases/hypterm_input", "r");
-	FILE *fout = fopen("../testcases/hypterm_output", "r");
-	if(fin == NULL || fout == NULL){
-		printf("Invalid input!\n");
-		exit(1);
-	}
-
-	// Scanning input
-	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
-	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
-	fscanf(fin, "%d\n", &ng);
-	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
-
-	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
-	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
-
-	FOR(i, 0, 3){
-		dim[i] = hi[i]-lo[i]+1;
-		dim_g[i]  = dim[i] + 2*ng;
-	}
-
-	allocate_4D(cons, 	dim_g, 	5);		// [40][40][40][5]
-	allocate_4D(q, 		dim_g, 	6);		// [40][40][40][6]
-	allocate_4D(flux, 	dim, 	5);		// [32][32][32][5]
-	allocate_4D(cons2, 	dim_g, 	5);		// [40][40][40][5]
-	allocate_4D(q2, 	dim_g, 	6);	 	// [40][40][40][6]
-	allocate_4D(flux2, 	dim, 	5);		// [40][40][40][5]
-
-	gpu_allocate_4D(d_cons, dim_g, 5);
-	gpu_allocate_4D(d_q,	dim_g, 6);
-	gpu_allocate_4D(d_flux, dim,   5);
-
-	FOR(l, 0, 5)
-		read_3D(fin, cons,  dim_g,  l);
-	FOR(l, 0, 6)
-		read_3D(fin, q,		dim_g,  l);
-	FOR(l, 0, 5)
-		read_3D(fin, flux,  dim, l);
-	fclose(fin);
-
-	gpu_copy_from_host_4D(d_cons, cons, dim_g, 5);
-	gpu_copy_from_host_4D(d_q, 	  q, 	dim_g, 6);
-	gpu_copy_from_host_4D(d_flux, flux, dim  , 5);
-
-	printf("Applying hypterm()...\n");
-//	hypterm(lo, hi, ng, dx, cons, q, flux);
-	gpu_hypterm(h_const, d_const, d_cons, d_q, d_flux);
-
-	gpu_copy_to_host_4D(cons, d_cons, dim_g, 5);
-	gpu_copy_to_host_4D(q   , d_q   , dim_g, 6);
-	gpu_copy_to_host_4D(flux, d_flux, dim  , 5);
-
-
-	// Scanning output to check
-	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
-	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
-	fscanf(fout, "%d\n", &ng2);
-	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
-
-	FOR(l, 0, 5)
-		read_3D(fout, cons2, dim_g,  l);
-	FOR(l, 0, 6)
-		read_3D(fout, q2,	 dim_g,  l);
-	FOR(l, 0, 5)
-		read_3D(fout, flux2,  dim, l);
-	fclose(fout);
-
-	// Checking...
-	printf("checking answers..\n");
-	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-	check_4D_array("cons", cons, cons2, dim_g,  5);
-	check_4D_array("q",    q, 	 q2,	dim_g,  6);
-	check_4D_array("flux", flux, flux2, dim, 5);
-
-	gpu_free_4D(d_cons);
-	gpu_free_4D(d_q);
-	gpu_free_4D(d_flux);
-
-	free_4D(cons,  dim_g, 5);	free_4D(q,  dim_g, 6);	free_4D(flux,  dim, 5);
-	free_4D(cons2, dim_g, 5);	free_4D(q2, dim_g, 6);	free_4D(flux2, dim, 5);
-
-	printf("Correct!\n");
 }

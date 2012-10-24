@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
 	//!
 	//! Allocation
 	//!
-	allocate_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, false);
+	allocate_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, false, true);
 
 	//!
 	//! Advance

@@ -9,23 +9,23 @@ extern global_const_t *d_const_ptr;
 
 void allocate_4D(double ****&ptr, int dim[], int dl){
 
-	int l,i,j;
+	int j,k,l;
 	int di=dim[0], dj=dim[1], dk=dim[2];
 	double *temp;
 
 	ptr = (double ****) malloc(dl * sizeof(double ***));
 	FOR(l, 0, dl){
-		ptr[l] = (double ***) malloc(di * sizeof(double **));
-		FOR(i, 0, di)
-			ptr[l][i] = (double **) malloc(dj * sizeof(double *));
+		ptr[l] = (double ***) malloc(dk * sizeof(double **));
+		FOR(k, 0, dk)
+			ptr[l][k] = (double **) malloc(dj * sizeof(double *));
 	}
 
-	temp = (double *) malloc(dl*di*dj*dk * sizeof(double));
+	temp = (double *) malloc(dl*dk*dj*di * sizeof(double));
 	FOR(l, 0, dl){
-		FOR(i, 0, di){
+		FOR(k, 0, dk){
 			FOR(j, 0, dj){
-				ptr[l][i][j] = temp;
-				temp += dk;
+				ptr[l][k][j] = temp;
+				temp += di;
 			}
 		}
 	}
@@ -33,43 +33,43 @@ void allocate_4D(double ****&ptr, int dim[], int dl){
 }
 
 void allocate_3D(double ***&ptr, int dim[]){
-	int i,j;
+	int j,k;
 	int di=dim[0], dj=dim[1], dk=dim[2];
 	double *temp;
 
 	ptr = (double ***) malloc(di * sizeof(double **));
-	FOR(i, 0, di){
-		ptr[i] = (double **) malloc(dj * sizeof(double *));
+	FOR(k, 0, dk){
+		ptr[k] = (double **) malloc(dj * sizeof(double *));
 	}
 
 	// Allocate memory as a bulk
 	temp = (double *) malloc(di*dj*dk * sizeof(double));
-	FOR(i, 0, di){
+	FOR(k, 0, dk){
 		FOR(j, 0, dj){
-			ptr[i][j] = temp;
-			temp += dk;
+			ptr[k][j] = temp;
+			temp += di;
 		}
 	}
 }
 
 void free_4D(double ****ptr, int dim[], int dl){
-	int i,l;
-	int di=dim[0], dj=dim[1];
+	int l,k;
+	int dj=dim[1], dk=dim[2];
 
 	free(ptr[0][0][0]);
 	FOR(l, 0, dl){
-		FOR(i, 0, di)
-			free(ptr[l][i]);
+		FOR(k, 0, dk)
+			free(ptr[l][k]);
 		free(ptr[l]);
 	}
 	free(ptr);
 }
 
 void free_3D(double ***ptr, int dim[]){
-	int i;
+	int k;
 	free(ptr[0][0]);
-	FOR(i, 0, dim[0])
-		free(ptr[i]);
+	FOR(k, 0, dim[2])
+		free(ptr[k]);
 	free(ptr);
 }
 
@@ -78,7 +78,7 @@ void read_3D(FILE *f, double ****ptr, int dim[], int l){
 	FOR(k, 0, dim[2]){
 		FOR(j, 0, dim[1]){
 			FOR(i, 0, dim[0])
-				fscanf(f, "%le", &ptr[l][i][j][k]);
+				fscanf(f, "%le", &ptr[l][k][j][i]);
 //				fscanf(f, "%le", &ptr[i][j][k][l]);
 		}
 	}
@@ -92,45 +92,21 @@ void check_double(double a, double b, const char *name){
 	}
 }
 
-void check_lo_hi_ng_dx( int lo[],  int hi[],  int ng,  double dx[],
-									  int lo2[], int hi2[], int ng2, double dx2[] ){
-	int i;
-	FOR(i, 0, 3){
-
-		if(lo[i] != lo2[i]+ng){
-			printf("lo[%d] = %d != %d = lo2[%d]\n", i, lo[i], lo2[i], i);
-			exit(1);
-		}
-		if(hi[i] != hi2[i]+ng){
-			printf("hi[%d] = %d != %d = hi2[%d]\n", i, hi[i], hi2[i], i);
-			exit(1);
-		}
-		if(!FEQ(dx[i], dx2[i])){
-			printf("dx[%d] = %le != %le = dx2[%d]\n", i, dx[i], dx2[i], i);
-			exit(1);
-		}
-	}
-	if(ng != ng2){
-		printf("ng = %d != %d = ng2\n", ng, ng2);
-		exit(1);
-	}
-}
-
 void check_4D_array( const char *name, double ****a, double ****a2, int dim[],  int la){
 
 	int i,j,k,l;
 	int exp, exp2;
 	double sig, sig2;
 	FOR(l, 0, la){
-		FOR(i, 0, dim[0]){
+		FOR(k, 0, dim[2]){
 			FOR(j, 0, dim[1]){
-				FOR(k, 0, dim[2]){
-					if(!FEQ(a[l][i][j][k], a2[l][i][j][k])){
+				FOR(i, 0, dim[0]){
+					if(!FEQ(a[l][k][j][i], a2[l][k][j][i])){
 						printf("%s[%d][%d][%d][%d] = %le != %le = %s2[%d][%d][%d][%d]\n",
-								name, l, i, j, k, a[l][i][j][k], a2[l][i][j][k], name, l, i, j, k);
-						printf("diff = %le\n", a[l][i][j][k] - a2[l][i][j][k]);
-						sig = frexp(a[l][i][j][k], &exp);
-						sig2 = frexp(a2[l][i][j][k], &exp2);
+								name, l, i, j, k, a[l][k][j][i], a2[l][k][j][i], name, l, i, j, k);
+						printf("diff = %le\n", a[l][k][j][i] - a2[l][k][j][i]);
+						sig = frexp(a[l][k][j][i], &exp);
+						sig2 = frexp(a2[l][k][j][i], &exp2);
 						if(exp!=exp2){
 							printf("exp = %d != %d = exp2\n", exp, exp2);
 							printf("sig1 = %le, sig2 = %le\n", sig, sig2);
@@ -159,33 +135,33 @@ void fill_boundary(
 	}
 
 	FOR(l, 0, NC){
-		FOR(i, NG, dim[0]+NG){
+		FOR(k, 0, NG){
 			FOR(j, NG, dim[1]+NG){
-				FOR(k, 0, NG){
-					U[l][i][j][k] = U[l][i][j][k+dim[2]];
-					U[l][i][j][k+dim[2]+NG] = U[l][i][j][k+NG];
+				FOR(i, NG, dim[0]+NG){
+					U[l][k][j][i] = U[l][k+dim[2]][j][i];
+					U[l][k+dim[2]+NG][j][i] = U[l][k+NG][j][i];
 				}
 			}
 		}
 	}
 
 	FOR(l, 0, NC){
-		FOR(i, NG, dim[0]+NG){
+		FOR(k, 0, dim_g[2]){
 			FOR(j, 0, NG){
-				FOR(k, 0, dim_g[2]){
-					U[l][i][j][k] = U[l][i][j+dim[1]][k];
-					U[l][i][j+dim[1]+NG][k] = U[l][i][j+NG][k];
+				FOR(i, NG, dim[0]+NG){
+					U[l][k][j][i] = U[l][k][j+dim[1]][i];
+					U[l][k][j+dim[1]+NG][i] = U[l][k][j+NG][i];
 				}
 			}
 		}
 	}
 
 	FOR(l, 0, NC){
-		FOR(i, 0, NG){
+		FOR(k, 0, dim_g[2]){
 			FOR(j, 0, dim_g[1]){
-				FOR(k, 0, dim_g[2]){
-					U[l][i][j][k] = U[l][i+dim[0]][j][k];
-					U[l][i+dim[0]+NG][j][k] = U[l][i+NG][j][k];
+				FOR(i, 0, NG){
+					U[l][k][j][i] = U[l][k][j][i+dim[0]];
+					U[l][k][j][i+dim[0]+NG] = U[l][k][j][i+NG];
 				}
 			}
 		}
@@ -198,7 +174,7 @@ void print_4D(FILE *f, double ****ptr, int dim[], int dl){
 		FOR(k, 0, dim[2]){
 			FOR(j, 0, dim[1]){
 				FOR(i, 0, dim[0])
-					fprintf(f, "%.17e\t", ptr[l][i][j][k]);
+					fprintf(f, "%.17e\t", ptr[l][k][j][i]);
 				fprintf(f, "\n");
 			}
 			fprintf(f, "\n");
@@ -212,7 +188,7 @@ void print_3D(FILE *f, double ***ptr, int dim[]){
 	FOR(k, 0, dim[2]){
 		FOR(j, 0, dim[1]){
 			FOR(i, 0, dim[0])
-				fprintf(f, "%.17e\t", ptr[i][j][k]);
+				fprintf(f, "%.17e\t", ptr[k][j][i]);
 			fprintf(f, "\n");
 		}
 		fprintf(f, "\n");
@@ -221,20 +197,20 @@ void print_3D(FILE *f, double ***ptr, int dim[]){
 
 void set_3D(double val, double ***ptr, int dim[]){
 	int i,j,k;
-	FOR(i, 0, dim[0]){
+	FOR(k, 0, dim[2]){
 		FOR(j, 0, dim[1]){
-			FOR(k, 0, dim[2])
-				ptr[i][j][k] = val;
+			FOR(i, 0, dim[0])
+				ptr[k][j][i] = val;
 		}
 	}
 }
 
 void number_3D(double ***ptr, int dim[]){
 	int i,j,k,count=0;
-	FOR(i, 0, dim[0]){
+	FOR(k, 0, dim[2]){
 		FOR(j, 0, dim[1]){
-			FOR(k, 0, dim[2])
-				ptr[i][j][k] = count++;
+			FOR(i, 0, dim[0])
+				ptr[k][j][i] = count++;
 		}
 	}
 }
@@ -252,7 +228,7 @@ double get_time()
 #define	plo(i)			plo[i-1]
 #define phi(i)			phi[i-1]
 #define	scale(i)		scale[i-1]
-#define	cons(i,j,k,l)	cons[l][i][j][k]
+#define	cons(i,j,k,l)	cons[l][k][j][i]
 #define ROUND17(x)		(floor((x)*1.0E17)/1.0E17)
 
 void init_data(global_const_t h, double ****cons){

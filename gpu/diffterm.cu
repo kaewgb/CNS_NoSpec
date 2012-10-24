@@ -30,7 +30,7 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+		idx = sk*g->plane_offset_g + sj*g->dim_g[2] + si;
 
 		s_q[s_qu][tidx][tidz]  =  q[idx + qu*g->comp_offset_g];
 		s_q[s_qv][tidx][tidz]  =  q[idx + qv*g->comp_offset_g];
@@ -43,7 +43,7 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 	__syncthreads();
 
 	si = bi*blockDim.x+threadIdx.x;
-	idx = (si+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	idx = sk*g->plane_offset_g + sj*g->dim_g[2] + (si+g->ng);
 	if(si < g->dim[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 		g->temp[UX][idx] =  ( g->ALP*(q(1,s_qu)-q(-1,s_qu))
@@ -80,7 +80,7 @@ __global__ void gpu_diffterm_x_stencil_kernel(
 							+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[0]);
 	}
 
-	idx = si*g->plane_offset + (sj-g->ng)*g->dim[2] + sk-g->ng;
+	idx = (sk-g->ng)*g->plane_offset + (sj-g->ng)*g->dim[2] + si;
 	if(                si < g->dim[0] &&
 		g->ng <= sj && sj < g->dim[1] + g->ng &&
 		g->ng <= sk && sk < g->dim[2] + g->ng ){
@@ -116,7 +116,7 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 	tidz = threadIdx.z;
 	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim[2]){
 
-		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + si;
 		vy[tidx][tidz]  =  g->temp[VY][idx];
 		tidx += blockDim.x;
 		si   += blockDim.x;
@@ -126,7 +126,7 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 	si = bi*blockDim.x+threadIdx.x;
 	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim[2]){
 
-		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + si;
 		wz[tidx][tidz]  =  g->temp[WZ][idx];
 
 		tidx += blockDim.x;
@@ -138,8 +138,8 @@ __global__ void gpu_diffterm_x_stencil_kernel_lv2(
 #define	wz(i)	wz[threadIdx.x+g->ng+(i)][threadIdx.z]
 
 	si = bi*blockDim.x+threadIdx.x;
-	idx 	= si*g->plane_offset + sj*g->dim[2] + sk;
-	idx_g 	= (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+	idx 	= sk*g->plane_offset + sj*g->dim[2] + si;
+	idx_g 	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		g->temp[VYX][idx] = ( g->ALP*(vy(1)-vy(-1))
@@ -183,7 +183,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 
 	tidy = threadIdx.y;
 	tidz = threadIdx.z;
-	idx = si*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	idx = sk*g->plane_offset_g + sj*g->dim_g[2] + si;
 	if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 		s_q[s_qu][tidy][tidz]  =  q[idx + qu*g->comp_offset_g];
 		s_q[s_qv][tidy][tidz]  =  q[idx + qv*g->comp_offset_g];
@@ -198,7 +198,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
 #define	q(i, comp)	s_q[comp][threadIdx.y+g->ng+(i)][threadIdx.z]
 
-		idx = si*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + sk;
+		idx = sk*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + si;
 		if(si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim_g[2]){
 
 			g->temp[UY][idx] =  ( g->ALP*(q(1,s_qu)-q(-1,s_qu))
@@ -235,7 +235,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[1]);
 		}
 
-		idx = (si-g->ng)*g->plane_offset + sj*g->dim[2] + sk-g->ng;
+		idx = (sk-g->ng)*g->plane_offset + sj*g->dim[2] + si-g->ng;
 		if( g->ng <= si && si < g->dim[0] + g->ng &&
 			               sj < g->dim[1] &&
 			g->ng <= sk && sk < g->dim[2] + g->ng ){
@@ -250,7 +250,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 #undef	q
 #define	q(i, comp)	s_q[comp][threadIdx.y][threadIdx.z+g->ng+(i)]
 
-		idx = si*g->plane_offset_g + sj*g->dim_g[2] + (sk+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + si;
 		if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
 
 			g->temp[UZ][idx] =  ( g->ALP*(q(1,s_qu)-q(-1,s_qu))
@@ -287,7 +287,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 								+ g->OFF4*(q(4,s_qw)+q(-4,s_qw)))*SQR(g->dxinv[2]);
 		}
 
-		idx = (si-g->ng)*g->plane_offset + (sj-g->ng)*g->dim[2] + sk;
+		idx = sk*g->plane_offset + (sj-g->ng)*g->dim[2] + (si-g->ng);
 		if( g->ng <= si && si < g->dim[0] + g->ng &&
 			g->ng <= sj && sj < g->dim[1] + g->ng &&
 						   sk < g->dim[2] ){
@@ -327,7 +327,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 
 	tidy = threadIdx.y;
 	tidz = threadIdx.z;
-	idx = (si+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + sk;
+	idx = sk*g->plane_offset_g + sj*g->dim_g[2] + (si+g->ng);
 	if(si < g->dim[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 		ux[tidy][tidz]  =  g->temp[UX][idx];
 		wz[tidy][tidz]  =  g->temp[WZ][idx];
@@ -340,7 +340,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
 
-		idx = si*g->plane_offset + sj*g->dim[2] + sk;
+		idx = sk*g->plane_offset + sj*g->dim[2] + si;
 		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 			g->temp[UXY][idx] = ( g->ALP*(ux(1)-ux(-1))
@@ -353,7 +353,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 								+ g->GAM*(wz(3)-wz(-3))
 								+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[1];
 
-			idx_g = (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+			idx_g = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
 
 			difflux[idx + imy*g->comp_offset] = 	g->eta * ( g->temp[VXX][idx_g] +
 												g->FourThirds * g->temp[VYY][idx_g] +
@@ -366,8 +366,8 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 #define	ux(i)	ux[threadIdx.y+g->ng][threadIdx.z+g->ng+(i)]
 #define vy(i)	vy[threadIdx.y+g->ng][threadIdx.z+g->ng+(i)]
 
-	idx = si*g->plane_offset + sj*g->dim[2] + sk;
-	idx_g = (si+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (sk+g->ng);
+	idx = sk*g->plane_offset + sj*g->dim[2] + si;
+	idx_g = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
 
 		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){

@@ -3,9 +3,9 @@
 #include "header.h"
 #include "util.h"
 
-#define	q(i,j,k,l)		q[l][i][j][k]
-#define cons(i,j,k,l)	cons[l][i][j][k]
-#define flux(i,j,k,l)	flux[l][i-ng][j-ng][k-ng]
+#define	q(i,j,k,l)		q[l][k][j][i]
+#define cons(i,j,k,l)	cons[l][k][j][i]
+#define flux(i,j,k,l)	flux[l][k-ng][j-ng][i-ng]
 #define dxinv(i)		dxinv[i-1]
 
 static const double ALP	=  0.8E0;
@@ -32,9 +32,9 @@ void hypterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				unp1 = q(i+1,j,k,qu);
 				unp2 = q(i+2,j,k,qu);
@@ -89,9 +89,9 @@ void hypterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,unp1,unp2,unp3,unp4,unm1,unm2,unm3,unm4)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				unp1 = q(i,j+1,k,qv);
 				unp2 = q(i,j+2,k,qv);
@@ -146,9 +146,9 @@ void hypterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,unp1,unp2,ump3,unp4,unm1,unm2,unm3,unm4)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				unp1 = q(i,j,k+1,qw);
 				unp2 = q(i,j,k+2,qw);

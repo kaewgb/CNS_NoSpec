@@ -6,18 +6,18 @@
 #define	lo(i)		lo[i]
 #define	hi(i)		hi[i]
 #define dxinv(i)	dxinv[i-1]
-#define	q(i,j,k,l)	q[l][i][j][k]
-#define	ux(i,j,k)	c.cpu_temp[UX][i][j][k]
-#define	vx(i,j,k)	c.cpu_temp[VX][i][j][k]
-#define	wx(i,j,k)	c.cpu_temp[WX][i][j][k]
-#define	uy(i,j,k)	c.cpu_temp[UY][i][j][k]
-#define	vy(i,j,k)	c.cpu_temp[VY][i][j][k]
-#define	wy(i,j,k)	c.cpu_temp[WY][i][j][k]
-#define	uz(i,j,k)	c.cpu_temp[UZ][i][j][k]
-#define	vz(i,j,k)	c.cpu_temp[VZ][i][j][k]
-#define	wz(i,j,k)	c.cpu_temp[WZ][i][j][k]
+#define	q(i,j,k,l)	q[l][k][j][i]
+#define	ux(i,j,k)	c.cpu_temp[UX][k][j][i]
+#define	vx(i,j,k)	c.cpu_temp[VX][k][j][i]
+#define	wx(i,j,k)	c.cpu_temp[WX][k][j][i]
+#define	uy(i,j,k)	c.cpu_temp[UY][k][j][i]
+#define	vy(i,j,k)	c.cpu_temp[VY][k][j][i]
+#define	wy(i,j,k)	c.cpu_temp[WY][k][j][i]
+#define	uz(i,j,k)	c.cpu_temp[UZ][k][j][i]
+#define	vz(i,j,k)	c.cpu_temp[VZ][k][j][i]
+#define	wz(i,j,k)	c.cpu_temp[WZ][k][j][i]
 
-#define difflux(i,j,k,l)	difflux[l][i][j][k]
+#define difflux(i,j,k,l)	difflux[l][k][j][i]
 
 static const double ALP	=  0.8E0;
 static const double BET	= -0.2E0;
@@ -56,19 +56,19 @@ void diffterm(
 		eta = c.eta;		alam = c.alam;
 	}
 
-	DO(i, lo[0]-ng, hi[0]-ng){
+	DO(k, lo[2]-ng, hi[2]-ng){
 		DO(j, lo[1]-ng, hi[1]-ng){
-			DO(k, lo[2]-ng, hi[2]-ng)
-				difflux[irho][i][j][k] = 0.0E0;
+			DO(i, lo[0]-ng, hi[0]-ng)
+				difflux[irho][k][j][i] = 0.0E0;
 		}
 	}
 
 //	#pragma omp parallel private(i,j,k)
 	{
 //		#pragma omp for nowait
-		DO(i, lo[0], hi[0]){
+		DO(k, lo[2]-ng, hi[2]+ng){
 			DO(j, lo[1]-ng, hi[1]+ng){
-				DO(k, lo[2]-ng, hi[2]+ng){
+				DO(i, lo[0], hi[0]){
 
 					ux(i,j,k)=
 						   (ALP*(q(i+1,j,k,qu)-q(i-1,j,k,qu))
@@ -92,10 +92,10 @@ void diffterm(
 			}
 		}
 
-		#pragma omp for nowait
-		DO(i, lo[0]-ng, hi[0]+ng){
+//		#pragma omp for nowait
+		DO(k, lo[2]-ng, hi[2]+ng){
 			DO(j, lo[1], hi[1]){
-				DO(k, lo[2]-ng, hi[2]+ng){
+				DO(i, lo[0]-ng, hi[0]+ng){
 
 					uy(i,j,k)=
 						   (ALP*(q(i,j+1,k,qu)-q(i,j-1,k,qu))
@@ -120,9 +120,9 @@ void diffterm(
 		}
 
 //		#pragma omp for
-		DO(i, lo[0]-ng, hi[0]+ng){
+		DO(k, lo[2], hi[2]){
 			DO(j, lo[1]-ng, hi[1]+ng){
-				DO(k, lo[2], hi[2]){
+				DO(i, lo[0]-ng, hi[0]+ng){
 
 					uz(i,j,k)=
 						   (ALP*(q(i,j,k+1,qu)-q(i,j,k-1,qu))
@@ -148,9 +148,9 @@ void diffterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,uxx,uyy,uzz,vyx,wzx)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				uxx = (CENTER*q(i,j,k,qu)
 					  + OFF1*(q(i+1,j,k,qu)+q(i-1,j,k,qu))
@@ -187,9 +187,9 @@ void diffterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,vxx,vyy,vzz,uxy,wzy)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				vxx = (CENTER*q(i,j,k,qv)
 					  + OFF1*(q(i+1,j,k,qv)+q(i-1,j,k,qv))
@@ -226,9 +226,9 @@ void diffterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,wxx,wyy,wzz,uxz,vyz)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				wxx = (CENTER*q(i,j,k,qw)
 					  + OFF1*(q(i+1,j,k,qw)+q(i-1,j,k,qw))
@@ -265,9 +265,9 @@ void diffterm(
 	}
 
 //	#pragma omp parallel for private(i,j,k,txx,tyy,tzz,divu,tauxx,tauyy,tauzz,tauxy,tauxz,tauyz,mechwork)
-	DO(i, lo[0], hi[0]){
+	DO(k, lo[2], hi[2]){
 		DO(j, lo[1], hi[1]){
-			DO(k, lo[2], hi[2]){
+			DO(i, lo[0], hi[0]){
 
 				txx = (CENTER*q(i,j,k,qt)
 					  + OFF1*(q(i+1,j,k,qt)+q(i-1,j,k,qt))

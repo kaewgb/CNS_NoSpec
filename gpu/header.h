@@ -237,19 +237,7 @@ void advance_multistep_test(
 	double *d_D,
 	double *d_F
 );
-extern void advance_hybrid_test(
-	global_const_t h_const, 	// i: Global struct containing application parameters
-	global_const_t *d_const		// i: Device pointer to global struct containing application paramters
-);
-extern void advance_hybrid_test(
-	global_const_t h_const, 	// i: Global struct containing application parameters
-	global_const_t *d_const, 	// i: Device pointer to global struct containing application paramters
-	double ****U,
-	double ****Unew,
-	double ****Q,
-	double ****D,
-	double ****F
-);
+
 extern void advance(
 	global_const_t h_const,
 	double ****U,		// i/o

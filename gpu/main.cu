@@ -33,6 +33,7 @@ int main(int argc, char *argv[]){
 	//! Allocation
 	//!
 	allocate_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
+//	allocate_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, true, true); // For hybrid
 
 	//!
 	//! Advance
@@ -65,6 +66,7 @@ int main(int argc, char *argv[]){
 	//!	Free Allocations
 	//!
 	free_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F);
+//	free_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, true, true); // For hybrid
 
 	return 0;
 

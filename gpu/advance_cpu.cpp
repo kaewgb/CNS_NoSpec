@@ -69,10 +69,10 @@ void advance(
     //! Calculate U at time N+1/3.
     //!
 	FOR(l, 0, nc){
-		FOR(i, 0, dim[0]){
+		FOR(k, 0, dim[2]){
 			FOR(j, 0, dim[1]){
-				FOR(k, 0, dim[2]){
-					Unew[l][i+ng][j+ng][k+ng] = U[l][i+ng][j+ng][k+ng] + dt*(D[l][i][j][k] + F[l][i][j][k]);
+				FOR(i, 0, dim[0]){
+					Unew[l][k+ng][j+ng][i+ng] = U[l][k+ng][j+ng][i+ng] + dt*(D[l][k][j][i] + F[l][k][j][i]);
 				}
 			}
 		}
@@ -102,12 +102,12 @@ void advance(
     //! Calculate U at time N+2/3.
     //!
     FOR(l, 0, nc){
-		FOR(i, 0, dim[0]){
-			FOR(j, 0, dim[0]){
-				FOR(k, 0, dim[0]){
-					Unew[l][i+ng][j+ng][k+ng] =
-						ThreeQuarters *  U[l][i+ng][j+ng][k+ng] +
-						OneQuarter    * (Unew[l][i+ng][j+ng][k+ng] + dt*(D[l][i][j][k] + F[l][i][j][k]));
+    	FOR(k, 0, dim[2]){
+			FOR(j, 0, dim[1]){
+				FOR(i, 0, dim[0]){
+					Unew[l][k+ng][j+ng][i+ng] =
+						ThreeQuarters *  U[l][k+ng][j+ng][i+ng] +
+						OneQuarter    * (Unew[l][k+ng][j+ng][i+ng] + dt*(D[l][k][j][i] + F[l][k][j][i]));
 				}
 			}
 		}
@@ -137,12 +137,12 @@ void advance(
     //! Calculate U at time N+1.
     //!
     FOR(l, 0, nc){
-		FOR(i, 0, dim[0]){
-			FOR(j, 0, dim[0]){
-				FOR(k, 0, dim[0]){
-					U[l][i+ng][j+ng][k+ng] =
-						OneThird    *  U[l][i+ng][j+ng][k+ng] +
-						TwoThirds   * (Unew[l][i+ng][j+ng][k+ng] + dt*(D[l][i][j][k] + F[l][i][j][k]));
+    	FOR(k, 0, dim[2]){
+			FOR(j, 0, dim[1]){
+				FOR(i, 0, dim[0]){
+					U[l][k+ng][j+ng][i+ng] =
+						OneThird    *  U[l][k+ng][j+ng][i+ng] +
+						TwoThirds   * (Unew[l][k+ng][j+ng][i+ng] + dt*(D[l][k][j][i] + F[l][k][j][i]));
 				}
 			}
 		}

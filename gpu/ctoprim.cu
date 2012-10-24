@@ -26,9 +26,9 @@ __global__ void gpu_ctoprim_kernel(
 	double rhoinv, eint, c, courx, coury, courz;
 
 	idx = blockIdx.x * blockDim.x + threadIdx.x;
-	i = idx / (g->dim_g[2] * g->dim_g[1]);
-	j = (idx / g->dim_g[2]) % g->dim_g[1];
-	k = idx % g->dim_g[2];
+	k =  idx / (g->dim_g[0] * g->dim_g[1]);
+	j = (idx / g->dim_g[0]) % g->dim_g[1];
+	i =  idx % g->dim_g[0];
 
 	loffset = g->dim_g[0] * g->dim_g[1] * g->dim_g[2];
 
@@ -81,9 +81,9 @@ __global__ void gpu_ctoprim_kernel(
 	double rhoinv, eint, c, courx, coury, courz;
 
 	idx = blockIdx.x * blockDim.x + threadIdx.x;
-	i = idx / (g->dim_g[2] * g->dim_g[1]);
-	j = (idx / g->dim_g[2]) % g->dim_g[1];
-	k = idx % g->dim_g[2];
+	k =  idx / (g->dim_g[0] * g->dim_g[1]);
+	j = (idx / g->dim_g[0]) % g->dim_g[1];
+	i =  idx % g->dim_g[0];
 
 	loffset = g->dim_g[0] * g->dim_g[1] * g->dim_g[2];
 
@@ -170,9 +170,9 @@ void ctoprim (
     const double CV     = 8.3333333333E6;
 
 //    #pragma omp parallel for private(i, j, k, eint, rhoinv)
-    DO(i, h.lo[0]-h.ng, h.hi[0]+h.ng){
+	DO(k, h.lo[2]-h.ng, h.hi[2]+h.ng){
         DO(j, h.lo[1]-h.ng, h.hi[1]+h.ng){
-            DO(k, h.lo[2]-h.ng, h.hi[2]+h.ng){
+            DO(i, h.lo[0]-h.ng, h.hi[0]+h.ng){
 
 				rhoinv     = 1.0E0/u(i,j,k,1);
 				q(i,j,k,1) = u(i,j,k,1);
@@ -189,9 +189,9 @@ void ctoprim (
     }
 
 //    #pragma omp parallel for private(i, j, k, c, courx, coury, courz) reduction(max: courmx, courmy, courmz)
-	DO(i, h.lo[0], h.hi[0]){
+	DO(k, h.lo[2], h.hi[2]){
 		DO(j, h.lo[1], h.hi[1]){
-			DO(k, h.lo[2], h.hi[2]){
+			DO(i, h.lo[0], h.hi[0]){
 
 				c     = sqrt(GAMMA*q(i,j,k,5)/q(i,j,k,1));
 
@@ -225,10 +225,9 @@ void ctoprim (
     const double CV     = 8.3333333333E6;
 
 //    #pragma omp parallel for private(i, j, k, eint, rhoinv)
-    DO(i, h.lo[0]-h.ng, h.hi[0]+h.ng){
+    DO(k, h.lo[2]-h.ng, h.hi[2]+h.ng){
         DO(j, h.lo[1]-h.ng, h.hi[1]+h.ng){
-            DO(k, h.lo[2]-h.ng, h.hi[2]+h.ng){
-
+			DO(i, h.lo[0]-h.ng, h.hi[0]+h.ng){
 				rhoinv     = 1.0E0/u(i,j,k,1);
 				q(i,j,k,1) = u(i,j,k,1);
 				q(i,j,k,2) = u(i,j,k,2)*rhoinv;
@@ -247,107 +246,4 @@ void ctoprim (
 #undef q
 #undef dx
 
-void ctoprim_test(
-	global_const_t h_const, // i: Global struct containing application parameters
-	global_const_t *d_const	// i: Device pointer to global struct containing application paramters
-){
-
-	int i, l, dummy, dim_g[3];
-	int lo[3], hi[3];
-	int ng=4;
-	double ****u, ****q;
-	double dx[3], courno;
-
-	int ng2;
-	int lo2[3], hi2[3];
-	double ****u2, ****q2;
-	double *d_u, *d_q;
-	double dx2[3], courno2;
-
-	FILE *fin = fopen("../testcases/ctoprim_input", "r");
-	FILE *fout = fopen("../testcases/ctoprim_output", "r");
-	if(fin == NULL || fout == NULL){
-		printf("Invalid input file\n");
-		exit(1);
-	}
-
-	// Scanning input
-	fscanf(fin, "%d %d %d\n", &lo[0], &lo[1], &lo[2]);
-	fscanf(fin, "%d %d %d\n", &hi[0], &hi[1], &hi[2]);
-
-	lo[0] += ng; 	lo[1] += ng; 	lo[2] += ng;
-	hi[0] += ng; 	hi[1] += ng; 	hi[2] += ng;
-
-	FOR(i, 0, 3)
-		dim_g[i] = hi[i]-lo[i]+1 + 2*ng;
-	printf("dim_g: %d %d %d\n", dim_g[0], dim_g[1], dim_g[2]);
-
-	allocate_4D(u, 	dim_g, 5); 	// [40][40][40][5]
-	allocate_4D(q, 	dim_g, 6); 	// [40][40][40][6]
-	allocate_4D(u2, dim_g, 5); 	// [40][40][40][5]
-	allocate_4D(q2, dim_g, 6); 	// [40][40][40][6]
-
-	gpu_allocate_4D(d_u, dim_g, 5);
-	gpu_allocate_4D(d_q, dim_g, 6);
-
-	// TODO: rearrange array to [l][i][j][k]
-	FOR(l, 0, 5)
-		read_3D(fin, u, dim_g, l);
-	FOR(l, 0, 6)
-		read_3D(fin, q, dim_g, l);
-
-	fscanf(fin, "%le %le %le\n", &dx[0], &dx[1], &dx[2]);
-	fscanf(fin, "%d\n", &dummy);
-	fscanf(fin, "%le\n", &courno);
-	fclose(fin);
-
-	gpu_copy_from_host_4D(d_u, u, dim_g, 5);
-	gpu_copy_from_host_4D(d_q, q, dim_g, 6);
-
-	printf("Applying ctoprim()...\n");
-	gpu_ctoprim(h_const, d_const, d_u, d_q, courno);
-//	ctoprim(lo, hi, u, q, dx, ng, courno);
-	gpu_copy_to_host_4D(u, d_u, dim_g, 5);
-	gpu_copy_to_host_4D(q, d_q, dim_g, 6);
-
-	// Scanning output to check
-	fscanf(fout, "%d %d %d\n", &lo2[0], &lo2[1], &lo2[2]);
-	fscanf(fout, "%d %d %d\n", &hi2[0], &hi2[1], &hi2[2]);
-	FOR(l, 0, 5)
-		read_3D(fout, u2, dim_g, l);
-	FOR(l, 0, 6)
-		read_3D(fout, q2, dim_g, l);
-
-	fscanf(fout, "%le %le %le\n", &dx2[0], &dx2[1], &dx2[2]);
-	fscanf(fout, "%d\n", &ng2);
-	fscanf(fout, "%le\n", &courno2);
-	fclose(fout);
-
-	// Checking...
-	double u_max=-1.0;
-	int j,k;
-	FOR(l, 0, 5){
-		FOR(i, 0, dim_g[0]){
-			FOR(j, 0, dim_g[1]){
-				FOR(k, 0, dim_g[2]){
-					if(u_max < u[l][i][j][k])
-						u_max = u[l][i][j][k];
-				}
-			}
-		}
-	}
-	printf("u_max = %le\n", u_max);
-
-	check_lo_hi_ng_dx(lo, hi, ng, dx, lo2, hi2, ng2, dx2);
-	check_double(courno, courno2, "courno");
-	check_4D_array("u", u, u2, dim_g, 5);
-	check_4D_array("q", q, q2, dim_g, 6);
-	printf("Correct!\n");
-
-	gpu_free_4D(d_u);
-	gpu_free_4D(d_q);
-
-	free_4D(u,  dim_g, 5);		free_4D(q,  dim_g, 6);
-	free_4D(u2, dim_g, 5);		free_4D(q2, dim_g, 6);
-}
 

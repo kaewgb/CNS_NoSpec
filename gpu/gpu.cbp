@@ -32,6 +32,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="3d.cu" />
 		<Unit filename="Makefile" />
 		<Unit filename="advance.cu">
 			<Option virtualFolder="CUDA Sources/" />
