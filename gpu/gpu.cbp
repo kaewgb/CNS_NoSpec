@@ -61,6 +61,9 @@
 			<Option link="0" />
 		</Unit>
 		<Unit filename="header.h" />
+		<Unit filename="hybrid.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="hypterm.cu">
 			<Option compile="1" />
 			<Option link="1" />
