@@ -10,6 +10,8 @@ GPU_OBJS	= advance.o advance_hybrid.o ctoprim.o diffterm.o hypterm.o hypterm_mer
 HEADERS		= header.h util.h
 THRUST		= $(HOME)/software/
 
+HYBRID		= hybrid
+
 
 CFLAGS		=
 NVCCFLAGS	= -I$(THRUST) -arch=sm_20 --fmad=false --ptxas-options=-v --disable-warnings
@@ -18,7 +20,8 @@ $(GPU):			main.o $(GPU_OBJS)
 				$(NVCC) -o $@ $^
 $(CPU):			cpu.o $(CPU_OBJS)
 				$(NVCC) -o $@ $^
-
+$(HYBRID):		hybrid.o $(GPU_OBJS)
+				$(NVCC) -o $@ $^
 
 ddiff:		ddiff.cpp
 			$(CC) $(CFLAGS) -o $@ $<
