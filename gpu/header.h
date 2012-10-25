@@ -190,6 +190,24 @@ extern void gpu_diffterm(
 	double *d_q,				// i:
 	double *flux				// o:
 );
+extern void gpu_diffterm_lv1(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *d_difflux				// o:
+);
+extern void gpu_diffterm_lv2(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *d_difflux				// o:
+);
+extern void gpu_diffterm2(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *d_difflux				// o:
+);
 
 
 extern void advance_test();

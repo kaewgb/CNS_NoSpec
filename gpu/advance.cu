@@ -163,8 +163,13 @@ void gpu_advance(
     //!
     //! Calculate D at time N.
     //!
-	gpu_diffterm(h_const, d_const, d_Q, d_D);
-
+//    double ****Q;
+//    allocate_4D(Q, h_const.dim_g, h_const.nc+1);
+//    number_3D(Q[qu], h_const.dim_g);
+//    gpu_copy_from_host_4D(d_Q, Q, h_const.dim_g, h_const.nc+1);
+//	gpu_diffterm_lv1(h_const, d_const, d_Q, d_D);
+	gpu_diffterm2(h_const, d_const, d_Q, d_D);
+	gpu_diffterm_lv2(h_const, d_const, d_Q, d_D);
 
     //!
     //! Calculate F at time N.
@@ -189,7 +194,9 @@ void gpu_advance(
     //!
     //! Calculate D at time N+1/3.
     //!
-	gpu_diffterm(h_const, d_const, d_Q, d_D);
+//	gpu_diffterm(h_const, d_const, d_Q, d_D);
+	gpu_diffterm2(h_const, d_const, d_Q, d_D);
+	gpu_diffterm_lv2(h_const, d_const, d_Q, d_D);
 
 	//!
     //! Calculate F at time N+1/3.
@@ -214,7 +221,9 @@ void gpu_advance(
     //!
     //! Calculate D at time N+2/3.
     //!
-    gpu_diffterm(h_const, d_const, d_Q, d_D);
+//    gpu_diffterm(h_const, d_const, d_Q, d_D);
+	gpu_diffterm2(h_const, d_const, d_Q, d_D);
+	gpu_diffterm_lv2(h_const, d_const, d_Q, d_D);
 
     //!
     //! Calculate F at time N+2/3.

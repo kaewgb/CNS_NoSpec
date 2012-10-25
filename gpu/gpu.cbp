@@ -55,6 +55,9 @@
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="diffterm2.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="diffterm_cpu.cpp" />
 		<Unit filename="extract.cpp">
 			<Option compile="0" />

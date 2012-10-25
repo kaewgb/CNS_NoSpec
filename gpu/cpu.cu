@@ -61,7 +61,7 @@ int main(int argc, char *argv[]){
 	//!
 	//!	Free Allocations
 	//!
-	free_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, false);
+	free_variables(U, Unew, Q, D, F, d_U, d_Unew, d_Q, d_D, d_F, false, true);
 
 	return 0;
 

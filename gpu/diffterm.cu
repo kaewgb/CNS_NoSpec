@@ -201,6 +201,7 @@ __global__ void gpu_diffterm_yz_stencil_kernel(
 		idx = sk*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + si;
 		if(si < g->dim_g[0] && sj < g->dim[1] && sk < g->dim_g[2]){
 
+//			g->temp[UY][idx] =  q(0, s_qu);
 			g->temp[UY][idx] =  ( g->ALP*(q(1,s_qu)-q(-1,s_qu))
 								+ g->BET*(q(2,s_qu)-q(-2,s_qu))
 								+ g->GAM*(q(3,s_qu)-q(-3,s_qu))
@@ -450,6 +451,73 @@ void gpu_diffterm(
     cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
 
 	gpu_diffterm_yz_stencil_kernel<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_difflux);
+
+	h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
+	h_kc.gridDim_y = h_const.dim[1];
+	h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
+	h_kc.gridDim_plane_xz = h_kc.gridDim_x * h_kc.gridDim_z;
+    h_kc.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    grid_dim = h_kc.gridDim_plane_xz * h_kc.gridDim_y;
+    cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
+
+	gpu_diffterm_x_stencil_kernel_lv2<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_difflux);
+
+	h_kc.gridDim_x = h_const.dim_g[0];
+	h_kc.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
+	h_kc.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
+	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
+    h_kc.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    h_kc.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+	grid_dim = h_kc.gridDim_x * h_kc.gridDim_plane_yz;
+    cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
+
+	gpu_diffterm_yz_stencil_kernel_lv2<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_difflux);
+
+}
+void gpu_diffterm_lv1(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *d_difflux				// o:
+){
+	int grid_dim;
+	kernel_const_t h_kc;
+
+	dim3 block_dim_x_stencil(BLOCK_DIM_G, 1, BLOCK_DIM);
+	h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
+	h_kc.gridDim_y = h_const.dim_g[1];
+	h_kc.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM);
+	h_kc.gridDim_plane_xz = h_kc.gridDim_x * h_kc.gridDim_z;
+    h_kc.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    grid_dim = h_kc.gridDim_plane_xz * h_kc.gridDim_y;
+    cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
+
+	gpu_diffterm_x_stencil_kernel<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_difflux);
+
+	dim3 block_dim_yz_stencil(1, BLOCK_DIM, BLOCK_DIM);
+	h_kc.gridDim_x = h_const.dim_g[0];
+	h_kc.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
+	h_kc.gridDim_z = CEIL(h_const.dim_g[2], BLOCK_DIM_G);
+	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
+    h_kc.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+    h_kc.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
+	grid_dim = h_kc.gridDim_x * h_kc.gridDim_plane_yz;
+    cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
+
+	gpu_diffterm_yz_stencil_kernel<<<grid_dim, block_dim_yz_stencil>>>(d_const, d_q, d_difflux);
+}
+
+void gpu_diffterm_lv2(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_q,				// i:
+	double *d_difflux				// o:
+){
+	int grid_dim;
+	kernel_const_t h_kc;
+
+	dim3 block_dim_x_stencil(BLOCK_DIM_G, 1, BLOCK_DIM);
+	dim3 block_dim_yz_stencil(1, BLOCK_DIM, BLOCK_DIM);
 
 	h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
 	h_kc.gridDim_y = h_const.dim[1];
