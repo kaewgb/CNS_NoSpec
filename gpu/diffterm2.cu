@@ -101,6 +101,7 @@ __global__ void gpu_diffterm_lv1_kernel(
 	sj = blockIdx.y*blockDim.y + threadIdx.y;
 	sk = blockIdx.z;
 
+	__syncthreads();
 	for(sj = blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy<blockDim.y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
 		for(si = blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx<blockDim.x+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
 			if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
@@ -244,5 +245,6 @@ void gpu_diffterm2(
 	dim3 grid_dim(CEIL(h_const.dim_g[0], BLOCK_DIM), CEIL(h_const.dim_g[1], BLOCK_DIM), h_const.dim_g[2]);
 	dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 	gpu_diffterm_lv1_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
+//	gpu_diffterm_lv1_xy_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
 //	gpu_diffterm_lv2_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
 }

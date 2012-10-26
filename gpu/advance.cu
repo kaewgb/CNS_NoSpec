@@ -195,6 +195,7 @@ void gpu_advance(
     //! Calculate D at time N+1/3.
     //!
 //	gpu_diffterm(h_const, d_const, d_Q, d_D);
+//	gpu_diffterm_lv1(h_const, d_const, d_Q, d_D);
 	gpu_diffterm2(h_const, d_const, d_Q, d_D);
 	gpu_diffterm_lv2(h_const, d_const, d_Q, d_D);
 
@@ -222,6 +223,7 @@ void gpu_advance(
     //! Calculate D at time N+2/3.
     //!
 //    gpu_diffterm(h_const, d_const, d_Q, d_D);
+//	gpu_diffterm_lv1(h_const, d_const, d_Q, d_D);
 	gpu_diffterm2(h_const, d_const, d_Q, d_D);
 	gpu_diffterm_lv2(h_const, d_const, d_Q, d_D);
 
