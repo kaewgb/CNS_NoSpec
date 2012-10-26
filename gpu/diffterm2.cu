@@ -235,6 +235,151 @@ __global__ void gpu_diffterm_lv1_kernel(
 #undef	q
 }
 
+__global__ void gpu_diffterm_lv2_kernel(
+	global_const_t *g,			// i: Global struct containing application parameters
+	double *q,					// i:
+	double *difflux				// o:
+){
+	int si, sj, sk;
+	int idx, idx_g, tidx, tidy, tidz;
+	double divu, tauxx, tauyy, tauzz, tauxy, tauxz, tauyz, mechwork;
+
+	__shared__ double ux[BLOCK_DIM+NG+NG][BLOCK_DIM+NG+NG];
+	__shared__ double wz[BLOCK_DIM+NG+NG][BLOCK_DIM+NG+NG];
+	__shared__ double vy[BLOCK_DIM+NG+NG][BLOCK_DIM+NG+NG];
+
+
+#define	ux(i)	ux[threadIdx.y+g->ng+(i)][threadIdx.x]
+#define	vy(i)	vy[threadIdx.y+g->ng+(i)][threadIdx.x]
+
+	/*** XZ ***/
+	si = blockIdx.x*blockDim.x + threadIdx.x;
+	sk = blockIdx.y*blockDim.y + threadIdx.y;
+	sj = blockIdx.z;
+
+	tidx = threadIdx.x;
+	tidz = threadIdx.y;
+	while(tidz < blockDim.y+NG+NG && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+		idx = sk*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+
+		ux[tidz][tidx] = g->temp[UX][idx];
+		vy[tidz][tidx] = g->temp[VY][idx];
+
+		tidz += blockDim.y;
+		sk	 += blockDim.y;
+	}
+	__syncthreads();
+
+	sk 		= blockIdx.y*blockDim.y + threadIdx.y;
+	idx		= sk*g->plane_offset + sj*g->dim[0] + si;
+	idx_g	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+
+		g->temp[UXZ][idx] = ( g->ALP*(ux(1)-ux(-1))
+							+ g->BET*(ux(2)-ux(-2))
+							+ g->GAM*(ux(3)-ux(-3))
+							+ g->DEL*(ux(4)-ux(-4)))*g->dxinv[2];
+
+		g->temp[VYZ][idx] = ( g->ALP*(vy(1)-vy(-1))
+							+ g->BET*(vy(2)-vy(-2))
+							+ g->GAM*(vy(3)-vy(-3))
+							+ g->DEL*(vy(4)-vy(-4)))*g->dxinv[2];
+
+		difflux[idx + imz*g->comp_offset] = 	g->eta * ( g->temp[WXX][idx_g] +
+														   g->temp[WYY][idx_g] +
+														   g->FourThirds * g->temp[WZZ][idx_g] +
+												g->OneThird*(g->temp[UXZ][idx]+g->temp[VYZ][idx]));
+	}
+#undef	ux
+#undef 	vy
+
+	/*** XY ***/
+	si = blockIdx.x*blockDim.x + threadIdx.x;
+	sj = blockIdx.y*blockDim.y + threadIdx.y;
+	sk = blockIdx.z;
+
+	__syncthreads();
+	for(sj = blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy<blockDim.y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
+		for(si = blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx<blockDim.x+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
+			if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
+				idx = (sk+g->ng)*g->plane_offset_g + sj*g->dim_g[0] + si;
+				ux[tidy][tidx] = g->temp[UX][idx];
+				wz[tidy][tidx] = g->temp[WZ][idx];
+				vy[tidy][tidx] = g->temp[VY][idx];
+			}
+		}
+	}
+	__syncthreads();
+
+	si 		= blockIdx.x*blockDim.x + threadIdx.x;
+	sj 		= blockIdx.y*blockDim.y + threadIdx.y;
+	idx 	= sk*g->plane_offset + sj*g->dim[0] + si;
+	idx_g	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+
+#define ux(i)	ux[threadIdx.y+g->ng+(i)][threadIdx.x+g->ng]
+#define	wz(i)	wz[threadIdx.y+g->ng+(i)][threadIdx.x+g->ng]
+
+		g->temp[UXY][idx] = ( g->ALP*(ux(1)-ux(-1))
+							+ g->BET*(ux(2)-ux(-2))
+							+ g->GAM*(ux(3)-ux(-3))
+							+ g->DEL*(ux(4)-ux(-4)))*g->dxinv[1];
+
+		g->temp[WZY][idx] = ( g->ALP*(wz(1)-wz(-1))
+							+ g->BET*(wz(2)-wz(-2))
+							+ g->GAM*(wz(3)-wz(-3))
+							+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[1];
+
+		difflux[idx + imy*g->comp_offset] = 	g->eta * ( g->temp[VXX][idx_g] +
+												g->FourThirds * g->temp[VYY][idx_g] +
+																g->temp[VZZ][idx_g] +
+												g->OneThird*(g->temp[UXY][idx]+g->temp[WZY][idx]));
+#undef	wz
+#define	vy(i)	vy[threadIdx.y+g->ng][threadIdx.x+g->ng+(i)]
+#define	wz(i)	wz[threadIdx.y+g->ng][threadIdx.x+g->ng+(i)]
+
+		g->temp[VYX][idx] = ( g->ALP*(vy(1)-vy(-1))
+							+ g->BET*(vy(2)-vy(-2))
+							+ g->GAM*(vy(3)-vy(-3))
+							+ g->DEL*(vy(4)-vy(-4)))*g->dxinv[0];
+
+		g->temp[WZX][idx] = ( g->ALP*(wz(1)-wz(-1))
+							+ g->BET*(wz(2)-wz(-2))
+							+ g->GAM*(wz(3)-wz(-3))
+							+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[0];
+
+		difflux[idx + imx*g->comp_offset] =  	 g->eta *
+											   ( g->FourThirds*g->temp[UXX][idx_g] +
+															   g->temp[UYY][idx_g] +
+															   g->temp[UZZ][idx_g] +
+												 g->OneThird *(g->temp[VYX][idx] + g->temp[WZX][idx]));
+
+		difflux[idx + irho*g->comp_offset] = 0.0;
+
+		divu  = g->TwoThirds*(ux(0)+vy(0)+wz(0));
+		tauxx = 2.E0*ux(0) - divu;
+		tauyy = 2.E0*vy(0) - divu;
+		tauzz = 2.E0*wz(0) - divu;
+		tauxy = g->temp[UY][idx_g]+g->temp[VX][idx_g];
+		tauxz = g->temp[UZ][idx_g]+g->temp[WX][idx_g];
+		tauyz = g->temp[VZ][idx_g]+g->temp[WY][idx_g];
+
+		mechwork = 	tauxx*ux(0) +
+					tauyy*vy(0) +
+					tauzz*wz(0) + SQR(tauxy)+SQR(tauxz)+SQR(tauyz);
+
+		mechwork = 	g->eta*mechwork
+					+ difflux[idx + imx*g->comp_offset]*q[idx_g + qu*g->comp_offset_g]
+					+ difflux[idx + imy*g->comp_offset]*q[idx_g + qv*g->comp_offset_g]
+					+ difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
+
+		difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
+
+#undef	vy
+#undef	wz
+	}
+}
+
 void gpu_diffterm2(
 	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
@@ -245,6 +390,5 @@ void gpu_diffterm2(
 	dim3 grid_dim(CEIL(h_const.dim_g[0], BLOCK_DIM), CEIL(h_const.dim_g[1], BLOCK_DIM), h_const.dim_g[2]);
 	dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 	gpu_diffterm_lv1_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
-//	gpu_diffterm_lv1_xy_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
-//	gpu_diffterm_lv2_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
+	gpu_diffterm_lv2_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
 }
