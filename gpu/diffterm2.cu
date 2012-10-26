@@ -370,13 +370,34 @@ __global__ void gpu_diffterm_lv2_kernel(
 
 		mechwork = 	g->eta*mechwork
 					+ difflux[idx + imx*g->comp_offset]*q[idx_g + qu*g->comp_offset_g]
-					+ difflux[idx + imy*g->comp_offset]*q[idx_g + qv*g->comp_offset_g]
-					+ difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
+					+ difflux[idx + imy*g->comp_offset]*q[idx_g + qv*g->comp_offset_g];
+//					+ difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
 
-		difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
+//		difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
+		difflux[idx + iene*g->comp_offset] = mechwork;
 
 #undef	vy
 #undef	wz
+	}
+}
+
+__global__ void gpu_diffterm_lv3_kernel(
+	global_const_t *g,			// i: Global struct containing application parameters
+	double *q,					// i:
+	double *difflux				// o:
+){
+	int si, sj, sk, idx, idx_g;
+	double mechwork;
+
+	si = blockIdx.x*blockDim.x + threadIdx.x;
+	sj = blockIdx.y*blockDim.y + threadIdx.y;
+	sk = blockIdx.z;
+
+	idx = sk*g->plane_offset + sj*g->dim[0] + si;
+	idx_g	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+		mechwork = difflux[idx + iene*g->comp_offset] + difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
+		difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
 	}
 }
 
@@ -391,4 +412,5 @@ void gpu_diffterm2(
 	dim3 block_dim(BLOCK_DIM, BLOCK_DIM);
 	gpu_diffterm_lv1_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
 	gpu_diffterm_lv2_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
+	gpu_diffterm_lv3_kernel<<<grid_dim, block_dim>>>(d_const, d_q, d_difflux);
 }

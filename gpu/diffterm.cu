@@ -342,25 +342,25 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
 
 		idx = sk*g->plane_offset + sj*g->dim[2] + si;
-//		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
-//
-//			g->temp[UXY][idx] = ( g->ALP*(ux(1)-ux(-1))
-//								+ g->BET*(ux(2)-ux(-2))
-//								+ g->GAM*(ux(3)-ux(-3))
-//								+ g->DEL*(ux(4)-ux(-4)))*g->dxinv[1];
-//
-//			g->temp[WZY][idx] = ( g->ALP*(wz(1)-wz(-1))
-//								+ g->BET*(wz(2)-wz(-2))
-//								+ g->GAM*(wz(3)-wz(-3))
-//								+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[1];
-//
-//			idx_g = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
-//
-//			difflux[idx + imy*g->comp_offset] = 	g->eta * ( g->temp[VXX][idx_g] +
-//												g->FourThirds * g->temp[VYY][idx_g] +
-//																g->temp[VZZ][idx_g] +
-//												g->OneThird*(g->temp[UXY][idx]+g->temp[WZY][idx]));
-//		}
+		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+
+			g->temp[UXY][idx] = ( g->ALP*(ux(1)-ux(-1))
+								+ g->BET*(ux(2)-ux(-2))
+								+ g->GAM*(ux(3)-ux(-3))
+								+ g->DEL*(ux(4)-ux(-4)))*g->dxinv[1];
+
+			g->temp[WZY][idx] = ( g->ALP*(wz(1)-wz(-1))
+								+ g->BET*(wz(2)-wz(-2))
+								+ g->GAM*(wz(3)-wz(-3))
+								+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[1];
+
+			idx_g = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
+
+			difflux[idx + imy*g->comp_offset] = 	g->eta * ( g->temp[VXX][idx_g] +
+												g->FourThirds * g->temp[VYY][idx_g] +
+																g->temp[VZZ][idx_g] +
+												g->OneThird*(g->temp[UXY][idx]+g->temp[WZY][idx]));
+		}
 	}
 
 #undef	ux
@@ -371,27 +371,27 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 	idx_g = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
 	if(threadIdx.y < BLOCK_DIM_G && threadIdx.z < BLOCK_DIM_G){
 
-//		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
-//
-//			g->temp[UXZ][idx] = ( g->ALP*(ux(1)-ux(-1))
-//								+ g->BET*(ux(2)-ux(-2))
-//								+ g->GAM*(ux(3)-ux(-3))
-//								+ g->DEL*(ux(4)-ux(-4)))*g->dxinv[2];
-//
-//			g->temp[VYZ][idx] = ( g->ALP*(vy(1)-vy(-1))
-//								+ g->BET*(vy(2)-vy(-2))
-//								+ g->GAM*(vy(3)-vy(-3))
-//								+ g->DEL*(vy(4)-vy(-4)))*g->dxinv[2];
-//
-//			difflux[idx + imz*g->comp_offset] = 	g->eta * ( g->temp[WXX][idx_g] +
-//														   g->temp[WYY][idx_g] +
-//														   g->FourThirds * g->temp[WZZ][idx_g] +
-//												g->OneThird*(g->temp[UXZ][idx]+g->temp[VYZ][idx]));
-//		}
+		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
+
+			g->temp[UXZ][idx] = ( g->ALP*(ux(1)-ux(-1))
+								+ g->BET*(ux(2)-ux(-2))
+								+ g->GAM*(ux(3)-ux(-3))
+								+ g->DEL*(ux(4)-ux(-4)))*g->dxinv[2];
+
+			g->temp[VYZ][idx] = ( g->ALP*(vy(1)-vy(-1))
+								+ g->BET*(vy(2)-vy(-2))
+								+ g->GAM*(vy(3)-vy(-3))
+								+ g->DEL*(vy(4)-vy(-4)))*g->dxinv[2];
+
+			difflux[idx + imz*g->comp_offset] = 	g->eta * ( g->temp[WXX][idx_g] +
+														   g->temp[WYY][idx_g] +
+														   g->FourThirds * g->temp[WZZ][idx_g] +
+												g->OneThird*(g->temp[UXZ][idx]+g->temp[VYZ][idx]));
+		}
 
 		// Last part
 		if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
-//			difflux[idx + irho*g->comp_offset] = 0.0;
+			difflux[idx + irho*g->comp_offset] = 0.0;
 
 			divu  = g->TwoThirds*(ux(0)+vy(0)+wz(0));
 			tauxx = 2.E0*ux(0) - divu;
@@ -411,7 +411,10 @@ __global__ void gpu_diffterm_yz_stencil_kernel_lv2(
 						+ difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
 
 			difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
-
+//			if(si==31 && sj==31 && sk==15){
+//				if(difflux[idx + iene*g->comp_offset] !=  g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork + difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g])
+//					printf("[%d][%d][%d] %le vs %le\n", si, sj, sk, difflux[idx + iene*g->comp_offset],  g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork + difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g]);
+//			}
 		}
 	}
 
@@ -527,7 +530,7 @@ void gpu_diffterm_lv2(
     grid_dim = h_kc.gridDim_plane_xz * h_kc.gridDim_y;
     cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
 
-//	gpu_diffterm_x_stencil_kernel_lv2<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_difflux);
+	gpu_diffterm_x_stencil_kernel_lv2<<<grid_dim, block_dim_x_stencil>>>(d_const, d_q, d_difflux);
 
 	h_kc.gridDim_x = h_const.dim_g[0];
 	h_kc.gridDim_y = CEIL(h_const.dim_g[1], BLOCK_DIM_G);
