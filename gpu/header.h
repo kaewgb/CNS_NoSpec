@@ -10,6 +10,7 @@
 #define MIN(x, y)       ((x < y)? (x):(y))
 #define MAX(x, y)       ((x > y)? (x):(y))
 #define CEIL(x, div)	(((x) + (div)-1)/(div))
+#define PAD(x)          ((((((x)-1))>>4)+1)<<4)
 
 // CONSTANTS
 #define	DIM		3
@@ -81,10 +82,18 @@ typedef struct global_const {
 	int hi[3];
 	int dim[3];					// Dimension
 	int dim_g[3];				// Dimension, including ghost cells
-	int comp_offset_g;
+	int dim_padded[3];          // Dimension (aligned)
+	int dim_g_padded[3];        // Dimension + ghost cells (aligned)
+
 	int comp_offset;
-	int plane_offset_g;
+	int comp_offset_g;
+	int comp_offset_padded;
+	int comp_offset_g_padded;
+
 	int plane_offset;
+	int plane_offset_g;
+	int plane_offset_padded;
+	int plane_offset_g_padded;
 	int nsteps;					// Number of simulation iterations
 
 	double dt;
@@ -276,6 +285,21 @@ extern void gpu_advance(
 	double &dt					// o
 );
 extern void new_advance_hybrid(
+	global_const_t h_const,
+	global_const_t *d_const,
+	double ****U,	// i/o
+	double ****Unew,
+	double ****Q,
+	double ****D,
+	double ****F,
+	double *d_U,	// i/o
+	double *d_Unew,	// i/o
+	double *d_Q,	// i/o
+	double *d_D,	// i/o
+	double *d_F,	// i/o
+	double &dt		// o
+);
+extern void advance_hybrid(
 	global_const_t h_const,
 	global_const_t *d_const,
 	double ****U,	// i/o

@@ -29,8 +29,9 @@ __global__ void gpu_ctoprim_kernel(
 	k =  idx / (g->dim_g[0] * g->dim_g[1]);
 	j = (idx / g->dim_g[0]) % g->dim_g[1];
 	i =  idx % g->dim_g[0];
+	idx = k*g->plane_offset_g_padded + j*g->dim_g_padded[0] + i;
 
-	loffset = g->dim_g[0] * g->dim_g[1] * g->dim_g[2];
+	loffset = g->comp_offset_g_padded;
 
 	// Calculate Q
 	if( idx < loffset ){
@@ -84,8 +85,9 @@ __global__ void gpu_ctoprim_kernel(
 	k =  idx / (g->dim_g[0] * g->dim_g[1]);
 	j = (idx / g->dim_g[0]) % g->dim_g[1];
 	i =  idx % g->dim_g[0];
+    idx = k*g->plane_offset_g_padded + j*g->dim_g_padded[0] + i;
 
-	loffset = g->dim_g[0] * g->dim_g[1] * g->dim_g[2];
+	loffset = g->comp_offset_g_padded;
 
 	// Calculate Q
 	if( idx < loffset ){
