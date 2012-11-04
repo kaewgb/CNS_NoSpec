@@ -5,10 +5,10 @@
 
 
 #define	BLOCK_DIM	16
-#define	Unew(l,i,j,k)	Unew[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
-#define	U(l,i,j,k)		U[(l)*g->comp_offset_g + (i)*g->plane_offset_g + (j)*g->dim_g[2] + (k)]
-#define	D(l,i,j,k)		D[(l)*g->comp_offset + (i)*g->plane_offset + (j)*g->dim[2] + (k)]
-#define	F(l,i,j,k)		F[(l)*g->comp_offset + (i)*g->plane_offset + (j)*g->dim[2] + (k)]
+#define	Unew(l,k,j,i)	Unew[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->dim_g_padded[0] + (i)]
+#define	U(l,k,j,i)		U[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->dim_g_padded[0] + (i)]
+#define	D(l,k,j,i)		D[(l)*g->comp_offset_padded + (k)*g->plane_offset_padded + (j)*g->dim_padded[0] + (i)]
+#define	F(l,k,j,i)		F[(l)*g->comp_offset_padded + (k)*g->plane_offset_padded + (j)*g->dim_padded[0] + (i)]
 
 __global__ void gpu_Unew_1_3_kernel(
 	global_const_t *g,	// i: Global Constants
@@ -31,7 +31,7 @@ __global__ void gpu_Unew_1_3_kernel(
 
 	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, g->nc)
-			Unew(l,i+g->ng,j+g->ng,k+g->ng) = U(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k));
+			Unew(l,k+g->ng,j+g->ng,i+g->ng) = U(l,k+g->ng,j+g->ng,i+g->ng) + dt*(D(l,k,j,i) + F(l,k,j,i));
 	}
 }
 
@@ -56,9 +56,9 @@ __global__ void gpu_Unew_2_3_kernel(
 
 	if(i < g->dim[0] && j< g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, g->nc){
-			Unew(l,i+g->ng,j+g->ng,k+g->ng) =
-				g->ThreeQuarters *  U(l,i+g->ng,j+g->ng,k+g->ng) +
-				g->OneQuarter	 * (Unew(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k)));
+			Unew(l,k+g->ng,j+g->ng,i+g->ng) =
+				g->ThreeQuarters *  U(l,k+g->ng,j+g->ng,i+g->ng) +
+				g->OneQuarter	 * (Unew(l,k+g->ng,j+g->ng,i+g->ng) + dt*(D(l,k,j,i) + F(l,k,j,i)));
 		}
 	}
 }
@@ -84,9 +84,9 @@ __global__ void gpu_Unew_3_3_kernel(
 
 	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, g->nc){
-			U(l,i+g->ng,j+g->ng,k+g->ng) =
-				g->OneThird  *  U(l,i+g->ng,j+g->ng,k+g->ng) +
-				g->TwoThirds * (Unew(l,i+g->ng,j+g->ng,k+g->ng) + dt*(D(l,i,j,k) + F(l,i,j,k)));
+			U(l,k+g->ng,j+g->ng,i+g->ng) =
+				g->OneThird  *  U(l,k+g->ng,j+g->ng,i+g->ng) +
+				g->TwoThirds * (Unew(l,k+g->ng,j+g->ng,i+g->ng) + dt*(D(l,k,j,i) + F(l,k,j,i)));
 		}
 	}
 }

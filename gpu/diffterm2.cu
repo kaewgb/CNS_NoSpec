@@ -238,7 +238,7 @@ __global__ void gpu_diffterm_lv2_kernel(
 	tidx = threadIdx.x;
 	tidz = threadIdx.y;
 	while(tidz < blockDim.y+NG+NG && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
-		idx = sk*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+		idx = sk*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + si+g->ng;
 
 		ux[tidz][tidx] = g->temp[UX][idx];
 		vy[tidz][tidx] = g->temp[VY][idx];
@@ -249,8 +249,8 @@ __global__ void gpu_diffterm_lv2_kernel(
 	__syncthreads();
 
 	sk 		= blockIdx.y*blockDim.y + threadIdx.y;
-	idx		= sk*g->plane_offset + sj*g->dim[0] + si;
-	idx_g	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+	idx		= sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
+	idx_g	= (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + si+g->ng;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		g->temp[UXZ][idx] = ( g->ALP*(ux(1)-ux(-1))
@@ -263,10 +263,10 @@ __global__ void gpu_diffterm_lv2_kernel(
 							+ g->GAM*(vy(3)-vy(-3))
 							+ g->DEL*(vy(4)-vy(-4)))*g->dxinv[2];
 
-		difflux[idx + imz*g->comp_offset] = 	g->eta * ( g->temp[WXX][idx_g] +
-														   g->temp[WYY][idx_g] +
-														   g->FourThirds * g->temp[WZZ][idx_g] +
-												g->OneThird*(g->temp[UXZ][idx]+g->temp[VYZ][idx]));
+		difflux[idx + imz*g->comp_offset_padded] = 	g->eta * ( g->temp[WXX][idx_g] +
+															   g->temp[WYY][idx_g] +
+															   g->FourThirds * g->temp[WZZ][idx_g] +
+													g->OneThird*(g->temp[UXZ][idx]+g->temp[VYZ][idx]));
 	}
 #undef	ux
 #undef 	vy
@@ -280,7 +280,7 @@ __global__ void gpu_diffterm_lv2_kernel(
 	for(sj = blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy<blockDim.y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
 		for(si = blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx<blockDim.x+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
 			if(si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim[2]){
-				idx = (sk+g->ng)*g->plane_offset_g + sj*g->dim_g[0] + si;
+				idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->dim_g_padded[0] + si;
 				ux[tidy][tidx] = g->temp[UX][idx];
 				wz[tidy][tidx] = g->temp[WZ][idx];
 				vy[tidy][tidx] = g->temp[VY][idx];
@@ -291,8 +291,8 @@ __global__ void gpu_diffterm_lv2_kernel(
 
 	si 		= blockIdx.x*blockDim.x + threadIdx.x;
 	sj 		= blockIdx.y*blockDim.y + threadIdx.y;
-	idx 	= sk*g->plane_offset + sj*g->dim[0] + si;
-	idx_g	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+	idx 	= sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
+	idx_g	= (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + si+g->ng;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 #define ux(i)	ux[threadIdx.y+g->ng+(i)][threadIdx.x+g->ng]
@@ -308,10 +308,10 @@ __global__ void gpu_diffterm_lv2_kernel(
 							+ g->GAM*(wz(3)-wz(-3))
 							+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[1];
 
-		difflux[idx + imy*g->comp_offset] = 	g->eta * ( g->temp[VXX][idx_g] +
-												g->FourThirds * g->temp[VYY][idx_g] +
-																g->temp[VZZ][idx_g] +
-												g->OneThird*(g->temp[UXY][idx]+g->temp[WZY][idx]));
+		difflux[idx + imy*g->comp_offset_padded] = 	g->eta * ( g->temp[VXX][idx_g] +
+													g->FourThirds * g->temp[VYY][idx_g] +
+																	g->temp[VZZ][idx_g] +
+													g->OneThird*(g->temp[UXY][idx]+g->temp[WZY][idx]));
 #undef	wz
 #define	vy(i)	vy[threadIdx.y+g->ng][threadIdx.x+g->ng+(i)]
 #define	wz(i)	wz[threadIdx.y+g->ng][threadIdx.x+g->ng+(i)]
@@ -326,13 +326,13 @@ __global__ void gpu_diffterm_lv2_kernel(
 							+ g->GAM*(wz(3)-wz(-3))
 							+ g->DEL*(wz(4)-wz(-4)))*g->dxinv[0];
 
-		difflux[idx + imx*g->comp_offset] =  	 g->eta *
-											   ( g->FourThirds*g->temp[UXX][idx_g] +
-															   g->temp[UYY][idx_g] +
-															   g->temp[UZZ][idx_g] +
-												 g->OneThird *(g->temp[VYX][idx] + g->temp[WZX][idx]));
+		difflux[idx + imx*g->comp_offset_padded] = 	 g->eta *
+												   ( g->FourThirds*g->temp[UXX][idx_g] +
+																   g->temp[UYY][idx_g] +
+																   g->temp[UZZ][idx_g] +
+													 g->OneThird *(g->temp[VYX][idx] + g->temp[WZX][idx]));
 
-		difflux[idx + irho*g->comp_offset] = 0.0;
+		difflux[idx + irho*g->comp_offset_padded] = 0.0;
 
 		divu  = g->TwoThirds*(ux(0)+vy(0)+wz(0));
 		tauxx = 2.E0*ux(0) - divu;
@@ -347,12 +347,12 @@ __global__ void gpu_diffterm_lv2_kernel(
 					tauzz*wz(0) + SQR(tauxy)+SQR(tauxz)+SQR(tauyz);
 
 		mechwork = 	g->eta*mechwork
-					+ difflux[idx + imx*g->comp_offset]*q[idx_g + qu*g->comp_offset_g]
-					+ difflux[idx + imy*g->comp_offset]*q[idx_g + qv*g->comp_offset_g];
-//					+ difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
+					+ difflux[idx + imx*g->comp_offset_padded]*q[idx_g + qu*g->comp_offset_g_padded]
+					+ difflux[idx + imy*g->comp_offset_padded]*q[idx_g + qv*g->comp_offset_g_padded];
+//					+ difflux[idx + imz*g->comp_offset_padded]*q[idx_g + qw*g->comp_offset_g_padded];
 
 //		difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
-		difflux[idx + iene*g->comp_offset] = mechwork;
+		difflux[idx + iene*g->comp_offset_padded] = mechwork;
 
 #undef	vy
 #undef	wz
@@ -371,11 +371,14 @@ __global__ void gpu_diffterm_lv3_kernel(
 	sj = blockIdx.y*blockDim.y + threadIdx.y;
 	sk = blockIdx.z;
 
-	idx = sk*g->plane_offset + sj*g->dim[0] + si;
-	idx_g	= (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[0] + si+g->ng;
+	idx = sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
+	idx_g	= (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + si+g->ng;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
-		mechwork = difflux[idx + iene*g->comp_offset] + difflux[idx + imz*g->comp_offset]*q[idx_g + qw*g->comp_offset_g];
-		difflux[idx + iene*g->comp_offset] = g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
+
+		mechwork = 	difflux[idx + iene*g->comp_offset_padded] +
+					difflux[idx + imz*g->comp_offset_padded]*q[idx_g + qw*g->comp_offset_g_padded];
+		difflux[idx + iene*g->comp_offset_padded] =
+					g->alam*(g->temp[TXX][idx]+g->temp[TYY][idx]+g->temp[TZZ][idx]) + mechwork;
 	}
 }
 

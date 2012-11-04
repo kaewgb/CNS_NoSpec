@@ -37,14 +37,14 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = (sk+g->ng)*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + si;
+		idx = (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + si;
 
-				   s_q[tidx][tidz]  =     q[idx + qu*g->comp_offset_g];
-			   s_qpres[tidx][tidz]	=     q[idx + qpres*g->comp_offset_g];
-		 s_cons[s_imx][tidx][tidz] 	=  cons[idx + imx*g->comp_offset_g];
-		 s_cons[s_imy][tidx][tidz] 	=  cons[idx + imy*g->comp_offset_g];
-		 s_cons[s_imz][tidx][tidz] 	=  cons[idx + imz*g->comp_offset_g];
-		s_cons[s_iene][tidx][tidz] 	=  cons[idx + iene*g->comp_offset_g];
+				   s_q[tidx][tidz]  =     q[idx + qu*g->comp_offset_g_padded];
+			   s_qpres[tidx][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
+		 s_cons[s_imx][tidx][tidz] 	=  cons[idx + imx*g->comp_offset_g_padded];
+		 s_cons[s_imy][tidx][tidz] 	=  cons[idx + imy*g->comp_offset_g_padded];
+		 s_cons[s_imz][tidx][tidz] 	=  cons[idx + imz*g->comp_offset_g_padded];
+		s_cons[s_iene][tidx][tidz] 	=  cons[idx + iene*g->comp_offset_g_padded];
 
 		tidx += blockDim.x;
 		si   += blockDim.x;
@@ -99,13 +99,13 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = sk*g->plane_offset + sj*g->dim[2] + si;
+		idx = sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
 
-		flux[idx + irho*g->comp_offset] = flux_irho;
-		flux[idx + imx *g->comp_offset] = flux_imx;
-		flux[idx + imy *g->comp_offset] = flux_imy;
-		flux[idx + imz *g->comp_offset] = flux_imz;
-		flux[idx + iene*g->comp_offset] = flux_iene;
+		flux[idx + irho*g->comp_offset_padded] = flux_irho;
+		flux[idx + imx *g->comp_offset_padded] = flux_imx;
+		flux[idx + imy *g->comp_offset_padded] = flux_imy;
+		flux[idx + imz *g->comp_offset_padded] = flux_imz;
+		flux[idx + iene*g->comp_offset_padded] = flux_iene;
 	}
 }
 #undef	s_q
@@ -144,14 +144,14 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidy < kc->blockDim_y_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = (sk+g->ng)*g->plane_offset_g + sj*g->dim_g[2] + (si+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->dim_g_padded[0] + (si+g->ng);
 
-				   s_q[tidy][tidz]  =     q[idx + qv*g->comp_offset_g];
-			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g];
-		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g];
-		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g];
-		 s_cons[s_imz][tidy][tidz] 	=  cons[idx + imz*g->comp_offset_g];
-		s_cons[s_iene][tidy][tidz] 	=  cons[idx + iene*g->comp_offset_g];
+				   s_q[tidy][tidz]  =     q[idx + qv*g->comp_offset_g_padded];
+			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
+		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g_padded];
+		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g_padded];
+		 s_cons[s_imz][tidy][tidz] 	=  cons[idx + imz*g->comp_offset_g_padded];
+		s_cons[s_iene][tidy][tidz] 	=  cons[idx + iene*g->comp_offset_g_padded];
 
 		tidy += blockDim.y;
 		sj   += blockDim.y;
@@ -206,13 +206,13 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = sk*g->plane_offset + sj*g->dim[2] + si;
+		idx = sk*g->plane_offset_padded + sj*g->dim_padded[2] + si;
 
-		flux[idx + irho*g->comp_offset] -= flux_irho;
-		flux[idx + imx *g->comp_offset] -= flux_imx;
-		flux[idx + imy *g->comp_offset] -= flux_imy;
-		flux[idx + imz *g->comp_offset] -= flux_imz;
-		flux[idx + iene*g->comp_offset] -= flux_iene;
+		flux[idx + irho*g->comp_offset_padded] -= flux_irho;
+		flux[idx + imx *g->comp_offset_padded] -= flux_imx;
+		flux[idx + imy *g->comp_offset_padded] -= flux_imy;
+		flux[idx + imz *g->comp_offset_padded] -= flux_imz;
+		flux[idx + iene*g->comp_offset_padded] -= flux_iene;
 	}
 }
 #undef	s_q
@@ -251,14 +251,14 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidz < kc->blockDim_z_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = sk*g->plane_offset_g + (sj+g->ng)*g->dim_g[2] + (si+g->ng);
+		idx = sk*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + (si+g->ng);
 
-				   s_q[tidy][tidz]  =     q[idx + qw*g->comp_offset_g];
-			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g];
-		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g];
-		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g];
-		 s_cons[s_imz][tidy][tidz] 	=  cons[idx + imz*g->comp_offset_g];
-		s_cons[s_iene][tidy][tidz] 	=  cons[idx + iene*g->comp_offset_g];
+				   s_q[tidy][tidz]  =     q[idx + qw*g->comp_offset_g_padded];
+			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
+		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g_padded];
+		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g_padded];
+		 s_cons[s_imz][tidy][tidz] 	=  cons[idx + imz*g->comp_offset_g_padded];
+		s_cons[s_iene][tidy][tidz] 	=  cons[idx + iene*g->comp_offset_g_padded];
 
 		tidz += blockDim.z;
 		sk   += blockDim.z;
@@ -313,13 +313,13 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = sk*g->plane_offset + sj*g->dim[2] + si;
+		idx = sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
 
-		flux[idx + irho*g->comp_offset] -= flux_irho;
-		flux[idx + imx *g->comp_offset] -= flux_imx;
-		flux[idx + imy *g->comp_offset] -= flux_imy;
-		flux[idx + imz *g->comp_offset] -= flux_imz;
-		flux[idx + iene*g->comp_offset] -= flux_iene;
+		flux[idx + irho*g->comp_offset_padded] -= flux_irho;
+		flux[idx + imx *g->comp_offset_padded] -= flux_imx;
+		flux[idx + imy *g->comp_offset_padded] -= flux_imy;
+		flux[idx + imz *g->comp_offset_padded] -= flux_imz;
+		flux[idx + iene*g->comp_offset_padded] -= flux_iene;
 	}
 }
 #undef	s_q

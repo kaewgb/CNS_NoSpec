@@ -21,14 +21,14 @@ __global__ void gpu_ctoprim_kernel(
     double *courno  	// i/o
 ){
 
-	int i, j, k, idx, loffset;
+	int i, j, k, idx, cour_idx, loffset;
 	int numthreads = BLOCK_DIM;
 	double rhoinv, eint, c, courx, coury, courz;
 
-	idx = blockIdx.x * blockDim.x + threadIdx.x;
-	k =  idx / (g->dim_g[0] * g->dim_g[1]);
-	j = (idx / g->dim_g[0]) % g->dim_g[1];
-	i =  idx % g->dim_g[0];
+	cour_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	k =  cour_idx / (g->dim_g[0] * g->dim_g[1]);
+	j = (cour_idx / g->dim_g[0]) % g->dim_g[1];
+	i =  cour_idx % g->dim_g[0];
 	idx = k*g->plane_offset_g_padded + j*g->dim_g_padded[0] + i;
 
 	loffset = g->comp_offset_g_padded;
@@ -43,9 +43,6 @@ __global__ void gpu_ctoprim_kernel(
 		q[idx+3*loffset] 	= u[idx+3*loffset]*rhoinv; 	//u(i,j,k,4) = u[3][i][j][k]
 
 		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
-//		eint = __dadd_rn(__dmul_rn(u[idx+4*loffset], rhoinv),
-//						-__dmul_rn(0.5E0, __dadd_rn(__dadd_rn(SQR(q[idx+loffset]), SQR(q[idx+2*loffset])), SQR(q[idx+3*loffset]))));
-
 
 		q[idx+4*loffset] = (GAMMA-1.0E0)*eint*u[idx];
 		q[idx+5*loffset] = eint/CV;
@@ -60,15 +57,10 @@ __global__ void gpu_ctoprim_kernel(
 			coury	= (c+fabs(q[idx+2*loffset]))/g->dx[1];
 			courz	= (c+fabs(q[idx+3*loffset]))/g->dx[2];
 
-//			c		= sqrt(__dmul_rn(GAMMA, q[idx+4*loffset])/q[idx]);
-//			courx	= __dadd_rn(c, fabs(q[idx+loffset]))/g->dx[0];
-//			coury	= __dadd_rn(c, fabs(q[idx+2*loffset]))/g->dx[1];
-//			courz	= __dadd_rn(c, fabs(q[idx+3*loffset]))/g->dx[2];
-
-			courno[idx] = MAX(courx, MAX(coury, courz));
+			courno[cour_idx] = MAX(courx, MAX(coury, courz));
 		}
 		else
-			courno[idx] = -1.0;		//TODO: make it minus infinity
+			courno[cour_idx] = -1.0;		//TODO: make it minus infinity
 	}
 }
 __global__ void gpu_ctoprim_kernel(
@@ -99,9 +91,6 @@ __global__ void gpu_ctoprim_kernel(
 		q[idx+3*loffset] 	= u[idx+3*loffset]*rhoinv; 	//u(i,j,k,4) = u[3][i][j][k]
 
 		eint = u[idx+4*loffset]*rhoinv - 0.5E0*(SQR(q[idx+loffset]) + SQR(q[idx+2*loffset]) + SQR(q[idx+3*loffset]));
-//		eint = __dadd_rn(__dmul_rn(u[idx+4*loffset], rhoinv),
-//						-__dmul_rn(0.5E0, __dadd_rn(__dadd_rn(SQR(q[idx+loffset]), SQR(q[idx+2*loffset])), SQR(q[idx+3*loffset]))));
-
 
 		q[idx+4*loffset] = (GAMMA-1.0E0)*eint*u[idx];
 		q[idx+5*loffset] = eint/CV;
