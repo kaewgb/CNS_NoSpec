@@ -3,11 +3,11 @@
 #include "header.h"
 #include "util.h"
 
-#define BLOCK_DIM		16		// Dimension that doesn't have ghost cells
-#define	BLOCK_DIM_G		8		// Dimension that has ghost cells
-#define	s_q(i)			s_q[threadIdx.x+g->ng+(i)][threadIdx.z]
-#define	s_qpres(i)		s_qpres[threadIdx.x+g->ng+(i)][threadIdx.z]
-#define	s_cons(i, comp)	s_cons[comp][threadIdx.x+g->ng+(i)][threadIdx.z]
+#define BLOCK_SMALL		8
+#define	BLOCK_LARGE		16
+#define	s_q(i)			s_q[threadIdx.y][threadIdx.x+g->ng+(i)]
+#define	s_qpres(i)		s_qpres[threadIdx.y][threadIdx.x+g->ng+(i)]
+#define	s_cons(i, comp)	s_cons[comp][threadIdx.y][threadIdx.x+g->ng+(i)]
 
 __global__ void gpu_hypterm_x_stencil_kernel(
 	global_const_t *g,	// i:
@@ -15,43 +15,38 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 	double *q,			// i:
 	double *flux		// o:
 ){
-	int idx,bi,bj,bk;
-	int si,sj,sk,tidx,tidz;
-	kernel_const_t *kc = g->kc;
+	int idx,si,sj,sk,tidx,tidy;
 	double dxinv, unp1, unp2, unp3, unp4, unm1, unm2, unm3, unm4;
 	double flux_irho, flux_imx, flux_imy, flux_imz, flux_iene;
 
-	__shared__ double       s_q[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
-	__shared__ double   s_qpres[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
-	__shared__ double s_cons[4][BLOCK_DIM_G+NG+NG][BLOCK_DIM];
+	__shared__ double       s_q[BLOCK_LARGE][BLOCK_SMALL+NG+NG];
+	__shared__ double   s_qpres[BLOCK_LARGE][BLOCK_SMALL+NG+NG];
+	__shared__ double s_cons[4][BLOCK_LARGE][BLOCK_SMALL+NG+NG];
 
 	// Load to shared mem
-	bi = (blockIdx.x % (kc->gridDim_plane_xz)) / kc->gridDim_z;
-	bk = (blockIdx.x % (kc->gridDim_plane_xz)) % kc->gridDim_z;
-	bj =  blockIdx.x / (kc->gridDim_plane_xz);
-	si = bi*blockDim.x+threadIdx.x;
-	sj = bj*blockDim.y+threadIdx.y; // = bj
-	sk = bk*blockDim.z+threadIdx.z;
+	si = blockIdx.x*blockDim.x+threadIdx.x;
+	sj = blockIdx.y*blockDim.y+threadIdx.y;
+	sk = blockIdx.z*blockDim.z+threadIdx.z;
 
 	tidx = threadIdx.x;
-	tidz = threadIdx.z;
-	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+	tidy = threadIdx.y;
+	while( tidx < BLOCK_SMALL+NG+NG && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 		idx = (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->pitch_g[0] + si;
 
-				   s_q[tidx][tidz]  =     q[idx + qu*g->comp_offset_g_padded];
-			   s_qpres[tidx][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
-		 s_cons[s_imx][tidx][tidz] 	=  cons[idx + imx*g->comp_offset_g_padded];
-		 s_cons[s_imy][tidx][tidz] 	=  cons[idx + imy*g->comp_offset_g_padded];
-		 s_cons[s_imz][tidx][tidz] 	=  cons[idx + imz*g->comp_offset_g_padded];
-		s_cons[s_iene][tidx][tidz] 	=  cons[idx + iene*g->comp_offset_g_padded];
+				   s_q[tidy][tidx]  =     q[idx + qu*g->comp_offset_g_padded];
+			   s_qpres[tidy][tidx]	=     q[idx + qpres*g->comp_offset_g_padded];
+		 s_cons[s_imx][tidy][tidx] 	=  cons[idx + imx*g->comp_offset_g_padded];
+		 s_cons[s_imy][tidy][tidx] 	=  cons[idx + imy*g->comp_offset_g_padded];
+		 s_cons[s_imz][tidy][tidx] 	=  cons[idx + imz*g->comp_offset_g_padded];
+		s_cons[s_iene][tidy][tidx] 	=  cons[idx + iene*g->comp_offset_g_padded];
 
 		tidx += blockDim.x;
 		si   += blockDim.x;
 	}
 	__syncthreads();
 
-	si = bi*blockDim.x+threadIdx.x;
+	si = blockIdx.x*blockDim.x+threadIdx.x;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		dxinv = 1.0E0/g->dx[0];
@@ -112,9 +107,9 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 #undef 	s_qpres
 #undef	s_cons
 
-#define	s_q(i)			s_q[threadIdx.y+g->ng+(i)][threadIdx.z]
-#define	s_qpres(i)		s_qpres[threadIdx.y+g->ng+(i)][threadIdx.z]
-#define	s_cons(i, comp)	s_cons[comp][threadIdx.y+g->ng+(i)][threadIdx.z]
+#define	s_q(i)			s_q[threadIdx.y+g->ng+(i)][threadIdx.x]
+#define	s_qpres(i)		s_qpres[threadIdx.y+g->ng+(i)][threadIdx.x]
+#define	s_cons(i, comp)	s_cons[comp][threadIdx.y+g->ng+(i)][threadIdx.x]
 
 __global__ void gpu_hypterm_y_stencil_kernel(
 	global_const_t *g,	// i:
@@ -122,43 +117,38 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 	double *q,			// i:
 	double *flux		// o:
 ){
-	int idx,bi,bj,bk;
-	int si,sj,sk,tidy,tidz;
-	kernel_const_t *kc = g->kc;
+	int idx,si,sj,sk,tidx,tidy;
 	double dxinv, unp1, unp2, unp3, unp4, unm1, unm2, unm3, unm4;
 	double flux_irho, flux_imx, flux_imy, flux_imz, flux_iene;
 
-	__shared__ double       s_q[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
-	__shared__ double   s_qpres[BLOCK_DIM_G+NG+NG][BLOCK_DIM];
-	__shared__ double s_cons[4][BLOCK_DIM_G+NG+NG][BLOCK_DIM];
+	__shared__ double       s_q[BLOCK_SMALL+NG+NG][BLOCK_LARGE];
+	__shared__ double   s_qpres[BLOCK_SMALL+NG+NG][BLOCK_LARGE];
+	__shared__ double s_cons[4][BLOCK_SMALL+NG+NG][BLOCK_LARGE];
 
 	// Load to shared mem
-	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
-	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
-	bi =  blockIdx.x / (kc->gridDim_plane_yz);
-	si = bi*blockDim.x+threadIdx.x;
-	sj = bj*blockDim.y+threadIdx.y;
-	sk = bk*blockDim.z+threadIdx.z;
+	si = blockIdx.x*blockDim.x+threadIdx.x;
+	sj = blockIdx.y*blockDim.y+threadIdx.y;
+	sk = blockIdx.z*blockDim.z+threadIdx.z;
 
+	tidx = threadIdx.x;
 	tidy = threadIdx.y;
-	tidz = threadIdx.z;
-	while( tidy < kc->blockDim_y_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+	while( tidy < BLOCK_SMALL+NG+NG && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 		idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->pitch_g[0] + (si+g->ng);
 
-				   s_q[tidy][tidz]  =     q[idx + qv*g->comp_offset_g_padded];
-			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
-		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g_padded];
-		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g_padded];
-		 s_cons[s_imz][tidy][tidz] 	=  cons[idx + imz*g->comp_offset_g_padded];
-		s_cons[s_iene][tidy][tidz] 	=  cons[idx + iene*g->comp_offset_g_padded];
+				   s_q[tidy][tidx]  =     q[idx + qv*g->comp_offset_g_padded];
+			   s_qpres[tidy][tidx]	=     q[idx + qpres*g->comp_offset_g_padded];
+		 s_cons[s_imx][tidy][tidx] 	=  cons[idx + imx*g->comp_offset_g_padded];
+		 s_cons[s_imy][tidy][tidx] 	=  cons[idx + imy*g->comp_offset_g_padded];
+		 s_cons[s_imz][tidy][tidx] 	=  cons[idx + imz*g->comp_offset_g_padded];
+		s_cons[s_iene][tidy][tidx] 	=  cons[idx + iene*g->comp_offset_g_padded];
 
 		tidy += blockDim.y;
 		sj   += blockDim.y;
 	}
 	__syncthreads();
 
-	sj = bj*blockDim.y+threadIdx.y;
+	sj = blockIdx.y*blockDim.y+threadIdx.y;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		dxinv = 1.0E0/g->dx[1];
@@ -219,9 +209,9 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 #undef 	s_qpres
 #undef	s_cons
 
-#define	s_q(i)			s_q[threadIdx.y][threadIdx.z+g->ng+(i)]
-#define	s_qpres(i)		s_qpres[threadIdx.y][threadIdx.z+g->ng+(i)]
-#define	s_cons(i, comp)	s_cons[comp][threadIdx.y][threadIdx.z+g->ng+(i)]
+#define	s_q(i)			s_q[threadIdx.z+g->ng+(i)][threadIdx.x]
+#define	s_qpres(i)		s_qpres[threadIdx.z+g->ng+(i)][threadIdx.x]
+#define	s_cons(i, comp)	s_cons[comp][threadIdx.z+g->ng+(i)][threadIdx.x]
 
 __global__ void gpu_hypterm_z_stencil_kernel(
 	global_const_t *g,	// i:
@@ -229,43 +219,38 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 	double *q,			// i:
 	double *flux		// o:
 ){
-	int idx,bi,bj,bk;
-	int si,sj,sk,tidy,tidz;
-	kernel_const_t *kc = g->kc;
+	int idx,si,sj,sk,tidx,tidz;
 	double dxinv, unp1, unp2, unp3, unp4, unm1, unm2, unm3, unm4;
 	double flux_irho, flux_imx, flux_imy, flux_imz, flux_iene;
 
-	__shared__ double       s_q[BLOCK_DIM][BLOCK_DIM_G+NG+NG];
-	__shared__ double   s_qpres[BLOCK_DIM][BLOCK_DIM_G+NG+NG];
-	__shared__ double s_cons[4][BLOCK_DIM][BLOCK_DIM_G+NG+NG];
+	__shared__ double       s_q[BLOCK_SMALL+NG+NG][BLOCK_LARGE];
+	__shared__ double   s_qpres[BLOCK_SMALL+NG+NG][BLOCK_LARGE];
+	__shared__ double s_cons[4][BLOCK_SMALL+NG+NG][BLOCK_LARGE];
 
 	// Load to shared mem
-	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
-	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
-	bi =  blockIdx.x / (kc->gridDim_plane_yz);
-	si = bi*blockDim.x+threadIdx.x;
-	sj = bj*blockDim.y+threadIdx.y;
-	sk = bk*blockDim.z+threadIdx.z;
+	si = blockIdx.x*blockDim.x+threadIdx.x;
+	sj = blockIdx.y*blockDim.y+threadIdx.y;
+	sk = blockIdx.z*blockDim.z+threadIdx.z;
 
-	tidy = threadIdx.y;
+	tidx = threadIdx.x;
 	tidz = threadIdx.z;
-	while( tidz < kc->blockDim_z_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
+	while( tidz < BLOCK_SMALL+NG+NG && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 		idx = sk*g->plane_offset_g_padded + (sj+g->ng)*g->pitch_g[0] + (si+g->ng);
 
-				   s_q[tidy][tidz]  =     q[idx + qw*g->comp_offset_g_padded];
-			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
-		 s_cons[s_imx][tidy][tidz] 	=  cons[idx + imx*g->comp_offset_g_padded];
-		 s_cons[s_imy][tidy][tidz] 	=  cons[idx + imy*g->comp_offset_g_padded];
-		 s_cons[s_imz][tidy][tidz] 	=  cons[idx + imz*g->comp_offset_g_padded];
-		s_cons[s_iene][tidy][tidz] 	=  cons[idx + iene*g->comp_offset_g_padded];
+				   s_q[tidz][tidx]  =     q[idx + qw*g->comp_offset_g_padded];
+			   s_qpres[tidz][tidx]	=     q[idx + qpres*g->comp_offset_g_padded];
+		 s_cons[s_imx][tidz][tidx] 	=  cons[idx + imx*g->comp_offset_g_padded];
+		 s_cons[s_imy][tidz][tidx] 	=  cons[idx + imy*g->comp_offset_g_padded];
+		 s_cons[s_imz][tidz][tidx] 	=  cons[idx + imz*g->comp_offset_g_padded];
+		s_cons[s_iene][tidz][tidx] 	=  cons[idx + iene*g->comp_offset_g_padded];
 
 		tidz += blockDim.z;
 		sk   += blockDim.z;
 	}
 	__syncthreads();
 
-	sk = bk*blockDim.z+threadIdx.z;
+	sk = blockIdx.z*blockDim.z+threadIdx.z;
 	if(si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]){
 
 		dxinv = 1.0E0/g->dx[2];
@@ -333,40 +318,18 @@ void gpu_hypterm(
 	double *d_q,				// i:
 	double *d_flux				// o: flux
 ){
-	int i, grid_dim;
-	kernel_const_t h_kc;
 
-	dim3 block_dim_x_stencil(BLOCK_DIM_G, 1, BLOCK_DIM);
-    h_kc.gridDim_x = CEIL(h_const.dim[0], BLOCK_DIM_G);
-    h_kc.gridDim_y = h_const.dim[1];
-    h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
-    h_kc.gridDim_plane_xz = h_kc.gridDim_x * h_kc.gridDim_z;
-    h_kc.blockDim_x_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-    grid_dim = h_kc.gridDim_plane_xz * h_kc.gridDim_y;
-    cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
+	dim3 block_dim_x_stencil(BLOCK_SMALL, BLOCK_LARGE, 1);
+	dim3 grid_dim_x_stencil(CEIL(h_const.dim[0], BLOCK_SMALL), CEIL(h_const.dim[1], BLOCK_LARGE), h_const.dim[2]);
+	gpu_hypterm_x_stencil_kernel<<<grid_dim_x_stencil, block_dim_x_stencil>>>(d_const, d_cons, d_q, d_flux);
 
-	gpu_hypterm_x_stencil_kernel<<<grid_dim, block_dim_x_stencil>>>(d_const, d_cons, d_q, d_flux);
+	dim3 block_dim_y_stencil(BLOCK_LARGE, BLOCK_SMALL, 1);
+	dim3 grid_dim_y_stencil(CEIL(h_const.dim[0], BLOCK_LARGE), CEIL(h_const.dim[1], BLOCK_SMALL), h_const.dim[2]);
+	gpu_hypterm_y_stencil_kernel<<<grid_dim_y_stencil, block_dim_y_stencil>>>(d_const, d_cons, d_q, d_flux);
 
-	dim3 block_dim_y_stencil(1, BLOCK_DIM_G, BLOCK_DIM);
-	h_kc.gridDim_x = h_const.dim[0];
-	h_kc.gridDim_y = CEIL(h_const.dim[1], BLOCK_DIM_G);
-	h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
-	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
-	h_kc.blockDim_y_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-	grid_dim = h_kc.gridDim_plane_yz * h_kc.gridDim_x;
-	cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
-
-	gpu_hypterm_y_stencil_kernel<<<grid_dim, block_dim_y_stencil>>>(d_const, d_cons, d_q, d_flux);
-
-	dim3 block_dim_z_stencil(1, BLOCK_DIM, BLOCK_DIM_G);
-	h_kc.gridDim_x = h_const.dim[0];
-	h_kc.gridDim_y = CEIL(h_const.dim[1], BLOCK_DIM);
-	h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM_G);
-	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
-	h_kc.blockDim_z_g = BLOCK_DIM_G + h_const.ng + h_const.ng;
-	grid_dim = h_kc.gridDim_plane_yz * h_kc.gridDim_x;
-	cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
-
-	gpu_hypterm_z_stencil_kernel<<<grid_dim, block_dim_z_stencil>>>(d_const, d_cons, d_q, d_flux);
+	dim3 block_dim_z_stencil(BLOCK_LARGE, 1, BLOCK_SMALL);
+	dim3 grid_dim_z_stencil(CEIL(h_const.dim[0], BLOCK_LARGE), h_const.dim[1], CEIL(h_const.dim[2], BLOCK_SMALL));
+	gpu_hypterm_z_stencil_kernel<<<grid_dim_z_stencil, block_dim_z_stencil>>>(d_const, d_cons, d_q, d_flux);
 
 }
+

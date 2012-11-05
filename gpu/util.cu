@@ -17,6 +17,17 @@
 extern global_const_t h_const;
 extern global_const_t *d_const_ptr;
 
+__device__ double atomicAdd(double *address, double val){
+	unsigned long long int *address_as_ull = (unsigned long long int *) address;
+	unsigned long long int old = *address_as_ull, assumed;
+	do {
+		assumed = old;
+		old = atomicCAS( address_as_ull, assumed,
+						  __double_as_longlong(val + __longlong_as_double(assumed)));
+	} while(assumed != old);
+	return __longlong_as_double(old);
+}
+
 void gpu_allocate_3D(double *&d_ptr, int dim[]){
 	CUDA_SAFE_CALL(cudaMalloc((void **) &d_ptr, dim[0]*dim[1]*dim[2] * sizeof(double)));
 }

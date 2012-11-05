@@ -72,6 +72,9 @@
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="hypterm2.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="hypterm_cpu.cpp" />
 		<Unit filename="hypterm_merged.cu">
 			<Option virtualFolder="CUDA Sources/" />
