@@ -29,7 +29,7 @@ __global__ void gpu_ctoprim_kernel(
 	k =  cour_idx / (g->dim_g[0] * g->dim_g[1]);
 	j = (cour_idx / g->dim_g[0]) % g->dim_g[1];
 	i =  cour_idx % g->dim_g[0];
-	idx = k*g->plane_offset_g_padded + j*g->dim_g_padded[0] + i;
+	idx = k*g->plane_offset_g_padded + j*g->pitch_g[0] + i;
 
 	loffset = g->comp_offset_g_padded;
 
@@ -77,7 +77,7 @@ __global__ void gpu_ctoprim_kernel(
 	k =  idx / (g->dim_g[0] * g->dim_g[1]);
 	j = (idx / g->dim_g[0]) % g->dim_g[1];
 	i =  idx % g->dim_g[0];
-    idx = k*g->plane_offset_g_padded + j*g->dim_g_padded[0] + i;
+    idx = k*g->plane_offset_g_padded + j*g->pitch_g[0] + i;
 
 	loffset = g->comp_offset_g_padded;
 

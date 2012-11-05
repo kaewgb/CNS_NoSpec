@@ -46,7 +46,7 @@ void gpu_free_4D(double *d_ptr){
 	CUDA_SAFE_CALL(cudaFree(d_ptr));
 }
 
-#define d_ptr(l,k,j,i)	d_ptr[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->dim_g_padded[0] + (i)]
+#define d_ptr(l,k,j,i)	d_ptr[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->pitch_g[0] + (i)]
 
 __device__ kernel_const_t k_const;
 __global__ void gpu_fill_boundary_z_kernel(
@@ -150,32 +150,32 @@ void allocate_variables(
 	double *&d_U, double *&d_Unew, double *&d_Q, double *&d_D, double *&d_F,
 	bool gpu /* == true by default */, bool cpu
 ){
-	int i, nc, *dim_padded=h_const.dim_padded, *dim_g_padded=h_const.dim_g_padded;
+	int i, nc, *pitch=h_const.pitch, *pitch_g=h_const.pitch_g;
 	char *dest;
 
 	nc = h_const.nc;
-	allocate_4D(U,  	dim_g_padded, 	nc);
-	allocate_4D(Unew,  	dim_g_padded, 	nc);
-	allocate_4D(Q,  	dim_g_padded, 	nc+1);
-	allocate_4D(D,  	dim_padded, 	nc);
-	allocate_4D(F, 		dim_padded, 	nc);
+	allocate_4D(U,  	pitch_g, 	nc);
+	allocate_4D(Unew,  	pitch_g, 	nc);
+	allocate_4D(Q,  	pitch_g, 	nc+1);
+	allocate_4D(D,  	pitch, 	nc);
+	allocate_4D(F, 		pitch, 	nc);
 
 	if(gpu){
-		gpu_allocate_4D(d_U, 	dim_g_padded, 	nc);
-		gpu_allocate_4D(d_Unew, dim_g_padded, 	nc);
-		gpu_allocate_4D(d_Q, 	dim_g_padded, 	nc+1);
-		gpu_allocate_4D(d_D, 	dim_padded, 	nc);
-		gpu_allocate_4D(d_F, 	dim_padded, 	nc);
+		gpu_allocate_4D(d_U, 	pitch_g, 	nc);
+		gpu_allocate_4D(d_Unew, pitch_g, 	nc);
+		gpu_allocate_4D(d_Q, 	pitch_g, 	nc+1);
+		gpu_allocate_4D(d_D, 	pitch, 	nc);
+		gpu_allocate_4D(d_F, 	pitch, 	nc);
 
 		dest = (char *)d_const_ptr + ((char *)&h_const.temp - (char *)&h_const);
 
 		FOR(i, 0, MAX_TEMP)
-			gpu_allocate_3D(h_const.temp[i], dim_g_padded);
+			gpu_allocate_3D(h_const.temp[i], pitch_g);
 		cudaMemcpy((double *) dest, h_const.temp, MAX_TEMP*sizeof(double *), cudaMemcpyHostToDevice);
 	}
 	if(cpu){
 		DO(i, 0, WZ)
-			allocate_3D(h_const.cpu_temp[i], dim_g_padded);
+			allocate_3D(h_const.cpu_temp[i], pitch_g);
 	}
 }
 
@@ -184,14 +184,14 @@ void free_variables(
 	double *d_U, double *d_Unew, double *d_Q, double *d_D, double *d_F,
 	bool gpu /* == true by default */, bool cpu
 ){
-	int i, nc, *dim_padded=h_const.dim_padded, *dim_g_padded=h_const.dim_g_padded;
+	int i, nc, *pitch=h_const.pitch, *pitch_g=h_const.pitch_g;
 	nc = h_const.nc;
 
-	free_4D(U,  	dim_g_padded, 	nc);
-	free_4D(Unew,  	dim_g_padded, 	nc);
-	free_4D(Q,  	dim_g_padded, 	nc+1);
-	free_4D(D,  	dim_padded, 	nc);
-	free_4D(F, 		dim_padded, 	nc);
+	free_4D(U,  	pitch_g, 	nc);
+	free_4D(Unew,  	pitch_g, 	nc);
+	free_4D(Q,  	pitch_g, 	nc+1);
+	free_4D(D,  	pitch, 	nc);
+	free_4D(F, 		pitch, 	nc);
 
 	if(gpu){
 		gpu_free_4D(d_U);
@@ -205,7 +205,7 @@ void free_variables(
 	}
 	if(cpu){
 		DO(i, 0, WZ)
-			free_3D(h_const.cpu_temp[i], dim_g_padded);
+			free_3D(h_const.cpu_temp[i], pitch_g);
 	}
 }
 

@@ -10,6 +10,7 @@
 #define MIN(x, y)       ((x < y)? (x):(y))
 #define MAX(x, y)       ((x > y)? (x):(y))
 #define CEIL(x, div)	(((x) + (div)-1)/(div))
+//#define PAD(x)          ((((((x)-1))>>3)+1)<<3)
 #define PAD(x)          ((((((x)-1))>>4)+1)<<4)
 
 // CONSTANTS
@@ -82,16 +83,11 @@ typedef struct global_const {
 	int hi[3];
 	int dim[3];					// Dimension
 	int dim_g[3];				// Dimension, including ghost cells
-	int dim_padded[3];          // Dimension (aligned)
-	int dim_g_padded[3];        // Dimension + ghost cells (aligned)
+	int pitch[3];          // Dimension (aligned)
+	int pitch_g[3];        // Dimension + ghost cells (aligned)
 
-	int comp_offset;
-	int comp_offset_g;
 	int comp_offset_padded;
 	int comp_offset_g_padded;
-
-	int plane_offset;
-	int plane_offset_g;
 	int plane_offset_padded;
 	int plane_offset_g_padded;
 	int nsteps;					// Number of simulation iterations

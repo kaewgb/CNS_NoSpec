@@ -37,7 +37,7 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidx < kc->blockDim_x_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + si;
+		idx = (sk+g->ng)*g->plane_offset_g_padded + (sj+g->ng)*g->pitch_g[0] + si;
 
 				   s_q[tidx][tidz]  =     q[idx + qu*g->comp_offset_g_padded];
 			   s_qpres[tidx][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
@@ -99,7 +99,7 @@ __global__ void gpu_hypterm_x_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
+		idx = sk*g->plane_offset_padded + sj*g->pitch[0] + si;
 
 		flux[idx + irho*g->comp_offset_padded] = flux_irho;
 		flux[idx + imx *g->comp_offset_padded] = flux_imx;
@@ -144,7 +144,7 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidy < kc->blockDim_y_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->dim_g_padded[0] + (si+g->ng);
+		idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->pitch_g[0] + (si+g->ng);
 
 				   s_q[tidy][tidz]  =     q[idx + qv*g->comp_offset_g_padded];
 			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
@@ -206,7 +206,7 @@ __global__ void gpu_hypterm_y_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = sk*g->plane_offset_padded + sj*g->dim_padded[2] + si;
+		idx = sk*g->plane_offset_padded + sj*g->pitch[2] + si;
 
 		flux[idx + irho*g->comp_offset_padded] -= flux_irho;
 		flux[idx + imx *g->comp_offset_padded] -= flux_imx;
@@ -251,7 +251,7 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 	tidz = threadIdx.z;
 	while( tidz < kc->blockDim_z_g && si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
-		idx = sk*g->plane_offset_g_padded + (sj+g->ng)*g->dim_g_padded[0] + (si+g->ng);
+		idx = sk*g->plane_offset_g_padded + (sj+g->ng)*g->pitch_g[0] + (si+g->ng);
 
 				   s_q[tidy][tidz]  =     q[idx + qw*g->comp_offset_g_padded];
 			   s_qpres[tidy][tidz]	=     q[idx + qpres*g->comp_offset_g_padded];
@@ -313,7 +313,7 @@ __global__ void gpu_hypterm_z_stencil_kernel(
 					  + (s_qpres(4)*unp4-s_qpres(-4)*unm4)))*dxinv;
 
 		// Update changes
-		idx = sk*g->plane_offset_padded + sj*g->dim_padded[0] + si;
+		idx = sk*g->plane_offset_padded + sj*g->pitch[0] + si;
 
 		flux[idx + irho*g->comp_offset_padded] -= flux_irho;
 		flux[idx + imx *g->comp_offset_padded] -= flux_imx;

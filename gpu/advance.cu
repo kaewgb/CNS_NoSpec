@@ -5,10 +5,10 @@
 
 
 #define	BLOCK_DIM	16
-#define	Unew(l,k,j,i)	Unew[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->dim_g_padded[0] + (i)]
-#define	U(l,k,j,i)		U[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->dim_g_padded[0] + (i)]
-#define	D(l,k,j,i)		D[(l)*g->comp_offset_padded + (k)*g->plane_offset_padded + (j)*g->dim_padded[0] + (i)]
-#define	F(l,k,j,i)		F[(l)*g->comp_offset_padded + (k)*g->plane_offset_padded + (j)*g->dim_padded[0] + (i)]
+#define	Unew(l,k,j,i)	Unew[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->pitch_g[0] + (i)]
+#define	U(l,k,j,i)		U[(l)*g->comp_offset_g_padded + (k)*g->plane_offset_g_padded + (j)*g->pitch_g[0] + (i)]
+#define	D(l,k,j,i)		D[(l)*g->comp_offset_padded + (k)*g->plane_offset_padded + (j)*g->pitch[0] + (i)]
+#define	F(l,k,j,i)		F[(l)*g->comp_offset_padded + (k)*g->plane_offset_padded + (j)*g->pitch[0] + (i)]
 
 __global__ void gpu_Unew_1_3_kernel(
 	global_const_t *g,	// i: Global Constants
@@ -18,16 +18,10 @@ __global__ void gpu_Unew_1_3_kernel(
 	double *F,			// i: flux
 	double dt			// i: dt
 ){
-	int bi,bj,bk;
 	int i,j,k,l;
-	kernel_const_t *kc = g->kc;
-
-	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
-	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
-	bi =  blockIdx.x / (kc->gridDim_plane_yz);
-	i = bi;
-	j = bj*BLOCK_DIM+threadIdx.y;
-	k = bk*BLOCK_DIM+threadIdx.z;
+	i = blockIdx.x * blockDim.x + threadIdx.x;
+	j = blockIdx.y * blockDim.y + threadIdx.y;
+	k = blockIdx.z * blockDim.z + threadIdx.z;
 
 	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, g->nc)
@@ -43,16 +37,10 @@ __global__ void gpu_Unew_2_3_kernel(
 	double *F,			// i: flux
 	double dt			// i: dt
 ){
-	int bi,bj,bk;
 	int i,j,k,l;
-	kernel_const_t *kc = g->kc;
-
-	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
-	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
-	bi =  blockIdx.x / (kc->gridDim_plane_yz);
-	i = bi;
-	j = bj*BLOCK_DIM+threadIdx.y;
-	k = bk*BLOCK_DIM+threadIdx.z;
+	i = blockIdx.x * blockDim.x + threadIdx.x;
+	j = blockIdx.y * blockDim.y + threadIdx.y;
+	k = blockIdx.z * blockDim.z + threadIdx.z;
 
 	if(i < g->dim[0] && j< g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, g->nc){
@@ -71,16 +59,10 @@ __global__ void gpu_Unew_3_3_kernel(
 	double *F,			// i: flux
 	double dt			// i: dt
 ){
-	int bi,bj,bk;
 	int i,j,k,l;
-	kernel_const_t *kc = g->kc;
-
-	bj = (blockIdx.x % (kc->gridDim_plane_yz)) / kc->gridDim_z;
-	bk = (blockIdx.x % (kc->gridDim_plane_yz)) % kc->gridDim_z;
-	bi =  blockIdx.x / (kc->gridDim_plane_yz);
-	i = bi;
-	j = bj*BLOCK_DIM+threadIdx.y;
-	k = bk*BLOCK_DIM+threadIdx.z;
+	i = blockIdx.x * blockDim.x + threadIdx.x;
+	j = blockIdx.y * blockDim.y + threadIdx.y;
+	k = blockIdx.z * blockDim.z + threadIdx.z;
 
 	if(i < g->dim[0] && j < g->dim[1] && k < g->dim[2]){
 		FOR(l, 0, g->nc){
@@ -106,16 +88,8 @@ void gpu_Unew(
 	double dt,					// i: dt
 	int phase					// i: phase
 ){
-	int grid_dim;
-	dim3 block_dim(1, BLOCK_DIM, BLOCK_DIM);
-	kernel_const_t h_kc;
-
-	h_kc.gridDim_x = h_const.dim[0];
-	h_kc.gridDim_y = CEIL(h_const.dim[1], BLOCK_DIM);
-	h_kc.gridDim_z = CEIL(h_const.dim[2], BLOCK_DIM);
-	h_kc.gridDim_plane_yz = h_kc.gridDim_y * h_kc.gridDim_z;
-	grid_dim = h_kc.gridDim_x * h_kc.gridDim_plane_yz;
-	cudaMemcpy(h_const.kc, &h_kc, sizeof(kernel_const_t), cudaMemcpyHostToDevice);
+	dim3 block_dim(BLOCK_DIM, BLOCK_DIM, 1);
+	dim3 grid_dim(CEIL(h_const.dim[0], BLOCK_DIM), CEIL(h_const.dim[1], BLOCK_DIM), h_const.dim[2]);
 
 	switch(phase){
 		case 1:

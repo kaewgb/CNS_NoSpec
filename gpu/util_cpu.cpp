@@ -329,23 +329,18 @@ void read_configurations(global_const_t &h_const, int argc, char *argv[]){
 		h_const.hi[i] += h_const.ng;
 		h_const.dim[i] 		= h_const.hi[i] - h_const.lo[i] + 1;
 		h_const.dim_g[i] 	= h_const.hi[i] - h_const.lo[i] + 1 + h_const.ng + h_const.ng;
-		h_const.dim_padded[i]   = h_const.dim[i];
-		h_const.dim_g_padded[i] = h_const.dim_g[i];
+		h_const.pitch[i]   = h_const.dim[i];
+		h_const.pitch_g[i] = h_const.dim_g[i];
 	}
-	h_const.dim_padded[0]   = PAD(h_const.dim[0]);      // No need to pad Y and Z, padding X alone will make them aligned
-	h_const.dim_g_padded[0] = PAD(h_const.dim_g[0]);    // No need to pad Y and Z, padding X alone will make them aligned
-	printf("dim_padded:   %d %d %d\n", h_const.dim_padded[0], h_const.dim_padded[1], h_const.dim_padded[2]);
-	printf("dim_g_padded: %d %d %d\n", h_const.dim_g_padded[0], h_const.dim_g_padded[1], h_const.dim_g_padded[2]);
+	h_const.pitch[0]   = PAD(h_const.dim[0]);      // No need to pad Y and Z, padding X alone will make them aligned
+	h_const.pitch_g[0] = PAD(h_const.dim_g[0]);    // No need to pad Y and Z, padding X alone will make them aligned
+	printf("pitch:   %d %d %d\n", h_const.pitch[0], h_const.pitch[1], h_const.pitch[2]);
+	printf("pitch_g: %d %d %d\n", h_const.pitch_g[0], h_const.pitch_g[1], h_const.pitch_g[2]);
 
-	h_const.comp_offset_g  = h_const.dim_g[0] * h_const.dim_g[1] * h_const.dim_g[2];
-	h_const.comp_offset    = h_const.dim[0]   * h_const.dim[1]   * h_const.dim[2];
-	h_const.plane_offset_g = h_const.dim_g[0] * h_const.dim_g[1];
-	h_const.plane_offset   = h_const.dim[0]   * h_const.dim[1];
-
-	h_const.comp_offset_g_padded    = h_const.dim_g_padded[0] * h_const.dim_g_padded[1] * h_const.dim_g_padded[2];
-	h_const.plane_offset_g_padded   = h_const.dim_g_padded[0] * h_const.dim_g_padded[1];
-	h_const.comp_offset_padded      = h_const.dim_padded[0] * h_const.dim_padded[1] * h_const.dim_padded[2];
-	h_const.plane_offset_padded     = h_const.dim_padded[0] * h_const.dim_padded[1];
+	h_const.comp_offset_g_padded    = h_const.pitch_g[0] * h_const.pitch_g[1] * h_const.pitch_g[2];
+	h_const.plane_offset_g_padded   = h_const.pitch_g[0] * h_const.pitch_g[1];
+	h_const.comp_offset_padded      = h_const.pitch[0] * h_const.pitch[1] * h_const.pitch[2];
+	h_const.plane_offset_padded     = h_const.pitch[0] * h_const.pitch[1];
 
 	FOR(i, 0, 3)
 		h_const.dxinv[i] = 1.0E0/h_const.dx[i];
