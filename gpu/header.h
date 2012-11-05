@@ -218,7 +218,8 @@ extern void gpu_diffterm2(
 	global_const_t h_const, 	// i: Global struct containing application parameters
 	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
 	double *d_q,				// i:
-	double *d_difflux				// o:
+	double *d_difflux,			// o:
+	double *d_flux				// o: just set zeroes for hypterm
 );
 
 
@@ -319,4 +320,5 @@ extern void gpu_Unew(
 	double dt,					// i: dt
 	int phase					// i: phase
 );
+
 #endif

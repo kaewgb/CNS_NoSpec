@@ -137,12 +137,12 @@ void gpu_advance(
     //!
     //! Calculate D at time N.
     //!
-	gpu_diffterm2(h_const, d_const, d_Q, d_D);
+	gpu_diffterm2(h_const, d_const, d_Q, d_D, d_F);	// set d_F to all zeroes, preparing for hypterm
 
     //!
     //! Calculate F at time N.
     //!
-	gpu_hypterm(h_const, d_const, d_U, d_Q, d_F);
+	gpu_hypterm2(h_const, d_const, d_U, d_Q, d_F);
 
     //!
     //! Calculate U at time N+1/3.
@@ -162,12 +162,12 @@ void gpu_advance(
     //!
     //! Calculate D at time N+1/3.
     //!
-	gpu_diffterm2(h_const, d_const, d_Q, d_D);
+	gpu_diffterm2(h_const, d_const, d_Q, d_D, d_F);	// set d_F to all zeroes, preparing for hypterm;
 
 	//!
     //! Calculate F at time N+1/3.
     //!
-	gpu_hypterm(h_const, d_const, d_Unew, d_Q, d_F);
+	gpu_hypterm2(h_const, d_const, d_Unew, d_Q, d_F);
 
 	//!
     //! Calculate U at time N+2/3.
@@ -187,12 +187,12 @@ void gpu_advance(
     //!
     //! Calculate D at time N+2/3.
     //!
-	gpu_diffterm2(h_const, d_const, d_Q, d_D);
+	gpu_diffterm2(h_const, d_const, d_Q, d_D, d_F);	// set d_F to all zeroes, preparing for hypterm;
 
     //!
     //! Calculate F at time N+2/3.
     //!
-	gpu_hypterm(h_const, d_const, d_Unew, d_Q, d_F);
+	gpu_hypterm2(h_const, d_const, d_Unew, d_Q, d_F);
 
     //!
     //! Calculate U at time N+1.

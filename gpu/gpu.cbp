@@ -76,9 +76,6 @@
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
 		<Unit filename="hypterm_cpu.cpp" />
-		<Unit filename="hypterm_merged.cu">
-			<Option virtualFolder="CUDA Sources/" />
-		</Unit>
 		<Unit filename="job-template" />
 		<Unit filename="job-test" />
 		<Unit filename="main.cu">
