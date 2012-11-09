@@ -105,25 +105,17 @@ void gpu_ctoprim(
     double &courno  			// i/o
 ){
 	int i, len;
-	double *d_cour;
 
 	len = h_const.dim_g[0] * h_const.dim_g[1] * h_const.dim_g[2];
 	int grid_dim = (len + BLOCK_DIM-1) / BLOCK_DIM;
 	int block_dim = BLOCK_DIM;
 
-	// Allocate temporary memory to find maximum courno
-	cudaMalloc((void **) &d_cour, len * sizeof(double));
-
-	// TODO: edit parameters
-	gpu_ctoprim_kernel<<<grid_dim, block_dim>>>(d_const, u_d, q_d, d_cour);
+	gpu_ctoprim_kernel<<<grid_dim, block_dim>>>(d_const, u_d, q_d, h_const.temp[0]);
 
 	// Find max & update courno
 	// TODO: make it minus infinity
-	thrust::device_ptr<double> dev_ptr(d_cour);
-	courno = thrust::reduce(dev_ptr, dev_ptr + len, (double) -1.0, thrust::maximum<double>());
-
-	// Free temporary memory
-	cudaFree(d_cour);
+	thrust::device_ptr<double> dev_ptr(h_const.temp[0]);
+	courno = thrust::reduce(dev_ptr, dev_ptr + len, (double) -INFINITY, thrust::maximum<double>());
 
 }
 void gpu_ctoprim(
