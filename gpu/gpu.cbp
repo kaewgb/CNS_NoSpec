@@ -5,7 +5,7 @@
 		<Option title="gpu" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="CUDA Sources/;" />
+		<Option virtualFolders="CUDA Sources/;CUDA Headers/;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/gpu" prefix_auto="1" extension_auto="1" />
@@ -58,6 +58,9 @@
 		<Unit filename="diffterm2.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="diffterm3.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="diffterm_cpu.cpp" />
 		<Unit filename="extract.cpp">
 			<Option compile="0" />
@@ -85,6 +88,9 @@
 		</Unit>
 		<Unit filename="util.cu">
 			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
+		<Unit filename="util.cuh">
+			<Option virtualFolder="CUDA Headers/" />
 		</Unit>
 		<Unit filename="util.h" />
 		<Unit filename="util_cpu.cpp" />
