@@ -78,6 +78,9 @@
 		<Unit filename="hypterm2.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="hypterm3.cu">
+			<Option virtualFolder="CUDA Sources/" />
+		</Unit>
 		<Unit filename="hypterm_cpu.cpp" />
 		<Unit filename="job-template" />
 		<Unit filename="job-test" />
