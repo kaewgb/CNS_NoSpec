@@ -142,7 +142,7 @@ void gpu_advance(
     //!
     //! Calculate F at time N.
     //!
-	gpu_hypterm2(h_const, d_const, d_U, d_Q, d_F);
+	gpu_hypterm3(h_const, d_const, d_U, d_Q, d_F);
 
     //!
     //! Calculate U at time N+1/3.
@@ -167,7 +167,7 @@ void gpu_advance(
 	//!
     //! Calculate F at time N+1/3.
     //!
-	gpu_hypterm2(h_const, d_const, d_Unew, d_Q, d_F);
+	gpu_hypterm3(h_const, d_const, d_Unew, d_Q, d_F);
 
 	//!
     //! Calculate U at time N+2/3.
@@ -192,7 +192,7 @@ void gpu_advance(
     //!
     //! Calculate F at time N+2/3.
     //!
-	gpu_hypterm2(h_const, d_const, d_Unew, d_Q, d_F);
+	gpu_hypterm3(h_const, d_const, d_Unew, d_Q, d_F);
 
     //!
     //! Calculate U at time N+1.

@@ -189,7 +189,13 @@ extern void gpu_hypterm2(
 	double *d_q,				// i:
 	double *d_flux				// o: flux
 );
-
+extern void gpu_hypterm3(
+	global_const_t h_const, 	// i: Global struct containing application parameters
+	global_const_t *d_const,	// i: Device pointer to global struct containing application paramters
+	double *d_cons,				// i:
+	double *d_q,				// i:
+	double *d_flux				// o: flux
+);
 
 extern void diffterm(
 	global_const_t c,		// i: global application parameters

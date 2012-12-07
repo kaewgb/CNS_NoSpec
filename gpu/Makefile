@@ -6,7 +6,7 @@ CPU			= cpu
 CPU_OBJS	= advance_cpu.o diffterm_cpu.o hypterm_cpu.o util_cpu.o ctoprim.o util.o
 
 GPU			= gpu
-GPU_OBJS	= advance.o ctoprim.o diffterm2.o hypterm2.o util.o $(CPU_OBJS)
+GPU_OBJS	= advance.o ctoprim.o diffterm2.o hypterm3.o util.o $(CPU_OBJS)
 HEADERS		= header.h util.h util.cuh
 THRUST		= $(HOME)/software/
 
