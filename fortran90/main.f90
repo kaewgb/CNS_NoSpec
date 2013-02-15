@@ -22,6 +22,7 @@ program main
   ! We have five components (no species).
   !
   integer, parameter :: NC  = 5
+  logical :: write_results = .false.
 
   integer            :: nsteps, plot_int, n_cell, max_grid_size, n
   integer            :: un, farg, narg
@@ -44,7 +45,6 @@ program main
 
   call boxlib_initialize()
 
-  start_time = parallel_wtime()
   !
   ! Namelist default values -- overwritable via inputs file.
   !
@@ -81,9 +81,12 @@ program main
      end if
   end if
 
-  if ( parallel_IOProcessor() ) then
+  if ( write_results .and. parallel_IOProcessor() ) then
      write(6,probin)
   end if
+
+  start_time = parallel_wtime()
+
   !
   ! Physical problem is a box on (-1,-1) to (1,1), periodic on all sides.
   !
@@ -117,11 +120,11 @@ program main
   istep = 0
   time  = 0.d0
 
-  if (plot_int > 0) then
+  if (write_results .and. plot_int > 0) then
      call write_plotfile(U,istep,dx,time,prob_lo,prob_hi)
   end if
 
-  if(parallel_IOProcessor()) then
+  if(write_results .and. parallel_IOProcessor()) then
 	temp_file_name(temp_file_name_start:) = "_general_input"
     open(unit=9, file= temp_file_name)
 	write(9, *), NG
@@ -147,6 +150,7 @@ program main
 	end do
 	close(14)
   end if
+
   do istep=1,nsteps
 
      if (parallel_IOProcessor()) then
@@ -164,7 +168,7 @@ program main
      end if
 
   end do
-  if(parallel_IOProcessor()) then
+  if(write_results .and. parallel_IOProcessor()) then
     temp_file_name(temp_file_name_start:) = "_multistep_output"
 	open(unit=24, file= temp_file_name)
 	write(24, *), NC

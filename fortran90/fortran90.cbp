@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="cpu" />
+		<Option title="fortran90" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/cpu" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/fortran90" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -16,7 +16,7 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/cpu" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/fortran90" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -31,16 +31,16 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="Makefile" />
-		<Unit filename="advance.cpp" />
-		<Unit filename="ctoprim.cpp" />
-		<Unit filename="diffterm.cpp" />
-		<Unit filename="flops.cpp" />
-		<Unit filename="header.h" />
-		<Unit filename="helper_functions.cpp" />
-		<Unit filename="helper_functions.h" />
-		<Unit filename="hypterm.cpp" />
-		<Unit filename="main.cpp" />
+		<Unit filename="GNUmakefile" />
+		<Unit filename="GPackage.mak" />
+		<Unit filename="advance.f90" />
+		<Unit filename="in" />
+		<Unit filename="in2" />
+		<Unit filename="init_data.f90" />
+		<Unit filename="inputs.jbb" />
+		<Unit filename="inputs_3d" />
+		<Unit filename="main.f90" />
+		<Unit filename="write_plotfile.f90" />
 		<Extensions>
 			<code_completion />
 			<debugger />

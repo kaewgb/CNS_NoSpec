@@ -4,9 +4,9 @@
 #include "util.cuh"
 #include "util.h"
 
-#define BLOCK_SMALL		8
-#define	BLOCK_LARGE		16
-#define	THREAD_Z		8
+#define BLOCK_DIM_X		16
+#define	BLOCK_DIM_Y		8
+#define	THREAD_Z		4
 
 __global__ void gpu_hypterm_xy_stencil_kernel(
 	global_const_t *g,	// i:
@@ -19,10 +19,10 @@ __global__ void gpu_hypterm_xy_stencil_kernel(
 	double unp1, unp2, unp3, unp4, unm1, unm2, unm3, unm4;
 	double flux_irho, flux_imx, flux_imy, flux_imz, flux_iene;
 
-	__shared__ double      s_qu[BLOCK_LARGE+NG+NG][BLOCK_LARGE+NG+NG];
-	__shared__ double      s_qv[BLOCK_LARGE+NG+NG][BLOCK_LARGE+NG+NG];
-	__shared__ double   s_qpres[BLOCK_LARGE+NG+NG][BLOCK_LARGE+NG+NG];
-	__shared__ double    s_cons[BLOCK_LARGE+NG+NG][BLOCK_LARGE+NG+NG];
+	__shared__ double      s_qu[BLOCK_DIM_Y+NG+NG][BLOCK_DIM_X+NG+NG];
+	__shared__ double      s_qv[BLOCK_DIM_Y+NG+NG][BLOCK_DIM_X+NG+NG];
+	__shared__ double   s_qpres[BLOCK_DIM_Y+NG+NG][BLOCK_DIM_X+NG+NG];
+	__shared__ double    s_cons[BLOCK_DIM_Y+NG+NG][BLOCK_DIM_X+NG+NG];
 
 	// Load to shared mem
 	for(z=0;z<THREAD_Z;z++){
@@ -34,8 +34,8 @@ __global__ void gpu_hypterm_xy_stencil_kernel(
 		out = sk*g->plane_offset_padded + sj*g->pitch[0] + si;
 		compute = (si < g->dim[0] && sj < g->dim[1] && sk < g->dim[2]);
 
-		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_LARGE+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
-			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_LARGE+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
+		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_DIM_Y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
+			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_DIM_X+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
 				if( si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 					idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->pitch_g[0] + si;
@@ -84,8 +84,8 @@ __global__ void gpu_hypterm_xy_stencil_kernel(
 	#define	s_imy_y(i)	    s_cons[threadIdx.y+g->ng+(i)][threadIdx.x+g->ng]
 
 		__syncthreads();
-		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_LARGE+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
-			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_LARGE+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
+		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_DIM_Y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
+			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_DIM_X+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
 				if( si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 					idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->pitch_g[0] + si;
@@ -123,8 +123,8 @@ __global__ void gpu_hypterm_xy_stencil_kernel(
 	#define	s_imz_y(i)	    s_cons[threadIdx.y+g->ng+(i)][threadIdx.x+g->ng]
 
 		__syncthreads();
-		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_LARGE+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
-			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_LARGE+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
+		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_DIM_Y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
+			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_DIM_X+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
 				if( si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 					idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->pitch_g[0] + si;
@@ -154,8 +154,8 @@ __global__ void gpu_hypterm_xy_stencil_kernel(
 	#define	s_iene_y(i)	    s_cons[threadIdx.y+g->ng+(i)][threadIdx.x+g->ng]
 
 		__syncthreads();
-		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_LARGE+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
-			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_LARGE+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
+		for(sj=blockIdx.y*blockDim.y+threadIdx.y, tidy=threadIdx.y; tidy < BLOCK_DIM_Y+NG+NG; sj+=blockDim.y, tidy+=blockDim.y){
+			for(si=blockIdx.x*blockDim.x+threadIdx.x, tidx=threadIdx.x; tidx < BLOCK_DIM_X+NG+NG; si+=blockDim.x, tidx+=blockDim.x){
 				if( si < g->dim_g[0] && sj < g->dim_g[1] && sk < g->dim_g[2]){
 
 					idx = (sk+g->ng)*g->plane_offset_g_padded + sj*g->pitch_g[0] + si;
@@ -320,8 +320,13 @@ void gpu_hypterm3(
 
 	/** d_flux must be set to zero beforehand (in diffterm, etc) **/
 
-	dim3 block_dim_xy_stencil(BLOCK_LARGE, BLOCK_LARGE, 1);
-	dim3 grid_dim_xy_stencil(CEIL(h_const.dim[0], BLOCK_LARGE), CEIL(h_const.dim[1], BLOCK_LARGE), CEIL(h_const.dim[2], THREAD_Z));
+	// Set preferred cache configuration (48KB smem | 16KB smem)
+	// cudaFuncCachePreferShared | cudaFuncCachePreferL1
+	cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+
+	dim3 block_dim_xy_stencil(BLOCK_DIM_X, BLOCK_DIM_Y, 1);
+	dim3 grid_dim_xy_stencil(CEIL(h_const.dim[0], BLOCK_DIM_X), CEIL(h_const.dim[1], BLOCK_DIM_Y), CEIL(h_const.dim[2], THREAD_Z));
+
 	gpu_hypterm_xy_stencil_kernel<<<grid_dim_xy_stencil, block_dim_xy_stencil>>>(d_const, d_cons, d_q, d_flux);
 
 }

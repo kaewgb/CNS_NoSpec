@@ -2,6 +2,9 @@
 #include "helper_functions.h"
 
 global_const_t h_const;
+double ctoprim_time = 0.0;
+double diffterm_time = 0.0;
+double hypterm_time = 0.0;
 
 int main(int argc, char *argv[]){
 
@@ -26,6 +29,9 @@ int main(int argc, char *argv[]){
 		new_advance(U, Unew, Q, D, F, dt);
 	total_time += get_time();
 	printf("Total time: %lf\n", total_time);
+	printf("ctoprim time: %lf\n", ctoprim_time/h_const.nsteps);
+	printf("diffterm time: %lf\n", diffterm_time/h_const.nsteps);
+	printf("hypterm time: %lf\n", hypterm_time/h_const.nsteps);
 
 	fout = fopen("output", "w");
 	fprintf(fout, "%d\n", h_const.nc);

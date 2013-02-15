@@ -5,6 +5,10 @@
 #include "helper_functions.h"
 
 extern global_const_t h_const;
+extern double ctoprim_time;
+extern double diffterm_time;
+extern double hypterm_time;
+
 
 void new_advance(
 	double ****U,		// i/o
@@ -46,7 +50,9 @@ void new_advance(
     //! Also calculate courno so we can set "dt".
     //!
 	courno_proc = 1.0E-50;
+	ctoprim_time -= get_time();
 	ctoprim(lo, hi, U, Q, dx, ng, courno_proc);
+	ctoprim_time += get_time();
 
 	courno = courno_proc;
 	dt = cfl/courno;
@@ -55,12 +61,16 @@ void new_advance(
     //!
     //! Calculate D at time N.
     //!
+    diffterm_time -= get_time();
 	diffterm(lo, hi, ng, dx, Q, D, eta, alam);
+	diffterm_time += get_time();
 
     //!
     //! Calculate F at time N.
     //!
+    hypterm_time -= get_time();
 	hypterm(lo, hi, ng, dx, U, Q, F);
+	hypterm_time += get_time();
 
     //!
     //! Calculate U at time N+1/3.

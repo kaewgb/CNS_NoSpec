@@ -34,6 +34,8 @@ convert:	convert.o util_cpu.o
 3d:			3d.cu
 			$(NVCC) -o $@ $^
 
+hypterm3.o:	hypterm3.cu $(HEADERS)
+			$(NVCC) -c $< -o $@ $(NVCCFLAGS) -Xptxas -dlcm=cg
 %.o:		%.cpp $(HEADERS)
 			$(CC) $(CFLAGS) -c $< -o $@
 %.o:		%.cu $(HEADERS)
