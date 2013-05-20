@@ -22,6 +22,10 @@ $(CPU):			cpu.o $(CPU_OBJS)
 				$(NVCC) -o $@ $^
 $(HYBRID):		hybrid.o $(GPU_OBJS) advance_hybrid.o
 				$(NVCC) -o $@ $^
+
+runner:		runner.o readwrite.o
+			$(NVCC) -o $@ $^
+
 test:		test.o util.o util_cpu.o
 			$(NVCC) -o $@ $^
 

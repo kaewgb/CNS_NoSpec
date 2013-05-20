@@ -92,6 +92,8 @@
 			<Option link="1" />
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
+		<Unit filename="readwrite.cu" />
+		<Unit filename="runner.cu" />
 		<Unit filename="test.cu">
 			<Option virtualFolder="CUDA Sources/" />
 		</Unit>
